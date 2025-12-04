@@ -116,6 +116,13 @@ class MappedDotEnvSettingsSource(DotEnvSettingsSource):
         # 親クラスから.envファイルの値を取得
         data = super().__call__()
 
+        # env_prefixでフィルタリング（extra="forbid"対策, Issue #2）
+        # DotEnvSettingsSourceはenv_prefixに関係なく全変数を返すため、
+        # ここでプレフィックスにマッチする変数のみを保持する
+        env_prefix = (self.env_prefix or "").lower()
+        if env_prefix:
+            data = {k: v for k, v in data.items() if k.lower().startswith(env_prefix)}
+
         # case_sensitive設定を取得（Noneの場合はmodel_configから）
         case_sensitive = self.case_sensitive
         if case_sensitive is None:

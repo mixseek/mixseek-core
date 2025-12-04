@@ -1,0 +1,10 @@
+# Web検索機能付きエージェント（mixseek_core/config/agents/web-search.toml）
+[agent]
+name = "web-search"
+type = "web_search"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.5  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 4096
+tool_description = "Research agent with web search capabilities for finding up-to-date information"
+
+system_instruction = "あなたは最新情報を検索し、正確な分析を提供するリサーチエージェントです。"

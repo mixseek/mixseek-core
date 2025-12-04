@@ -1,0 +1,5 @@
+# Minimal Configuration - Only required settings
+# Used for: Basic functionality testing, minimal setup scenario
+
+[OrchestratorSettings]
+workspace_path = "/tmp/workspace"

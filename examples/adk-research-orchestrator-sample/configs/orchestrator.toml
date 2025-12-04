@@ -1,0 +1,24 @@
+# ADK Research Orchestrator Configuration
+# 深層調査オーケストレーション設定
+
+[orchestrator]
+# Maximum execution time per team (seconds)
+timeout_per_team_seconds = 600
+
+# Round configuration
+# Maximum number of rounds to execute
+max_rounds = 2
+
+# Minimum number of rounds to execute
+min_rounds = 1
+
+# Timeout for each round submission (seconds)
+# Deep Research requires longer timeout due to parallel agent execution
+submission_timeout_seconds = 300
+
+# Timeout for judgment between rounds (seconds)
+judgment_timeout_seconds = 60
+
+# Team configurations
+[[orchestrator.teams]]
+config = "configs/agents/team-deep-research.toml"

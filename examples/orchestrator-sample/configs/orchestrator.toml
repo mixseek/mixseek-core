@@ -1,0 +1,71 @@
+# MixSeek-Core Orchestrator - 2チーム競合サンプル設定ファイル
+#
+# このファイルは、2つの異なる分析アプローチを持つチームが
+# 同じテーマについて並列に分析を行うシナリオを定義しています。
+#
+# 使用方法:
+#   cp -rp examples/orchestrator-sample workspaces/
+#   export MIXSEEK_WORKSPACE="workspaces/orchestrator-sample"
+#   mixseek exec "プロンプト" --config $MIXSEEK_WORKSPACE/configs/orchestrator.toml
+
+[orchestrator]
+# チーム単位のタイムアウト時間（秒）
+# LLM API呼び出しの応答待機時間を考慮し、600秒（10分）に設定
+# 注：実際のネットワーク遅延に応じて調整してください
+timeout_per_team_seconds = 600
+
+# Judgment設定ファイル（オプション）
+# 未指定の場合は configs/judgment.toml を試行し、存在しない場合はデフォルト値を使用
+# judgment_config = "configs/judgment.toml"
+
+# チーム1: 論理的分析アプローチ
+# 相対パスは $MIXSEEK_WORKSPACE を起点に解釈されます
+# ワークスペース構造: $MIXSEEK_WORKSPACE/configs/agents/analyst-team-a.toml
+[[orchestrator.teams]]
+config = "configs/agents/analyst-team-a.toml"
+# チーム識別子とチーム名は、configs/agents/analyst-team-a.toml で定義されます
+# team_id: "team-a"
+# team_name: "チームA: 論理的分析"
+
+# チーム2: 創造的視点アプローチ
+# 同じく相対パスで指定
+# ワークスペース構造: $MIXSEEK_WORKSPACE/configs/agents/analyst-team-b.toml
+[[orchestrator.teams]]
+config = "configs/agents/analyst-team-b.toml"
+# team_id: "team-b"
+# team_name: "チームB: 創造的視点"
+
+# チーム3: 研究重視アプローチ（Web検索 + 論理分析）
+# 低温度設定で正確性と信頼性を重視
+[[orchestrator.teams]]
+config = "configs/agents/team-research.toml"
+# team_id: "team-research"
+# team_name: "Research Team: 研究重視チーム"
+
+# チーム4: 創造的アプローチ（Web検索 + データ分析）
+# 高温度設定で多様性と創造性を重視
+[[orchestrator.teams]]
+config = "configs/agents/team-creative.toml"
+# team_id: "team-creative"
+# team_name: "Creative Team: 創造的チーム"
+
+# チーム5: バランス型アプローチ（Web検索 + 論理分析 + データ分析）
+# 中温度設定で包括的な分析
+[[orchestrator.teams]]
+config = "configs/agents/team-balanced.toml"
+# team_id: "team-balanced"
+# team_name: "Balanced Team: バランス型チーム"
+
+# 実行フロー:
+# 1. Orchestratorが全チーム設定を読み込み
+# 2. 各チームの Leader Agent を並列実行
+# 3. 各チームが提案を生成
+# 4. LLM-as-a-Judge が各提案を評価（スコア: 0.0-1.0）
+# 5. 結果を集計し、最高スコアチームを特定
+# 6. DuckDB の leader_board テーブルに記録
+# 7. テキストまたはJSON形式で結果を出力
+
+# 拡張方法:
+# さらにチームを追加する場合:
+# [[orchestrator.teams]]
+# config = "configs/agents/team-custom.toml"

@@ -1,0 +1,45 @@
+# Solo Leader Team Configuration
+# Member Agent 0件のチーム設定例（FR-033, SC-008対応）
+#
+# このチーム設定では、Member Agentを使用せず、Leader Agent単独でタスクを処理します。
+# Leader Agentが直接ユーザープロンプトに応答し、結果を生成します。
+#
+# 使用例:
+#   mixseek team "2024年のノーベル賞受賞者を教えてください" \
+#     --config workspaces/my_first_ws/configs/team-solo-leader.toml \
+#     --output json
+
+[team]
+team_id = "solo-leader-001"
+team_name = "Solo Leader Team"
+max_concurrent_members = 15  # Member Agentは0件だが、上限設定は必須
+
+[team.leader]
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7
+max_tokens = 4096
+
+# Leader Agentの動作指示
+# Member Agentを使用せず、単独でタスクを完遂する
+system_instruction = """
+あなたは単独で動作するLeader Agentです。
+
+## 役割
+Member Agentを使用せず、自分自身でユーザーからのタスクを完遂してください。
+
+## 指示
+1. ユーザープロンプトを分析し、タスクの内容を理解する
+2. 必要な情報を整理し、適切な応答を生成する
+3. 正確で簡潔な回答を提供する
+
+## 制約
+- Member Agentへの委譲は行わない
+- 全ての処理を自分自身で完結させる
+- 明確で理解しやすい応答を心がける
+
+## 応答形式
+ユーザーのタスクに応じて、最適な形式で応答してください。
+"""
+
+# 注意: [[team.members]] セクションは意図的に省略しています
+# Member Agent 0件の構成を実現するため、members定義を含めません

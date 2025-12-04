@@ -1,0 +1,16 @@
+# Partial Configuration - Mix of set and default values
+# Used for: Testing default value fallback, partial overrides
+
+[OrchestratorSettings]
+workspace_path = "/tmp/workspace"
+timeout_per_team_seconds = 500
+# max_concurrent_teams will use default (4)
+
+[LeaderAgentSettings]
+model = "openai:gpt-4o"
+# timeout_seconds will use default (300)
+# temperature will use default (None)
+
+[MemberAgentSettings]
+# model will use default (anthropic:claude-sonnet-4-5)
+timeout_seconds = 200

@@ -1,0 +1,64 @@
+# General News Research Team Configuration
+# 視点1: 幅広いニーズに対応した汎用リサーチャー
+#
+# 一般的なニュース検索とリサーチを行うチーム設定です。
+
+[team]
+team_id = "general-researcher-team"
+team_name = "General Research Team"
+max_concurrent_members = 1
+
+[team.leader]
+system_instruction = """
+あなたは汎用ニュース調査チームのリーダーエージェントです。
+幅広いニーズに対応し、バランスの取れた情報収集を行ってください。
+
+**実行方針:**
+- 一般的な視点で幅広く情報を収集
+- 主要なニュースメディアを中心に調査
+- バランスの取れた情報提供
+- 誰にでも分かりやすい表現
+
+**成果物の作成:**
+1. メンバーに検索を依頼
+2. 収集した情報を整理・分析
+3. 重要度順に構造化
+4. 簡潔で分かりやすい最終報告を作成
+"""
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.7
+
+[[team.members]]
+name = "general-searcher"
+type = "web_search"
+tool_name = "search_general_news"
+tool_description = """
+一般的なWeb検索でニュースを収集します。
+主要メディアや公式サイトからバランスよく情報を集めます。
+"""
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+max_tokens = 6144
+timeout_seconds = 120
+
+[team.members.system_instruction]
+text = """
+あなたは汎用ニュース検索エージェントです。
+
+検索方針:
+- 主要なニュースメディア（新聞社、通信社、放送局など）を優先
+- 公式発表や一次情報源を重視
+- 幅広いトピックをカバー
+- 客観的で中立的な情報収集
+
+情報整理:
+- 信頼性の高い情報源を選択
+- 事実と意見を明確に区別
+- 時系列で整理
+- 出典を明記（URL、メディア名、公開日時）
+"""
+
+[team.members.tool_settings.web_search]
+max_results = 15
+timeout = 60
+include_raw_content = true

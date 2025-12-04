@@ -1,0 +1,9 @@
+[team]
+team_id = "test-team-001"  # team1.tomlと同じIDを意図的に設定
+team_name = "Test Team with Duplicate ID"
+max_concurrent_members = 5
+
+[team.leader]
+system_instruction = "You are another assistant with duplicate team_id"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.5

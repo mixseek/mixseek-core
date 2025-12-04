@@ -1,0 +1,272 @@
+# =============================================================================
+# MixSeek-Core Docker Environment Common Makefile
+# =============================================================================
+# This file contains shared variables and targets used by all environment-specific
+# Makefiles (dev, ci, prod). It provides consistent interfaces and utilities
+# across different environments.
+
+# =============================================================================
+# SHARED VARIABLES
+# =============================================================================
+
+# Application identification
+APP_NAME := mixseek-core
+# NETWORK is no longer used (removed docker-compose and network requirements)
+# NETWORK := $(APP_NAME)-network
+ROOTDIR := $(shell cd "$(CURDIR)/../.." && pwd -P)
+
+# Git-based tag generation
+TAG := $(shell git log -1 --date=short --format="%ad-%h" 2>/dev/null || echo "dev-$(shell date +%Y%m%d)")
+
+# =============================================================================
+# USER CONFIGURATION SYSTEM
+# =============================================================================
+# Priority order (highest to lowest):
+#   1. Environment variables (export MIXSEEK_UID=xxx)
+#   2. .env.local file in project root (gitignored, per-machine settings)
+#   3. Default values (1000:1000 - avoids macOS GID 20 conflict)
+#
+# To customize UID/GID, create .env.local in project root:
+#   MIXSEEK_UID=2000
+#   MIXSEEK_GID=2000
+#   MIXSEEK_USERNAME=myuser
+
+# Load .env.local if it exists (gitignored file for per-machine settings)
+# Parse values with comment removal and whitespace trimming for flexibility
+ifneq (,$(wildcard $(ROOTDIR)/.env.local))
+    LOCAL_UID := $(shell grep '^MIXSEEK_UID=' $(ROOTDIR)/.env.local 2>/dev/null | cut -d'=' -f2 | sed 's/#.*//' | xargs)
+    LOCAL_GID := $(shell grep '^MIXSEEK_GID=' $(ROOTDIR)/.env.local 2>/dev/null | cut -d'=' -f2 | sed 's/#.*//' | xargs)
+    LOCAL_USERNAME := $(shell grep '^MIXSEEK_USERNAME=' $(ROOTDIR)/.env.local 2>/dev/null | cut -d'=' -f2 | sed 's/#.*//' | xargs)
+endif
+
+# Apply priority: env vars > .env.local > defaults
+# Defaults (1000:1000) provide cross-platform compatibility (avoids macOS GID 20 conflict)
+MIXSEEK_USERNAME ?= $(or $(LOCAL_USERNAME),mixseek_core)
+MIXSEEK_UID ?= $(or $(LOCAL_UID),1000)
+MIXSEEK_GID ?= $(or $(LOCAL_GID),1000)
+
+# AWS configuration (optional)
+AWS_ACCOUNT := $(or $(AWS_ACCOUNT_ID),)
+AWS_REGION := $(or $(AWS_DEFAULT_REGION),ap-northeast-1)
+
+# Registry settings (override in environment-specific Makefiles)
+REGISTRY ?= localhost
+REPO ?= $(APP_NAME)
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+# Check if Docker is running
+define check_docker
+	@docker info >/dev/null 2>&1 || (echo "❌ Docker daemon is not running" && exit 1)
+endef
+
+# Check if required environment variables are set
+define check_env_file
+	@test -f "$(ROOTDIR)/.env.$(1)" || (echo "❌ Environment file .env.$(1) not found in $(ROOTDIR)" && echo "💡 Copy from dockerfiles/templates/.env.$(1).template" && exit 1)
+endef
+
+# Display build arguments and configuration source
+define validate_build_args
+	@echo "✅ Build arguments configured"
+	@echo "   MIXSEEK_USERNAME: $(MIXSEEK_USERNAME)"
+	@echo "   MIXSEEK_UID: $(MIXSEEK_UID)"
+	@echo "   MIXSEEK_GID: $(MIXSEEK_GID)"
+	@if [ -n "$(LOCAL_UID)$(LOCAL_GID)$(LOCAL_USERNAME)" ]; then \
+		echo "   📝 Source: .env.local (per-machine settings)"; \
+	else \
+		echo "   📝 Source: default values (1000:1000)"; \
+		echo "   💡 To customize: cp .env.local.template .env.local"; \
+	fi
+	@echo "   ℹ️  Note: Values can be overridden by environment variables"
+endef
+
+# =============================================================================
+# NETWORK MANAGEMENT (DISABLED - no longer using docker-compose or networks)
+# =============================================================================
+# Network management has been removed to simplify Docker setup.
+# Containers now run without custom networks.
+
+# =============================================================================
+# COMMON BUILD TARGETS
+# =============================================================================
+
+.PHONY: build
+build: validate-build-args
+	@echo "🔨 Building Docker image: $(IMAGE_NAME)"
+	@echo "📂 Build context: $(ROOTDIR)"
+	@echo "📄 Dockerfile: $(CURDIR)/Dockerfile"
+	$(call check_docker)
+	cd $(ROOTDIR) && \
+	docker build --no-cache -t $(IMAGE_NAME) . -f $(CURDIR)/Dockerfile $(BUILD_ARGS)
+	@echo "✅ Build completed: $(IMAGE_NAME)"
+
+.PHONY: xbuild
+xbuild: validate-build-args
+	@echo "🔨 Cross-platform building Docker image: $(IMAGE_NAME)"
+	$(call check_docker)
+	cd $(ROOTDIR) && \
+	docker buildx build --platform linux/amd64 -t $(IMAGE_NAME) . -f $(CURDIR)/Dockerfile $(BUILD_ARGS)
+	@echo "✅ Cross-platform build completed: $(IMAGE_NAME)"
+
+.PHONY: validate-build-args
+validate-build-args:
+	$(call validate_build_args)
+
+# =============================================================================
+# COMMON CONTAINER OPERATIONS
+# =============================================================================
+
+.PHONY: bash
+bash:
+	@echo "🐚 Connecting to container: $(CONTAINER_NAME)"
+	@docker exec -it $(CONTAINER_NAME) bash || (echo "❌ Failed to connect. Is container running?" && exit 1)
+
+.PHONY: sh
+sh:
+	@echo "🐚 Connecting to container shell: $(CONTAINER_NAME)"
+	@docker exec -it $(CONTAINER_NAME) sh || (echo "❌ Failed to connect. Is container running?" && exit 1)
+
+.PHONY: logs
+logs:
+	@echo "📋 Showing logs for: $(CONTAINER_NAME)"
+	@docker logs -f --tail 30 $(CONTAINER_NAME) || (echo "❌ Container $(CONTAINER_NAME) not found" && exit 1)
+
+.PHONY: stats
+stats:
+	@echo "📊 Container statistics: $(CONTAINER_NAME)"
+	@docker stats $(CONTAINER_NAME) --no-stream || (echo "❌ Container $(CONTAINER_NAME) not found" && exit 1)
+
+.PHONY: inspect
+inspect:
+	@echo "🔍 Inspecting container: $(CONTAINER_NAME)"
+	@docker inspect $(CONTAINER_NAME) || (echo "❌ Container $(CONTAINER_NAME) not found" && exit 1)
+
+# =============================================================================
+# COMMON CLEANUP OPERATIONS
+# =============================================================================
+
+.PHONY: rm
+rm:
+	@echo "🗑️  Removing container: $(CONTAINER_NAME)"
+	@docker rm -f $(CONTAINER_NAME) 2>/dev/null || echo "ℹ️  Container $(CONTAINER_NAME) does not exist"
+
+.PHONY: rmi
+rmi:
+	@echo "🗑️  Removing image: $(IMAGE_NAME)"
+	@docker rmi $(IMAGE_NAME) 2>/dev/null || echo "ℹ️  Image $(IMAGE_NAME) does not exist"
+
+.PHONY: cleanup
+cleanup:
+	@echo "🧹 Cleaning up containers and images for: $(APP_NAME)"
+	@echo "🗑️  Stopping and removing containers..."
+	@containers=$$(docker ps -q --filter "name=$(CONTAINER_NAME)"); \
+	if [ -n "$$containers" ]; then \
+		echo "   Stopping: $$containers"; \
+		docker stop $$containers; \
+	else \
+		echo "   No running containers to stop"; \
+	fi
+	@containers=$$(docker ps -aq --filter "name=$(CONTAINER_NAME)"); \
+	if [ -n "$$containers" ]; then \
+		echo "   Removing: $$containers"; \
+		docker rm $$containers; \
+	else \
+		echo "   No containers to remove"; \
+	fi
+	@echo "🗑️  Removing images..."
+	@images=$$(docker images -q --filter "reference=$(IMAGE_NAME)"); \
+	if [ -n "$$images" ]; then \
+		echo "   Removing: $$images"; \
+		docker rmi $$images; \
+	else \
+		echo "   No images to remove"; \
+	fi
+	@echo "✅ Cleanup completed"
+
+# =============================================================================
+# REGISTRY OPERATIONS (Optional)
+# =============================================================================
+
+.PHONY: push
+push: build
+	@echo "⬆️  Pushing image to registry"
+	@docker tag $(IMAGE_NAME) $(REGISTRY)/$(REPO):$(TAG)
+	@docker tag $(IMAGE_NAME) $(REGISTRY)/$(REPO):latest
+	@docker push $(REGISTRY)/$(REPO):$(TAG)
+	@docker push $(REGISTRY)/$(REPO):latest
+	@echo "✅ Push completed: $(REGISTRY)/$(REPO):$(TAG)"
+
+.PHONY: pull
+pull:
+	@echo "⬇️  Pulling image from registry"
+	@docker pull $(REGISTRY)/$(REPO):latest
+	@echo "✅ Pull completed: $(REGISTRY)/$(REPO):latest"
+
+# =============================================================================
+# TEMPLATE VALIDATION
+# =============================================================================
+
+.PHONY: validate-template
+validate-template:
+	@echo "🔍 Validating environment template format"
+	@if [ -z "$(ENV)" ]; then \
+		echo "❌ ENV variable not specified. Usage: make validate-template ENV=dev"; \
+		exit 1; \
+	fi
+	@template_file="$(ROOTDIR)/dockerfiles/templates/.env.$(ENV).template"; \
+	if [ ! -f "$$template_file" ]; then \
+		echo "❌ Template file not found: $$template_file"; \
+		exit 1; \
+	fi; \
+	if grep -q "=.*[^[].*[^]]$$" "$$template_file"; then \
+		echo "❌ Non-placeholder values found in template $$template_file"; \
+		echo "💡 All values should be in [PLACEHOLDER] format"; \
+		exit 1; \
+	fi; \
+	echo "✅ Template validation passed: $$template_file"
+
+# =============================================================================
+# HELP AND INFORMATION
+# =============================================================================
+
+.PHONY: help
+help:
+	@echo "🚀 MixSeek-Core Docker Environment Commands"
+	@echo ""
+	@echo "📋 Common Targets (available in all environments):"
+	@echo "  build              Build Docker image"
+	@echo "  xbuild             Cross-platform build"
+	@echo "  run                Start container"
+	@echo "  stop               Stop container"
+	@echo "  restart            Restart container"
+	@echo "  rm                 Remove container"
+	@echo "  rmi                Remove image"
+	@echo "  bash/sh            Connect to container shell"
+	@echo "  logs               Show container logs"
+	@echo "  stats              Show container statistics"
+	@echo ""
+	@echo "🧹 Cleanup:"
+	@echo "  cleanup            Remove containers and images"
+	@echo ""
+	@echo "🔍 Validation:"
+	@echo "  validate-template ENV=dev  Validate environment template"
+	@echo "  validate-build-args        Validate build arguments"
+	@echo ""
+	@echo "📖 Usage Examples:"
+	@echo "  make -C dockerfiles/dev build"
+	@echo "  make -C dockerfiles/dev run"
+	@echo "  make -C dockerfiles/dev bash"
+	@echo ""
+	@echo "⚙️  Current Settings:"
+	@echo "  APP_NAME: $(APP_NAME)"
+	@echo "  TAG: $(TAG)"
+	@echo "  USER: $(MIXSEEK_USERNAME) ($(MIXSEEK_UID):$(MIXSEEK_GID))"
+
+.PHONY: version
+version:
+	@echo "MixSeek-Core Docker Environment"
+	@echo "Version: 1.0.0"
+	@echo "Tag: $(TAG)"
+	@echo "Build Date: $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")"

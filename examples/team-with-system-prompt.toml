@@ -1,0 +1,55 @@
+# チーム設定 - system_prompt併用例
+#
+# Leader AgentとMember Agentの両方でsystem_instructionとsystem_promptを併用する
+# 高度な設定例です。
+#
+# 使用方法:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#
+#   # 必要なファイルをワークスペースにコピー
+#   mkdir -p $MIXSEEK_WORKSPACE/configs/agents
+#   cp examples/agents/analyst-with-system-prompt.toml $MIXSEEK_WORKSPACE/configs/agents/
+#   cp examples/team-with-system-prompt.toml $MIXSEEK_WORKSPACE/configs/
+#
+#   # 実行
+#   mixseek team "データ分析を実施してください" \
+#     --config $MIXSEEK_WORKSPACE/configs/team-with-system-prompt.toml --verbose
+#
+# 注意: 相対パス configs/agents/xxx.toml はMIXSEEK_WORKSPACE起点で解決されます
+
+[team]
+team_id = "advanced-team"
+team_name = "Advanced Team with System Prompt"
+max_concurrent_members = 3
+
+[team.leader]
+# system_prompt: 共有ルール（履歴保持）
+system_prompt = """
+常に日本語で回答してください。
+回答は簡潔かつ明確にしてください。
+"""
+
+# system_instruction: 主要な指示（毎回再評価）
+system_instruction = """
+あなたは研究チームのリーダーエージェントです。
+タスクを分析し、適切なMember Agentを選択して実行してください。
+
+利用可能なMember Agent:
+- delegate_to_analyst: データ分析・論理的推論
+
+選択戦略:
+1. タスクの複雑度を評価
+2. 必要な専門性を特定
+3. 最小限のMember Agentを選択
+"""
+
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
+
+# Member Agent（参照形式）
+# 注意: 相対パスはMIXSEEK_WORKSPACE起点で解決されます
+[[team.members]]
+config = "configs/agents/analyst-with-system-prompt.toml"
+tool_name = "delegate_to_analyst"
+tool_description = "論理的な分析・データ解釈を実行します。"

@@ -1,0 +1,104 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "LLM Compatibility Matrix",
+    "description": "Schema for the output compatibility_matrix.toml file.",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "validation_timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "total_cost": {
+                    "type": "number"
+                }
+            },
+            "required": ["validation_timestamp"]
+        },
+        "models": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/CompatibilityMatrixEntry"
+            }
+        }
+    },
+    "required": ["metadata", "models"],
+    "definitions": {
+        "CompatibilityMatrixEntry": {
+            "type": "object",
+            "properties": {
+                "provider": {"type": "string"},
+                "model_id": {"type": "string"},
+                "name": {"type": "string"},
+                "recommendation_rank": {
+                    "type": "string",
+                    "enum": ["⭐⭐⭐", "⭐⭐", "⭐", "N/A"]
+                },
+                "compatibility": {
+                    "$ref": "#/definitions/CompatibilityResult"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/ValidationMetrics"
+                },
+                "notes": {"type": "string"}
+            },
+            "required": ["provider", "model_id", "name", "recommendation_rank", "compatibility"]
+        },
+        "CompatibilityResult": {
+            "type": "object",
+            "properties": {
+                "pydantic_ai_category": {
+                    "type": "string",
+                    "enum": ["Google", "Anthropic", "OpenAI", "Unknown"]
+                },
+                "mixseek_agent_compatibility": {
+                    "type": "object",
+                    "properties": {
+                        "plain": {"type": "boolean"},
+                        "web_search": {"type": "boolean"},
+                        "code_exec": {"type": "boolean"}
+                    },
+                    "required": ["plain", "web_search", "code_exec"]
+                },
+                "supports_function_calling": {"type": "boolean"},
+                "authentication_status": {
+                    "type": "string",
+                    "enum": ["OK", "Failed", "NotConfigured"]
+                }
+            },
+            "required": ["pydantic_ai_category", "mixseek_agent_compatibility", "supports_function_calling", "authentication_status"]
+        },
+        "ValidationMetrics": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["Success", "Failed", "NotVerified"]
+                },
+                "latency": {
+                    "type": "object",
+                    "properties": {
+                        "p50": {"type": "number"},
+                        "p95": {"type": "number"},
+                        "p99": {"type": "number"}
+                    },
+                    "required": ["p50", "p95", "p99"]
+                },
+                "tokens": {
+                    "type": "object",
+                    "properties": {
+                        "input_tokens": {"type": "integer"},
+                        "output_tokens": {"type": "integer"}
+                    },
+                    "required": ["input_tokens", "output_tokens"]
+                },
+                "error_details": {"type": "string"},
+                "retry_attempts": {"type": "integer"},
+                "validation_timestamp": {"type": "string", "format": "date-time"}
+            },
+            "required": ["status", "retry_attempts", "validation_timestamp"]
+        }
+    }
+}

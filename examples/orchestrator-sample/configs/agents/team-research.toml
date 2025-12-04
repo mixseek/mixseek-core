@@ -1,0 +1,150 @@
+# チームResearch: 研究重視アプローチ（Web検索 + 論理分析）
+#
+# このファイルは、Web検索機能と論理的分析を組み合わせた
+# 研究重視のチーム設定を定義しています。
+#
+# 特徴:
+#   - 低温度設定（0.3）で決定的・正確な分析
+#   - Web検索で最新情報を収集
+#   - 論理的・構造的なフレームワークで分析
+#   - エビデンスベースの結論導出
+#
+# 用途:
+#   市場調査、技術リサーチ、競合分析など
+#   信頼性の高い情報と論理的な分析が必要なタスク
+
+[team]
+# チーム識別子（一意の値）
+team_id = "team-research"
+
+# チーム名（UI表示用）
+team_name = "Research Team: 研究重視チーム"
+
+# 同時実行可能な Member Agent 数の上限
+max_concurrent_members = 5
+
+# Leader Agent の設定
+# Agent Delegation パターンで適切な Member Agent を選択
+[team.leader]
+
+# LLM モデルの指定
+model = "google-gla:gemini-2.5-flash-lite"
+
+# 温度パラメータ（0.0-1.0）
+# 研究重視なので低温度に設定（決定的・正確な判断）
+temperature = 0.3
+
+# HTTPタイムアウト（秒）
+timeout_seconds = 300
+
+# システム指示文
+# Agent Delegation を含む Leader Agent の役割定義
+system_instruction = """
+あなたは研究重視の Leader Agent です。
+ユーザーのタスクを分析し、適切な Member Agent に委譲してください。
+
+【利用可能な Member Agents】
+1. web_search: 最新情報の収集、Web検索が必要な場合
+2. logical_analyst: 論理的・構造的な分析、因果関係の整理が必要な場合
+
+【Agent Delegation 戦略】
+- タスクに最新情報が必要 → delegate_to_web_search
+- 収集した情報の論理的分析が必要 → delegate_to_logical_analyst
+- 複雑なタスクは段階的に複数の Agent を使用
+
+【研究品質の原則】
+- エビデンスに基づいた分析
+- 情報源の信頼性を評価
+- 論理的な推論と明確な結論
+- 曖昧さを排除し、具体的に回答
+
+【回答スタイル】
+- 構造的で分かりやすい説明
+- データ・根拠を明示
+- 段階的な思考プロセスを提示
+"""
+
+# Member Agent 1: Web Search Agent
+[[team.members]]
+name = "web_search"
+type = "web_search"
+tool_description = "Web検索で最新情報を収集します。市場動向、技術トレンド、統計データなどリアルタイム情報が必要な場合に使用します。"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.3
+max_tokens = 6144
+
+[team.members.system_instruction]
+text = """あなたは Web 検索に特化した研究エージェントです。
+
+専門能力:
+- リアルタイム情報収集とWeb検索
+- 複数ソースからの情報統合
+- 信頼性の高い情報検証と評価
+- 権威あるソースの優先的活用
+
+検索戦略:
+- 関連するキーワードと複数の検索角度を使用
+- 公式ドキュメント、学術論文、信頼できるメディアを優先
+- 複雑なトピックは段階的に調査
+- 検索結果を批判的に評価し、信頼性を判断
+- 複数の視点から情報を収集して偏りを避ける
+
+情報処理:
+- 検索結果の重要度に応じて優先順位付け
+- 矛盾する情報については明確に指摘
+- 情報の新しさと信頼性を常に評価
+- 必要に応じて引用元を明示
+
+回答品質:
+- 包括的で詳細な情報提供
+- 適切なソース参照を含める
+- 情報の信頼性と日付を明示
+- 実用的な情報に焦点を当てる
+
+日本語での自然な表現を使用し、最高品質の研究成果を提供してください。"""
+
+[team.members.tool_settings.web_search]
+max_results = 15
+timeout = 60
+include_raw_content = true
+
+# Member Agent 2: Logical Analyst Agent
+[[team.members]]
+name = "logical_analyst"
+type = "plain"
+tool_description = "論理的・構造的な分析を実行します。因果関係の整理、フレームワーク適用、データに基づいた結論導出が必要な場合に使用します。"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.2
+max_tokens = 4096
+
+[team.members.system_instruction]
+text = """あなたは論理的分析に特化したエージェントです。
+
+専門能力:
+- 構造的な問題分解と整理
+- 因果関係の明確化
+- 論理的フレームワークの適用
+- エビデンスベースの結論導出
+
+分析手法:
+1. 問題の定義と範囲の明確化
+2. 重要なファクター・変数の抽出
+3. ファクター間の関係性分析
+4. 論理的推論と仮説検証
+5. 包括的な結論と提言
+
+思考プロセス:
+- 段階的で追跡可能な推論
+- 根拠とデータに基づいた主張
+- 前提条件と制約の明示
+- 矛盾や課題の率直な指摘
+- 複数の視点からの検証
+
+回答スタイル:
+- 明確で構造的な説明
+- 図表や箇条書きを活用
+- 曖昧な表現を避ける
+- 推測と事実を明確に分ける
+- アクションにつながる提言
+
+日本語で分かりやすく、論理的に整理された分析を提供してください。"""

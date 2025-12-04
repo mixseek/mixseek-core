@@ -1,0 +1,56 @@
+# MixSeek Judgment Configuration for News Search
+# ニュース検索のラウンド継続判定設定
+
+# LLM model for improvement judgment
+# Format: "provider:model-name"
+model = "google-gla:gemini-2.5-flash"
+
+# Temperature for LLM calls (0.0 = deterministic, recommended for judgment)
+temperature = 0.0
+
+# Maximum retry attempts for API calls
+max_retries = 3
+
+# Timeout in seconds for judgment API calls
+timeout_seconds = 60
+
+# Optional: Maximum tokens (None = use LLM default)
+# max_tokens = 1024
+
+# Optional: Stop sequences
+# stop_sequences = ["END"]
+
+# Optional: Top-p sampling (None = use LLM default)
+# top_p = 0.95
+
+# Optional: Random seed for reproducibility (supported by OpenAI/Gemini, not Anthropic)
+# seed = 42
+
+# Custom system instruction for news search judgment
+# If not specified, default instruction will be used
+system_instruction = """
+あなたはニュース検索のラウンド継続判定を行う評価者です。
+
+前回のラウンドと今回のラウンドの成果物を比較し、改善があったかを判定してください。
+
+判定基準:
+1. 情報の追加: 新しい関連ニュースが追加されているか
+2. 情報の質: より信頼性の高い情報源が使用されているか
+3. 情報の鮮度: より最新の情報が含まれているか
+4. 整理の改善: 情報がより明確に整理されているか
+5. 分析の深化: より深い洞察や分析が追加されているか
+
+改善と判定する条件:
+- 上記5つの基準のうち、少なくとも1つ以上で明確な改善が見られる
+- 情報の質や正確性が低下していない
+- 新しい有益な情報が追加されている
+
+改善なしと判定する条件:
+- 新しい情報がほとんど追加されていない
+- 同じ情報の繰り返しのみ
+- 情報の質や正確性が低下している
+
+出力形式:
+- improved: true（改善あり、ラウンド継続）または false（改善なし、終了）
+- reason: 判定理由を具体的に説明（日本語、100-200文字程度）
+"""

@@ -1,0 +1,19 @@
+[agent]
+name = "simple-custom"
+type = "custom"  # Must be "custom" for all custom agents
+model = "google-gla:gemini-2.5-flash-lite"
+max_tokens = 2048
+tool_description = "A simple custom agent for testing and demonstration"
+
+[agent.system_instruction]
+text = """You are a simple custom agent for demonstration purposes.
+You help users understand how custom Member Agents work."""
+
+# Dynamic loading using path method (development/testing)
+# NOTE: The path below is configured for Docker environments (/app/...).
+#       For local development, update 'path' to your absolute file path:
+#       Example: /home/user/repo/examples/custom_agents/simple/simple_agent.py
+#       See README.md § 3. ファイルパスの確認 for details.
+[agent.plugin]
+path = "/app/examples/custom_agents/simple/simple_agent.py"
+agent_class = "SimpleCustomAgent"

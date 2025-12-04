@@ -1,0 +1,32 @@
+# Plain Member Agent Configuration Template
+# This template provides a basic configuration for a plain text Member Agent.
+
+[agent]
+name = "my-plain-agent"
+type = "plain"
+model = "google-gla:gemini-1.5-flash"
+temperature = 0.2
+max_tokens = 2048
+timeout_seconds = 30
+tool_description = "A helpful AI assistant that provides clear and accurate responses"
+
+[agent.instructions]
+text = """You are a helpful AI assistant that provides clear, accurate, and concise responses.
+
+Guidelines:
+- Always be polite and professional
+- Provide factual information when possible
+- If you're uncertain about something, acknowledge it
+- Structure your responses clearly
+- Be helpful and supportive
+
+Your goal is to assist users with their questions and tasks to the best of your ability."""
+
+
+
+[agent.metadata]
+# Add custom metadata for your agent
+created_by = "user"
+version = "1.0.0"
+environment = "development"
+# tags = ["general", "assistant", "plain-text"]

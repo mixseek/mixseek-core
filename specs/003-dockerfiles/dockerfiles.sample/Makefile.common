@@ -1,0 +1,45 @@
+.PHONY: build run rm logs bash
+
+APP_NAME := mixseek-oss
+NETWORK := $(APP_NAME)-network
+TAG := $(shell git log -1 --date=short --format="%ad-%h")
+ROOTDIR = $(shell cd "$(dirname $(CURDIR))" &>/dev/null && cd ../../ && pwd -P)
+AWS_ACCOUNT := 822754592070
+
+# ホスト環境情報（dev/ci環境でコンテナユーザーをホストに同期するために使用）
+HOST_USERNAME := $(shell whoami)
+HOST_UID := $(shell id -u)
+HOST_GID := $(shell id -g)
+
+create_network:
+	@if docker network inspect ${NETWORK} >/dev/null 2>/dev/null ; then echo network ${NETWORK} exists; else docker network create ${NETWORK}; fi
+
+build:
+	cd $(ROOTDIR) && \
+	docker build --no-cache -t $(IMAGE_NAME) . -f $(CURDIR)/Dockerfile
+
+xbuild:
+	cd $(ROOTDIR) && \
+	docker build --platform linux/amd64 -t $(IMAGE_NAME) . -f $(CURDIR)/Dockerfile
+
+bash:
+	docker exec -i -t $(CONTAINER_NAME) bash
+
+rm:
+	docker rm -f $(CONTAINER_NAME) || echo
+
+logs:
+	docker logs -f --tail 30 $(CONTAINER_NAME)
+
+sh:
+	docker exec -i -t $(CONTAINER_NAME) sh
+
+ecr_login:
+	aws ecr get-login --no-include-email --region ap-northeast-1 --registry-ids $(AWS_ACCOUNT) | sh -
+
+push: ecr_login
+	docker tag $(IMAGE_NAME) $(AWS_ACCOUNT).dkr.ecr.ap-northeast-1.amazonaws.com/$(REPO):latest
+	docker tag $(IMAGE_NAME) $(AWS_ACCOUNT).dkr.ecr.ap-northeast-1.amazonaws.com/$(REPO):$(TAG)
+
+	docker push $(AWS_ACCOUNT).dkr.ecr.ap-northeast-1.amazonaws.com/$(REPO):latest
+	docker push $(AWS_ACCOUNT).dkr.ecr.ap-northeast-1.amazonaws.com/$(REPO):$(TAG)

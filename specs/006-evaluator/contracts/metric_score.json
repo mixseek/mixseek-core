@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MetricScore",
+  "description": "Evaluation score for a single metric, containing both quantitative score (0-100) and qualitative comment explaining the evaluation.",
+  "type": "object",
+  "properties": {
+    "metric_name": {
+      "type": "string",
+      "description": "Name of the evaluation metric",
+      "minLength": 1,
+      "examples": ["clarity_coherence", "coverage", "relevance", "custom_metric"]
+    },
+    "score": {
+      "type": "number",
+      "description": "Numerical score between 0 and 100 (FR-002)",
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "examples": [85.5, 72.33, 91.0, 68.75]
+    },
+    "evaluator_comment": {
+      "type": "string",
+      "description": "Detailed explanation of the score (FR-012). Empty strings are allowed.",
+      "examples": [
+        "The response is well-structured and easy to understand. Technical terms are explained clearly. Minor improvements possible in the conclusion section.",
+        "Covers main aspects comprehensively but lacks depth in certain areas. Some examples would strengthen the explanation.",
+        "Highly relevant to the user's query. Directly addresses the question with appropriate focus and no tangents.",
+        ""
+      ]
+    }
+  },
+  "required": ["metric_name", "score", "evaluator_comment"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "metric_name": "clarity_coherence",
+      "score": 85.5,
+      "evaluator_comment": "The response is well-structured with clear language. Technical terms are explained adequately. Minor improvements possible in the conclusion section."
+    },
+    {
+      "metric_name": "coverage",
+      "score": 78.0,
+      "evaluator_comment": "Covers main points but some depth is missing in the explanation. More examples would strengthen the response."
+    },
+    {
+      "metric_name": "relevance",
+      "score": 92.0,
+      "evaluator_comment": "Highly relevant to the user's query, directly addresses the question with appropriate focus."
+    }
+  ]
+}

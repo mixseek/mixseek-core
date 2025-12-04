@@ -1,0 +1,24 @@
+# Web Fetch Agent - URLコンテンツ取得エージェント（mixseek_core/config/agents/web-fetch.toml）
+[agent]
+name = "web-fetch"
+type = "web_fetch"
+model = "anthropic:claude-sonnet-4-5-20250929"
+temperature = 0.2
+max_tokens = 4096
+tool_description = "Agent for fetching and analyzing web page content from URLs"
+
+system_instruction = "あなたはWebページの内容を分析するエージェントです。URLから取得した情報を正確に要約し、重要なポイントを抽出してください。"
+
+[agent.tool_settings.web_fetch]
+# ツール呼び出し回数制限（省略可）
+# max_uses = 5
+
+# 引用情報の有効化
+enable_citations = true
+
+# 最大コンテンツトークン数（上限50000、省略可）
+# max_content_tokens = 30000
+
+# ドメイン制限（allowed_domainsとblocked_domainsは排他的）
+# allowed_domains = ["example.com", "docs.example.com"]
+# blocked_domains = ["malicious.com"]

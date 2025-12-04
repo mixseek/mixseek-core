@@ -1,0 +1,44 @@
+# Leader Agent システム指示空文字テスト用設定
+#
+# Leader Agent の system_instruction に "" を明示した場合、
+# デフォルト指示にフォールバックせず無指示で実行されることを検証するためのサンプルです。
+#
+# 使用例:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#   mkdir -p $MIXSEEK_WORKSPACE
+#
+#   mixseek team "テストプロンプト" --config examples/team-leader-empty-prompt.toml --verbose
+
+[team]
+team_id = "leader-empty-prompt"
+team_name = "Leader Empty Prompt Example"
+max_concurrent_members = 3
+
+[team.leader]
+# 空文字を明示してシステム指示なしで稼働させる
+system_instruction = ""
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.6  # 省略可（省略時はモデルのデフォルト値を使用）
+
+# Member Agent 1: 解析担当
+[[team.members]]
+name = "analyst"
+type = "plain"
+tool_name = "delegate_to_analyst"
+tool_description = "解析を行います。"
+model = "google-gla:gemini-2.5-flash-lite"
+system_instruction = "与えられた情報を分析し、簡潔な結論を導き出してください。"
+temperature = 0.2  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 2048
+
+# Member Agent 2: 要約担当
+[[team.members]]
+name = "summarizer"
+type = "plain"
+tool_name = "delegate_to_summarizer"
+tool_description = "要約を行います。"
+model = "google-gla:gemini-2.5-flash-lite"
+system_instruction = "情報を3つのポイントに要約してください。"
+temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 1024

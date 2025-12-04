@@ -1,0 +1,20 @@
+# Production Environment Configuration
+# Used for: Production deployment, conservative timeouts and high concurrency
+
+[OrchestratorSettings]
+workspace_path = "/data/prod_workspace"
+timeout_per_team_seconds = 1800
+max_concurrent_teams = 16
+
+[LeaderAgentSettings]
+model = "openai:gpt-4-turbo"
+timeout_seconds = 600
+temperature = 0.3
+
+[MemberAgentSettings]
+model = "anthropic:claude-opus-4"
+timeout_seconds = 300
+
+[EvaluatorSettings]
+model = "openai:gpt-4-turbo"
+timeout_seconds = 600

@@ -1,0 +1,9 @@
+[team]
+team_id = "test-team-001"
+team_name = "Test Team 1"
+max_concurrent_members = 5
+
+[team.leader]
+system_instruction = "You are a helpful assistant"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7

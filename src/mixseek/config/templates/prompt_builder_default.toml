@@ -1,0 +1,99 @@
+# UserPromptBuilder 設定ファイル
+# 生成日時: 2025-11-25
+
+[prompt_builder]
+# Teamに渡すユーザプロンプトのJinja2テンプレート
+# 利用可能なプレースホルダー変数:
+#   - {{ user_prompt }}            : 元のユーザプロンプト
+#   - {{ round_number }}            : 現在のラウンド番号（整数）
+#   - {{ submission_history }}      : 過去のSubmission履歴（整形済み文字列）
+#   - {{ ranking_table }}           : Leader Boardランキング情報（整形済み文字列）
+#   - {{ team_position_message }}   : チーム順位メッセージ（整形済み文字列）
+#   - {{ current_datetime }}        : 現在日時（ISO 8601形式、タイムゾーン付き）
+#
+# 注意:
+#   - すべてのプレースホルダー変数は、UserPromptBuilder内で事前に整形されます
+#   - テンプレート内でforループやフィルタを使用することは推奨されません
+#   - 環境変数TZでタイムゾーンを設定できます（デフォルト: UTC）
+
+team_user_prompt = """
+---
+現在日時: {{ current_datetime }}
+---
+
+# 概要
+あなたはtoolによってチームメンバーを従え、一つのチームとしてユーザから指定されたタスクにコンペ形式で取り組みます。
+他にも複数のチームが参戦しており、あなたの出力はスコア化されリーダーボードに載ることになります。
+リーダーボード情報やあなたの過去の提出内容を参照しつつ、最終提出物を洗練させていきます。
+リーダーボード上位との差が著しい場合は、過去の提出内容にとらわれず、抜本的な見直しや方針転換も検討してください。
+優勝を目指して頑張ってください！
+
+# ユーザから指定されたタスク
+{{ user_prompt }}
+
+# 現在のラウンド
+{{ round_number }}
+
+# 現在のリーダーボード
+{{ ranking_table }}
+
+{{ team_position_message }}
+
+# 過去の提出履歴
+{{ submission_history }}
+"""
+
+# Evaluatorに渡すユーザプロンプトのJinja2テンプレート
+# 利用可能なプレースホルダー変数:
+#   - {{ user_prompt }}      : 元のユーザープロンプト
+#   - {{ submission }}      : AIエージェントのSubmission
+#   - {{ current_datetime }} : 現在日時（ISO 8601形式、タイムゾーン付き）
+#
+# 注意:
+#   - current_datetimeはUserPromptBuilder内で自動取得されます
+#   - 環境変数TZでタイムゾーンを設定できます（デフォルト: UTC）
+
+evaluator_user_prompt = """
+---
+現在日時: {{ current_datetime }}
+---
+# タスク
+以下のユーザプロンプトに対するエージェントの提出内容を、あなたの役割に従って評価してください。
+
+# ユーザから指定されたタスク
+{{ user_prompt }}
+
+# 提出内容
+{{ submission }}
+"""
+
+# JudgementClientに渡すユーザプロンプトのJinja2テンプレート
+# 利用可能なプレースホルダー変数:
+#   - {{ user_prompt }}          : 元のユーザープロンプト
+#   - {{ round_number }}          : 現在のラウンド番号（整数）
+#   - {{ submission_history }}    : 過去のSubmission履歴（整形済み文字列）
+#   - {{ ranking_table }}         : Leader Boardランキング情報（整形済み文字列）
+#   - {{ team_position_message }} : チーム順位メッセージ（整形済み文字列）
+#   - {{ current_datetime }}      : 現在日時（ISO 8601形式、タイムゾーン付き）
+#
+# 注意:
+#   - ranking_tableとteam_position_messageはstoreが存在する場合のみ埋め込まれます
+#   - 環境変数TZでタイムゾーンを設定できます（デフォルト: UTC）
+
+judgment_user_prompt = """
+---
+現在日時: {{ current_datetime }}
+---
+
+# タスク
+以下の提出履歴に基づいて、チームが次のラウンドに進むべきかどうかを評価してください。
+
+# ユーザから指定されたタスク
+{{ user_prompt }}
+
+# 提出履歴
+{{ submission_history }}
+
+# リーダーボード
+{{ ranking_table }}
+"""

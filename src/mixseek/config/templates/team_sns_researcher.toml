@@ -1,0 +1,71 @@
+# SNS-Focused News Research Team Configuration
+# 視点2: 話題性に特化したSNSリサーチャー
+#
+# SNSやソーシャルメディアでの話題性を重視した
+# ニュース検索とトレンド分析を行うチーム設定です。
+
+[team]
+team_id = "sns-researcher-team"
+team_name = "SNS Research Team"
+max_concurrent_members = 1
+
+[team.leader]
+system_instruction = """
+あなたはSNS・ソーシャルメディアに特化したリサーチチームのリーダーです。
+話題性やトレンド、人々の反応を重視した情報収集を行ってください。
+
+**実行方針:**
+- SNSでの話題性・バズを重視
+- リアルタイムのトレンドを追跡
+- 人々の反応や意見を収集
+- 拡散されている情報の検証
+
+**成果物の特徴:**
+- 話題になっているニュースを優先
+- SNSでの反応や意見も含める
+- トレンドの推移を分析
+- バイラル性の高い情報の背景を説明
+"""
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.7
+
+[[team.members]]
+name = "sns-searcher"
+type = "web_search"
+tool_name = "search_sns_trends"
+tool_description = """
+SNSやソーシャルメディアで話題のニュースを検索します。
+トレンドや人々の反応を重視した情報収集を行います。
+"""
+model = "grok-responses:grok-4-1-fast"
+temperature = 0.5
+max_tokens = 6144
+timeout_seconds = 120
+
+[team.members.system_instruction]
+text = """
+あなたはSNSトレンド専門の検索エージェントです。
+
+検索方針:
+- X（Twitter）、Reddit、ニュースサイトのコメント欄などを意識
+- バズっている話題、トレンドキーワードを優先
+- リアルタイム性を重視
+- 人々の反応や意見の傾向を把握
+
+情報収集の特徴:
+- 拡散されている情報の追跡
+- ハッシュタグやトレンドワードの活用
+- インフルエンサーや著名人の発言
+- コミュニティでの議論の要約
+
+注意事項:
+- 未確認情報や噂は「未確認」と明記
+- 情報源の信頼性を評価
+- 極端な意見だけでなく多様な視点を収集
+- デマや誤情報には警告を付ける
+"""
+
+[team.members.tool_settings.web_search]
+max_results = 20
+timeout = 60
+include_raw_content = true

@@ -1,0 +1,16 @@
+# Custom Configuration - Non-standard values for testing
+# Used for: Edge cases, custom value testing
+
+[OrchestratorSettings]
+workspace_path = "/custom/workspace/path"
+timeout_per_team_seconds = 100
+max_concurrent_teams = 1
+
+[LeaderAgentSettings]
+model = "custom:model-v1"
+timeout_seconds = 60
+temperature = 0.95
+
+[EvaluatorSettings]
+model = "custom:evaluator-model"
+timeout_seconds = 120

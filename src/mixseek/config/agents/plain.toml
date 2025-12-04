@@ -1,0 +1,10 @@
+# プレーン推論エージェント（mixseek_core/config/agents/plain.toml）
+[agent]
+name = "plain"
+type = "plain"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 2048
+tool_description = "General-purpose AI assistant for answering questions and providing information"
+
+system_instruction = "あなたは親切で正確な情報を提供するアシスタントです。"

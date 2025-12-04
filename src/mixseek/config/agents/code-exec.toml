@@ -1,0 +1,16 @@
+# コード実行機能付きエージェント（mixseek_core/config/agents/code-exec.toml）
+[agent]
+name = "code-exec"
+type = "code_execution"
+model = "anthropic:claude-haiku-4-5"
+temperature = 0.1  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 4096
+tool_description = "Code execution agent for data analysis and computational tasks"
+
+system_instruction = "あなたはデータ分析とコード実行が可能なアシスタントです。"
+
+[agent.tool_settings.code_execution]
+# 注意: これらの設定は documentation-only です
+# 実際のセキュリティ制約はAnthropic側で制御されます
+expected_available_modules = ["pandas", "numpy", "matplotlib", "scikit-learn"]
+expected_min_timeout_seconds = 300  # Anthropic側で5分最小値が強制される

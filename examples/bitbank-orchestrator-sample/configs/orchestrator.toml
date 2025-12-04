@@ -1,0 +1,23 @@
+# Bitbank Orchestrator Configuration
+# オーケストレーション実行の設定
+
+[orchestrator]
+# Maximum execution time per team (seconds)
+timeout_per_team_seconds = 600
+
+# Round configuration
+# Maximum number of rounds to execute (default: 1)
+max_rounds = 2
+
+# Minimum number of rounds to execute (default: 1)
+min_rounds = 1
+
+# Timeout for each round submission (seconds, default: 300)
+submission_timeout_seconds = 300
+
+# Timeout for judgment between rounds (seconds, default: 60)
+judgment_timeout_seconds = 60
+
+# Team configurations
+[[orchestrator.teams]]
+config = "configs/agents/team-bitbank-analysis.toml"

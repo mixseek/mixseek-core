@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvaluationResult",
+  "description": "Complete evaluation result containing all metric scores and an aggregated overall score computed as a weighted average.",
+  "type": "object",
+  "properties": {
+    "metrics": {
+      "type": "array",
+      "description": "List of individual metric scores",
+      "items": {
+        "$ref": "#/definitions/MetricScore"
+      },
+      "minItems": 1
+    },
+    "overall_score": {
+      "type": "number",
+      "description": "Weighted average of all metric scores (0-100)",
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "examples": [87.25, 75.50, 92.33]
+    }
+  },
+  "required": ["metrics", "overall_score"],
+  "additionalProperties": false,
+  "definitions": {
+    "MetricScore": {
+      "type": "object",
+      "description": "Evaluation score for a single metric with both quantitative score and qualitative comment",
+      "properties": {
+        "metric_name": {
+          "type": "string",
+          "description": "Name of the evaluation metric",
+          "minLength": 1,
+          "examples": ["clarity_coherence", "coverage", "relevance"]
+        },
+        "score": {
+          "type": "number",
+          "description": "Numerical score between 0 and 100",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "examples": [85.5, 72.3, 91.0]
+        },
+        "evaluator_comment": {
+          "type": "string",
+          "description": "Detailed explanation of the score",
+          "minLength": 1,
+          "examples": [
+            "The response is well-structured and easy to understand. Technical terms are explained clearly."
+          ]
+        }
+      },
+      "required": ["metric_name", "score", "evaluator_comment"],
+      "additionalProperties": false
+    }
+  },
+  "examples": [
+    {
+      "metrics": [
+        {
+          "metric_name": "clarity_coherence",
+          "score": 85.5,
+          "evaluator_comment": "The response is well-structured with clear language. Technical terms are explained adequately."
+        },
+        {
+          "metric_name": "coverage",
+          "score": 78.0,
+          "evaluator_comment": "Covers main points but some depth is missing in the explanation."
+        },
+        {
+          "metric_name": "relevance",
+          "score": 92.0,
+          "evaluator_comment": "Highly relevant to the user's query, directly addresses the question."
+        }
+      ],
+      "overall_score": 85.17
+    }
+  ]
+}

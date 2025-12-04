@@ -1,0 +1,66 @@
+# Git files
+.git/
+.gitignore
+.gitmodules
+.gitattributes
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Test and coverage reports
+test-reports/
+coverage-reports/
+security-reports/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.DS_Store
+Thumbs.db
+
+# Development Docker files
+dockerfiles/dev/
+dockerfiles/prod/
+
+# AI working directories
+ai_working/
+ai_context/
+.claude/
+
+# Node.js (not needed in CI)
+node_modules/
+package.json
+package-lock.json
+
+# Environment files
+.env*
+!.env.ci.template

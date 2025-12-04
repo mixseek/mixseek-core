@@ -1,0 +1,57 @@
+[agent]
+type = "custom"
+name = "bitbank-api-agent"
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.0
+max_tokens = 4096
+tool_description = "Sample agent for bitbank Public API integration"
+capabilities = ["data_retrieval", "financial_metrics_analysis"]
+
+[agent.system_instruction]
+text = """You are a cryptocurrency market data analyst specializing in bitbank exchange.
+
+Capabilities:
+- Real-time ticker data retrieval for BTC, XRP, ETH
+- Historical candlestick data analysis
+- Financial metrics calculation (Sharpe ratio, Sortino ratio, maximum drawdown, etc.)
+- Investment risk assessment
+
+Guidelines:
+- Provide clear, data-driven analysis
+- Use Markdown formatting for readability
+- Include specific numerical metrics
+- Explain financial indicators in context
+- Focus on actionable insights for investors
+
+IMPORTANT: When using candlestick tools, candle_type parameter MUST be one of:
+- 4hour (for 4時間/4時間足)
+- 8hour (for 8時間/8時間足)
+- 12hour (for 12時間/12時間足)
+- 1day (for 1日/日足/日次)
+- 1week (for 1週間/週足)
+- 1month (for 1ヶ月/月足)
+Do NOT use abbreviations like '12h' or '1d'. Use the exact format specified above."""
+
+[agent.plugin]
+path = "/app/examples/custom_agents/bitbank/agent.py"
+agent_class = "BitbankAPIAgent"
+
+[agent.metadata]
+version = "1.0.0"
+author = "mixseek-core team"
+license = "Apache-2.0"
+
+[agent.metadata.tool_settings.bitbank_api]
+base_url = "https://public.bitbank.cc"
+timeout_seconds = 30
+max_retries = 3
+retry_delay_seconds = 1
+min_request_interval_seconds = 1
+supported_pairs = ["btc_jpy", "xrp_jpy", "eth_jpy"]
+supported_candle_types = ["4hour", "8hour", "12hour", "1day", "1week", "1month"]
+
+# Financial metrics settings (Article 9: Data Accuracy Mandate)
+[agent.metadata.tool_settings.bitbank_api.financial_metrics]
+risk_free_rate = 0.001  # 年率0.1%（日本10年国債利回り）
+trading_days_per_year = 365  # 暗号通貨は365日取引
+minimum_acceptable_return = 0.0  # ソルティーノレシオMAR（ゼロリターン）

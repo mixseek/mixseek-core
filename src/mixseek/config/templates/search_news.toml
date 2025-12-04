@@ -1,0 +1,31 @@
+# News Search Orchestrator Configuration
+# シンプルなニュース検索オーケストレーター設定（1チーム構成）
+#
+# 汎用リサーチャーチームを使用して、ニュースを検索・収集します。
+#
+# 使用方法:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#
+#   mixseek exec \
+#     --workspace $MIXSEEK_WORKSPACE \
+#     --config configs/search_news.toml \
+#     "最新のAI技術に関するニュースを検索してまとめてください"
+
+[orchestrator]
+# Maximum execution time per team (seconds)
+timeout_per_team_seconds = 180
+
+# Round configuration
+min_rounds = 1
+max_rounds = 2
+
+# Timeout for each round submission (seconds)
+submission_timeout_seconds = 120
+
+# Timeout for judgment between rounds (seconds)
+judgment_timeout_seconds = 60
+
+# Team configuration - 汎用リサーチャーチームを使用
+[[orchestrator.teams]]
+config = "configs/agents/team_general_researcher.toml"

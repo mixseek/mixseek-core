@@ -1,0 +1,101 @@
+# サンプルチーム設定 - Agent Delegation方式
+#
+# このチーム設定は、Agent Delegationパターンを使用して
+# Leader Agentが動的にMember Agentを選択・実行する例です。
+#
+# 使用方法:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#
+#   # 必要なファイルをワークスペースにコピー
+#   mkdir -p $MIXSEEK_WORKSPACE/configs/agents
+#   cp examples/agents/analyst.toml $MIXSEEK_WORKSPACE/configs/agents/
+#   cp examples/agents/researcher.toml $MIXSEEK_WORKSPACE/configs/agents/
+#   cp examples/agents/summarizer.toml $MIXSEEK_WORKSPACE/configs/agents/
+#   cp examples/team-ref-agents.toml $MIXSEEK_WORKSPACE/configs/
+#
+#   # 実行
+#   mixseek team "最新のAI技術トレンドを調査し、分析して、まとめてください" \
+#     --config $MIXSEEK_WORKSPACE/configs/team-ref-agents.toml --verbose
+
+[team]
+team_id = "workspace-sample-team"
+team_name = "Sample Research Team"
+max_concurrent_members = 5
+
+[team.leader]
+# Leader Agentシステム指示
+system_instruction = """
+あなたは研究チームのリーダーエージェントです。
+タスクを分析し、以下のMember Agentから適切なものを選択して実行してください：
+
+**利用可能なMember Agent:**
+- delegate_to_analyst: 論理的分析・データ解釈が必要な場合に使用
+  （統計分析、論理推論、パターン発見等）
+- delegate_to_researcher: Web検索で最新情報が必要な場合に使用
+  （市場動向、最新ニュース、技術トレンド等）
+- delegate_to_summarizer: 情報を簡潔にまとめる必要がある場合に使用
+  （要約、重要ポイント抽出、箇条書き化等）
+
+**選択戦略:**
+1. タスクの複雑度を評価（単純/中程度/複雑）
+2. 必要な専門性を特定（分析/調査/要約）
+3. 最小限のMember Agentを選択（リソース効率優先）
+4. 必要に応じて複数のAgentを順次実行
+
+**実行例:**
+- 単純な質問: 1つのAgentで完結
+- 最新情報の調査: researcher（Web検索）のみ
+- 調査+分析: researcher → analyst
+- 調査+分析+まとめ: researcher → analyst → summarizer
+"""
+
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
+
+# ============================================================================
+# Member Agent設定（参照形式、DRY Article 10準拠）
+# 注意: 相対パスはMIXSEEK_WORKSPACE起点で解決されます
+# ============================================================================
+
+# Member Agent 1: Analyst（アナリスト）
+[[team.members]]
+config = "configs/agents/analyst.toml"
+tool_name = "delegate_to_analyst"
+tool_description = """
+論理的な分析・データ解釈を実行します。
+以下の場合に使用してください：
+- 統計データの分析
+- 論理的推論が必要な問題
+- パターンや傾向の発見
+- 因果関係の分析
+- データに基づく洞察の提供
+"""
+
+# Member Agent 2: Researcher（リサーチャー、Web検索）
+[[team.members]]
+config = "configs/agents/researcher.toml"
+tool_name = "delegate_to_researcher"
+tool_description = """
+Web検索で最新情報を収集・調査します。
+以下の場合に使用してください：
+- 最新のニュースや動向
+- 市場データやトレンド
+- 技術的な最新情報
+- 事実確認が必要な情報
+- 複数ソースからの情報統合
+"""
+
+# Member Agent 3: Summarizer（サマライザー）
+[[team.members]]
+config = "configs/agents/summarizer.toml"
+tool_name = "delegate_to_summarizer"
+tool_description = """
+情報を簡潔にまとめます。
+以下の場合に使用してください：
+- 長文の要約
+- 重要なポイントの抽出
+- 箇条書きでのまとめ
+- 結論の明確化
+- エグゼクティブサマリー作成
+"""

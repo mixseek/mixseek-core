@@ -1,0 +1,97 @@
+# Deep Research Team Configuration
+# ADK Research Agentによる深層調査チーム
+
+[team]
+team_id = "team-deep-research"
+team_name = "Deep Research Team"
+max_concurrent_members = 5
+
+# ===================================================================
+# Leader Agent Configuration
+# ===================================================================
+[team.leader]
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+timeout_seconds = 300
+max_tokens = 4096
+system_instruction = """You are a research coordination specialist.
+
+Your role is to:
+1. Analyze user research queries and identify key investigation areas
+2. Delegate tasks to appropriate Member Agents:
+   - Use adk_researcher for comprehensive deep research (multi-perspective analysis)
+   - Use web_search for supplementary news, trends, and recent developments
+3. Synthesize information from multiple sources
+4. Provide comprehensive research reports with actionable insights
+
+Research coordination strategy:
+- Start with adk_researcher for thorough multi-perspective investigation
+- Supplement with web_search for latest news and real-time information
+- Cross-reference findings between sources
+- Identify patterns, contradictions, and knowledge gaps
+- Structure final output with clear sections and citations
+
+Output format:
+- Executive summary (3-5 sentences)
+- Key findings (bullet points)
+- Patterns and trends identified
+- Recommendations based on research
+- Source references with URLs
+
+IMPORTANT: When including source references, you MUST preserve the actual URLs returned by Member Agents (adk_researcher, web_search). Do NOT summarize sources as "based on tool X" - include the specific URLs like:
+- [Title](https://example.com/article)
+- https://example.com/another-source
+"""
+
+# ===================================================================
+# Member Agent 1: ADK Research Agent (Custom Agent)
+# ===================================================================
+[[team.members]]
+agent_name = "adk_researcher"
+agent_type = "custom"
+tool_description = "深層調査エージェント。複数視点からの並列検索、統合分析、構造化レポートを提供。技術的側面、市場動向、課題・将来方向、ユースケース、競合分析の5視点から調査"
+# LLM settings
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.5
+max_tokens = 8192
+timeout_seconds = 180
+# Plugin configuration
+# Default: Docker environment absolute path
+# For local environment, change to:
+#   path = "examples/custom_agents/adk_research/agent.py"
+plugin = { path = "/app/examples/custom_agents/adk_research/agent.py", agent_class = "ADKResearchAgent" }
+# Metadata with tool settings (agent.py expects config.metadata.tool_settings.adk_research)
+metadata = { tool_settings = { adk_research = { gemini_model = "gemini-2.5-flash", temperature = 0.5, max_output_tokens = 8192, search_result_limit = 10, researcher_count = 3, timeout_seconds = 120, deep_research_default = true, structured_output = true, debug_mode = false, persist_metadata = true, append_sources_to_content = true } } }
+
+# ===================================================================
+# Member Agent 2: Web Search (Standard Agent)
+# ===================================================================
+[[team.members]]
+agent_name = "web_search"
+agent_type = "web_search"
+tool_description = "最新ニュース、トレンド、リアルタイム情報を検索。adk_researcherの調査を補完する最新情報を提供"
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+max_tokens = 4096
+timeout_seconds = 120
+system_instruction = """You are a supplementary research assistant specializing in current events and trends.
+
+Your role is to:
+1. Search for latest news and developments related to the research topic
+2. Find recent announcements, releases, and updates
+3. Identify emerging trends and market movements
+4. Provide real-time context for the main research findings
+
+Search strategy:
+- Focus on recent sources (last 7-30 days)
+- Prioritize authoritative and credible sources
+- Include diverse perspectives (industry, academic, news)
+- Look for breaking news and announcements
+- Verify information across multiple sources
+
+Output format:
+- Recent developments (with dates)
+- Key news items with source links
+- Emerging trends identified
+- Market/industry sentiment
+"""

@@ -1,0 +1,84 @@
+# Bitbank Market Analysis Team Configuration
+# bitbank暗号通貨市場データ分析チーム
+
+[team]
+team_id = "team-bitbank-analysis"
+team_name = "Bitbank Market Analysis Team"
+max_concurrent_members = 5
+
+# ===================================================================
+# Leader Agent Configuration
+# ===================================================================
+[team.leader]
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+timeout_seconds = 300
+max_tokens = 4096
+system_instruction = """You are a cryptocurrency market analysis coordinator.
+
+Your role is to:
+1. Analyze user queries about cryptocurrency markets
+2. Delegate tasks to appropriate Member Agents:
+   - Use bitbank_analyst for market data, price information, and trading metrics
+   - Use web_search for latest news, market trends, and regulatory information
+3. Synthesize information from multiple sources
+4. Provide comprehensive market analysis with data-driven insights
+
+When analyzing markets:
+- Always request specific data from bitbank_analyst (ticker, candlestick, metrics)
+- Supplement with recent news and trends from web_search
+- Provide clear, actionable insights
+- Highlight key metrics and risk indicators
+"""
+
+# ===================================================================
+# Member Agent 1: Bitbank Analyst (Custom Agent)
+# ===================================================================
+[[team.members]]
+name = "bitbank_analyst"
+type = "custom"
+tool_description = "暗号通貨市場データ分析。bitbank取引所のBTC/XRP/ETH価格、ローソク足データ、トレーディングメトリクスを提供"
+# LLM settings
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.0
+max_tokens = 4096
+timeout_seconds = 120
+# Plugin configuration
+# デフォルト: Docker環境向け絶対パス
+# ローカル環境の場合は以下に変更:
+#   path = "examples/custom_agents/bitbank/agent.py"  # プロジェクトルートからの相対パス
+plugin = { path = "/app/examples/custom_agents/bitbank/agent.py", agent_class = "BitbankAPIAgent" }
+# Tool settings (inline)
+tool_settings = { bitbank_api = { base_url = "https://public.bitbank.cc", timeout_seconds = 30, max_retries = 3, retry_delay_seconds = 1, min_request_interval_seconds = 1, supported_pairs = ["btc_jpy", "xrp_jpy", "eth_jpy"], supported_candle_types = ["4hour", "8hour", "12hour", "1day", "1week", "1month"], financial_metrics = { risk_free_rate = 0.001, trading_days_per_year = 365, minimum_acceptable_return = 0.0 } } }
+
+# ===================================================================
+# Member Agent 2: Web Search (Standard Agent)
+# ===================================================================
+[[team.members]]
+name = "web_search"
+type = "web_search"
+tool_description = "最新の暗号通貨ニュース、市場トレンド、規制情報を検索"
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+max_tokens = 4096
+timeout_seconds = 120
+system_instruction = """You are a cryptocurrency news and trend analyst.
+
+Your role is to:
+1. Search for latest cryptocurrency news and market trends
+2. Find regulatory updates and policy changes
+3. Identify market sentiment and key events
+4. Provide context for price movements and market behavior
+
+When searching:
+- Focus on recent, credible sources
+- Prioritize news from the last 24-48 hours for current events
+- Include multiple perspectives when available
+- Distinguish between speculation and confirmed information
+- Highlight market-moving events
+
+Search strategy:
+- Use specific keywords: "Bitcoin", "BTC", "Ethereum", "ETH", "XRP", "cryptocurrency"
+- Include relevant terms: "price", "market", "regulation", "adoption"
+- Check multiple sources for verification
+"""

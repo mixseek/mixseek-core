@@ -1,0 +1,20 @@
+# Development Environment Configuration
+# Used for: Local development, testing with dev defaults
+
+[OrchestratorSettings]
+workspace_path = "/tmp/dev_workspace"
+timeout_per_team_seconds = 300
+max_concurrent_teams = 4
+
+[LeaderAgentSettings]
+model = "openai:gpt-4o"
+timeout_seconds = 300
+temperature = 0.5
+
+[MemberAgentSettings]
+model = "anthropic:claude-sonnet-4-5"
+timeout_seconds = 180
+
+[EvaluatorSettings]
+model = "openai:gpt-4o"
+timeout_seconds = 300

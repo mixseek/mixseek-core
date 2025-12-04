@@ -1,0 +1,148 @@
+# チーム Web Fetch: マルチプロバイダーアプローチ
+#
+# このファイルは、Anthropic と Google の両プロバイダーを組み合わせた
+# Web Fetch チーム設定を定義しています。
+#
+# 特徴:
+#   - Anthropic Claude: 高品質な分析、引用機能、詳細なパラメータ制御
+#   - Google Gemini: 高速処理、効率的なコンテンツ取得
+#   - Leader Agent による適切なタスク振り分け
+#
+# 用途:
+#   Web調査、ドキュメント分析、技術文書の解読など
+#   品質と速度のバランスが必要なタスク
+#
+# 注意事項:
+#   - JavaScriptでレンダリングされるページは取得できません（両プロバイダー共通）
+#   - 静的HTML/ドキュメントページ（docs.python.org等）を推奨
+
+[team]
+# チーム識別子（一意の値）
+team_id = "team-web-fetch"
+
+# チーム名（UI表示用）
+team_name = "Web Fetch Team: マルチプロバイダーチーム"
+
+# 同時実行可能な Member Agent 数の上限
+max_concurrent_members = 3
+
+# Leader Agent の設定
+[team.leader]
+
+# LLM モデルの指定
+# Note: gemini-2.5-flash-lite はツール呼び出し後の最終回答生成に問題が発生することがあるため
+# より高性能な gemini-2.5-flash を使用
+model = "google-gla:gemini-2.5-flash"
+
+# 温度パラメータ（0.0-1.0）
+temperature = 0.3
+
+# HTTPタイムアウト（秒）
+timeout_seconds = 300
+
+# システム指示文
+system_instruction = """
+あなたは Web Fetch チームの Leader Agent です。
+ユーザーのタスクを分析し、適切な Member Agent に委譲してください。
+
+【利用可能な Member Agents】
+1. anthropic_fetcher: 高品質な分析、引用付きの詳細な回答が必要な場合
+2. google_fetcher: 高速処理、シンプルなコンテンツ取得が必要な場合
+
+【Agent Delegation 戦略】
+- 詳細な分析・引用が必要 → delegate_to_anthropic_fetcher
+  (技術文書の解読、学術的な内容、正確な引用が重要な場合)
+- 高速な取得・要約が必要 → delegate_to_google_fetcher
+  (ニュース記事、一般的なWebページ、速度優先の場合)
+- 複数URLの処理 → 両方のAgentを活用
+  (重要なURLはAnthropic、補助的なURLはGoogle)
+
+【品質原則】
+- タスクの性質に応じて適切なAgentを選択
+- 品質と速度のトレードオフを考慮
+- 複雑なタスクは段階的に処理
+- 結果を統合して一貫性のある回答を提供
+
+【回答スタイル】
+- 構造的で分かりやすい説明
+- 情報源を明示
+- 実用的な提案を含める
+
+【重要】Member Agent からの結果を受け取ったら、必ずその内容を整理して最終回答を生成してください。
+ツール呼び出しの結果をそのまま返すのではなく、ユーザーのリクエストに対する回答として整形してください。
+"""
+
+# Member Agent 1: Anthropic Web Fetch Agent
+[[team.members]]
+name = "anthropic_fetcher"
+type = "web_fetch"
+tool_description = "Anthropic Claudeによる高品質なURLコンテンツ分析。引用機能有効、詳細なパラメータ制御が可能。技術文書や詳細な分析が必要な場合に使用。"
+model = "anthropic:claude-sonnet-4-5-20250929"
+temperature = 0.3
+max_tokens = 8192
+
+[team.members.system_instruction]
+text = """あなたは Anthropic Claude で動作する高品質 Web Fetch エージェントです。
+
+【重要】URLが提供された場合、必ず web_fetch ツールを使用してコンテンツを取得してください。
+
+専門能力:
+- 詳細なコンテンツ分析と引用
+- 技術文書の正確な解読
+- 複雑な情報の構造化
+- エビデンスベースの回答
+
+処理方針:
+- まず web_fetch でコンテンツを取得
+- コンテンツを深く分析
+- 重要な情報を正確に抽出
+- 引用元を明示して信頼性を確保
+
+品質基準:
+- 正確性を最優先
+- 論理的な構造
+- 明確な引用
+- 専門的な分析
+
+高品質な分析と正確な引用を提供してください。"""
+
+[team.members.tool_settings.web_fetch]
+max_uses = 5
+enable_citations = true
+max_content_tokens = 40000
+
+# Member Agent 2: Google Web Fetch Agent
+[[team.members]]
+name = "google_fetcher"
+type = "web_fetch"
+tool_description = "Google Geminiによる高速URLコンテンツ取得。シンプルな要約や素早い情報取得が必要な場合に使用。"
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.3
+max_tokens = 6144
+
+[team.members.system_instruction]
+text = """あなたは Google Gemini で動作する高速 Web Fetch エージェントです。
+
+【重要】URLが提供された場合、必ず web_fetch ツールを使用してコンテンツを取得してください。
+
+専門能力:
+- 高速なコンテンツ取得
+- 効率的な要約作成
+- シンプルな情報抽出
+- 多言語対応
+
+処理方針:
+- まず web_fetch でコンテンツを取得
+- 重要ポイントを簡潔に抽出
+- 実用的な情報に焦点
+- 効率的な回答を提供
+
+品質基準:
+- 速度と効率を重視
+- 簡潔で分かりやすい
+- 実用的な情報
+- 即座に活用可能
+
+高速で効率的な情報取得を提供してください。"""
+
+# Google models do not support tool_settings.web_fetch parameters

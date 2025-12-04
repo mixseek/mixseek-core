@@ -1,0 +1,185 @@
+# GitHub Actions CI Workflow Contract
+# This file defines the expected structure and behavior of .github/workflows/ci.yml
+
+# Workflow Metadata
+name: CI Pipeline
+description: >
+  Automated CI pipeline for code quality checks, testing, and documentation build.
+  Triggered on pull requests to develop or main branches.
+
+# Trigger Contract
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+# Concurrency Contract
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+  expected_behavior: >
+    When a new commit is pushed to a PR, any running CI jobs for the same PR
+    are automatically cancelled to save resources (FR-012).
+
+# Jobs Contract
+jobs:
+  # Job 1: Code Formatting Check
+  ruff:
+    description: Verify code adheres to ruff formatting and linting standards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    required_status_check: true
+    expected_outcome:
+      - success: All code passes ruff check --fix and ruff format verification
+      - failure: Code contains formatting or linting violations
+    commands:
+      - ruff check .
+      - ruff format --check .
+
+  # Job 2: Static Type Checking
+  mypy:
+    description: Verify code passes mypy strict type checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    required_status_check: true
+    check_targets: src and tests directories only
+    expected_outcome:
+      - success: All code passes mypy strict mode with no type errors
+      - failure: Code contains type errors or missing type annotations
+    commands:
+      - mypy src tests
+
+  # Job 3: Automated Testing
+  pytest:
+    description: Run automated tests excluding E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    required_status_check: true
+    test_exclusion:
+      marker: e2e
+      rationale: E2E tests require real API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY) and are excluded per FR-006 (future enhancement)
+    expected_outcome:
+      - success: All tests (excluding e2e) pass
+      - failure: One or more tests fail
+    commands:
+      - pytest -m "not e2e"
+
+  # Job 4: Documentation Build
+  docs:
+    description: Verify Sphinx documentation builds without errors
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    required_status_check: true
+    expected_outcome:
+      - success: Documentation builds without errors or warnings
+      - failure: Documentation contains syntax errors, broken links, or warnings
+    commands:
+      - sphinx-build -W --keep-going -b html docs docs/_build/html
+
+# Dependency Management Contract
+dependencies:
+  package_manager: uv
+  cache_enabled: true
+  cache_key_based_on: uv.lock
+  installation_command: uv sync --group dev --group docs
+  expected_behavior: >
+    Dependencies are cached based on uv.lock file hash. Cache is reused when
+    uv.lock is unchanged, minimizing installation time (NFR-001).
+
+# Python Version Contract
+python:
+  version_source: .python-version
+  version_read_method: dynamic (cat .python-version)
+  rationale: >
+    Python version is read from .python-version file to ensure CI environment
+    matches development environment exactly (Article 9: Data Accuracy Mandate).
+
+# Status Check Contract
+status_checks:
+  total_count: 4
+  required_checks:
+    - ruff
+    - mypy
+    - pytest
+    - docs
+  merge_policy: >
+    All 4 status checks must pass before PR can be merged to develop or main.
+    Enforced by GitHub Branch Protection Rules (FR-013).
+
+# Performance Contract
+performance:
+  total_execution_time:
+    target: < 5 minutes (with cache)
+    maximum: 15 minutes (timeout)
+  parallel_execution: true
+  parallel_jobs: 4 (ruff, mypy, pytest, docs)
+
+# Notification Contract
+notifications:
+  recipients:
+    - PR author
+    - PR reviewers
+  delivery_method: GitHub standard notifications
+  trigger_events:
+    - CI completion (success or failure)
+    - Individual job completion
+
+# Error Handling Contract
+error_handling:
+  job_independence: >
+    Each job runs independently. Failure of one job does not prevent other jobs
+    from completing (NFR-002).
+  timeout_behavior: >
+    Jobs exceeding 15 minutes are automatically terminated and marked as failed
+    (NFR-005).
+  retry_policy: >
+    Developers can manually re-run CI jobs at any time via GitHub UI (FR-014).
+
+# Expected Outputs
+outputs:
+  workflow_run:
+    status: completed
+    conclusion: success | failure | cancelled | timed_out
+  job_executions:
+    - job_name: ruff
+      status: completed
+      conclusion: success | failure
+    - job_name: mypy
+      status: completed
+      conclusion: success | failure
+    - job_name: pytest
+      status: completed
+      conclusion: success | failure
+    - job_name: docs
+      status: completed
+      conclusion: success | failure
+  check_statuses:
+    - check_name: ruff
+      conclusion: success | failure
+    - check_name: mypy
+      conclusion: success | failure
+    - check_name: pytest
+      conclusion: success | failure
+    - check_name: docs
+      conclusion: success | failure
+
+# Branch Protection Requirements
+branch_protection:
+  target_branches:
+    - develop
+    - main
+  required_status_checks:
+    - ruff
+    - mypy
+    - pytest
+    - docs
+  dismiss_stale_reviews: recommended
+  require_code_owner_reviews: optional
+  configuration_method: >
+    Must be manually configured via GitHub repository settings after workflow
+    implementation. See quickstart.md for detailed instructions.

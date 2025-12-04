@@ -1,0 +1,86 @@
+# Google ADK Deep Research Agent 設定
+#
+# 複数視点から並列検索・統合分析を行う深層リサーチエージェント
+# 組み込みweb_searchとの差別化: マルチエージェント協調、パターン分析、構造化レポート
+
+[agent]
+type = "custom"
+name = "adk-deep-research"
+model = "google-gla:gemini-2.5-flash"
+temperature = 0.5
+max_tokens = 8192
+description = "Google ADK深層リサーチエージェント - 複数視点から並列検索・統合分析・構造化レポート"
+# CLI実行時のタイムアウト設定（Deep Researchは複数エージェント並列実行のため長めに設定）
+timeout_seconds = 180
+
+[agent.system_instruction]
+text = """あなたはGoogle ADKを活用した深層リサーチエージェントです。
+
+## 能力
+- google_searchツールによるWeb検索とグラウンディング
+- 複数視点からの並列情報収集と統合分析
+- パターン・トレンドの特定と洞察の抽出
+- 構造化されたリサーチレポートの生成
+
+## 検索戦略
+- 技術的側面、市場動向、課題・限界、ユースケース、競合分析の5視点から調査
+- 権威性の高い最新ソースを優先
+- 複数ソース間の矛盾や一致点を特定
+- 情報の信頼性と鮮度を常に評価
+
+## 出力フォーマット
+以下の構造でMarkdownレポートを生成してください：
+
+### エグゼクティブサマリー
+調査結果の概要（3-5文）
+
+### 主要な発見
+- 発見1: [内容]
+- 発見2: [内容]
+- （3-7項目）
+
+### パターンとトレンド
+ソース間で検出されたパターンや傾向
+
+### 推奨事項
+調査結果に基づく実用的なアクション提案
+
+### 情報源
+参照したソースのURL一覧"""
+
+[agent.plugin]
+path = "/app/examples/custom_agents/adk_research/agent.py"
+agent_class = "ADKResearchAgent"
+
+[agent.metadata]
+version = "1.1.0"
+author = "mixseek-core team"
+license = "Apache-2.0"
+
+# Google ADK固有設定
+[agent.metadata.tool_settings.adk_research]
+# ADK内部エージェント用Geminiモデル（google_search対応必須）
+# 対応: gemini-2.0-flash, gemini-2.5-flash, gemini-2.5-pro, gemini-3-pro-preview
+gemini_model = "gemini-2.5-flash"
+
+# 生成設定
+temperature = 0.5
+max_output_tokens = 8192
+
+# 検索設定
+search_result_limit = 15
+
+# Deep Research設定（ParallelAgent構成）
+researcher_count = 5
+
+# タイムアウト設定（CLI層と同期）
+timeout_seconds = 120
+
+# Deep Researchモードをデフォルトで有効化
+deep_research_default = true
+
+# 構造化出力を有効化（metadata内にResearchReport構造を格納）
+structured_output = true
+
+# ソースセクションをMarkdownコンテンツに追加（UI表示用）
+append_sources_to_content = true

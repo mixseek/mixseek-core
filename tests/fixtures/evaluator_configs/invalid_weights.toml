@@ -1,0 +1,15 @@
+# Invalid configuration - weights sum to 1.3 instead of 1.0
+default_model = "anthropic:claude-sonnet-4-5-20250929"
+max_retries = 3
+
+[[metrics]]
+name = "clarity_coherence"
+weight = 0.5
+
+[[metrics]]
+name = "coverage"
+weight = 0.5
+
+[[metrics]]
+name = "relevance"
+weight = 0.3

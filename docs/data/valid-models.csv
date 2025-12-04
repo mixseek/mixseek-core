@@ -1,0 +1,61 @@
+model_id,provider,name,plain_compatible,code_exec_compatible
+gpt-4-0613,openai,gpt-4-0613,True,False
+gpt-4,openai,gpt-4,True,False
+gpt-3.5-turbo,openai,gpt-3.5-turbo,True,False
+gpt-5-search-api-2025-10-14,openai,gpt-5-search-api-2025-10-14,True,False
+gpt-4-1106-preview,openai,gpt-4-1106-preview,True,False
+gpt-3.5-turbo-1106,openai,gpt-3.5-turbo-1106,True,False
+gpt-4-0125-preview,openai,gpt-4-0125-preview,True,False
+gpt-4-turbo-preview,openai,gpt-4-turbo-preview,True,False
+gpt-3.5-turbo-0125,openai,gpt-3.5-turbo-0125,True,False
+gpt-4-turbo,openai,gpt-4-turbo,True,False
+gpt-4-turbo-2024-04-09,openai,gpt-4-turbo-2024-04-09,True,False
+gpt-4o,openai,gpt-4o,True,False
+gpt-4o-2024-05-13,openai,gpt-4o-2024-05-13,True,False
+gpt-4o-mini-2024-07-18,openai,gpt-4o-mini-2024-07-18,True,False
+gpt-4o-mini,openai,gpt-4o-mini,True,False
+gpt-4o-2024-08-06,openai,gpt-4o-2024-08-06,True,False
+chatgpt-4o-latest,openai,chatgpt-4o-latest,True,False
+o1-mini-2024-09-12,openai,o1-mini-2024-09-12,True,False
+o1-mini,openai,o1-mini,True,False
+o1-2024-12-17,openai,o1-2024-12-17,True,False
+o1,openai,o1,True,False
+o3-mini,openai,o3-mini,True,False
+o3-mini-2025-01-31,openai,o3-mini-2025-01-31,True,False
+gpt-4o-2024-11-20,openai,gpt-4o-2024-11-20,True,False
+gpt-4o-search-preview-2025-03-11,openai,gpt-4o-search-preview-2025-03-11,True,False
+gpt-4o-search-preview,openai,gpt-4o-search-preview,True,False
+gpt-4o-mini-search-preview-2025-03-11,openai,gpt-4o-mini-search-preview-2025-03-11,True,False
+gpt-4o-mini-search-preview,openai,gpt-4o-mini-search-preview,True,False
+o3-2025-04-16,openai,o3-2025-04-16,True,False
+o4-mini-2025-04-16,openai,o4-mini-2025-04-16,True,False
+o3,openai,o3,True,False
+o4-mini,openai,o4-mini,True,False
+gpt-4.1-2025-04-14,openai,gpt-4.1-2025-04-14,True,False
+gpt-4.1,openai,gpt-4.1,True,False
+gpt-4.1-mini-2025-04-14,openai,gpt-4.1-mini-2025-04-14,True,False
+gpt-4.1-mini,openai,gpt-4.1-mini,True,False
+gpt-4.1-nano-2025-04-14,openai,gpt-4.1-nano-2025-04-14,True,False
+gpt-4.1-nano,openai,gpt-4.1-nano,True,False
+gpt-5-chat-latest,openai,gpt-5-chat-latest,True,False
+gpt-5-2025-08-07,openai,gpt-5-2025-08-07,True,False
+gpt-5,openai,gpt-5,True,False
+gpt-5-mini-2025-08-07,openai,gpt-5-mini-2025-08-07,True,False
+gpt-5-mini,openai,gpt-5-mini,True,False
+gpt-5-nano-2025-08-07,openai,gpt-5-nano-2025-08-07,True,False
+gpt-5-nano,openai,gpt-5-nano,True,False
+gpt-5-search-api,openai,gpt-5-search-api,True,False
+gpt-3.5-turbo-16k,openai,gpt-3.5-turbo-16k,True,False
+gemini-2.5-flash,google,Gemini 2.5 Flash,True,False
+gemini-2.5-pro,google,Gemini 2.5 Pro,True,False
+gemini-2.0-flash-exp,google,Gemini 2.0 Flash Experimental,True,False
+gemini-2.0-flash,google,Gemini 2.0 Flash,True,False
+gemini-2.0-flash-001,google,Gemini 2.0 Flash 001,True,False
+gemini-2.0-flash-lite-001,google,Gemini 2.0 Flash-Lite 001,True,False
+gemini-2.0-flash-lite,google,Gemini 2.0 Flash-Lite,True,False
+gemini-2.5-flash-lite,google,Gemini 2.5 Flash-Lite,True,False
+claude-sonnet-4-5-20250929,anthropic,Claude Sonnet 4.5,True,True
+claude-haiku-4-5,anthropic,Claude Haiku 4.5,True,True
+claude-opus-4-1,anthropic,Claude Opus 4.1,True,True
+grok-2-1212,grok,Grok 2,True,False
+grok-4-fast,grok,Grok 4 Fast (Web Search),True,False

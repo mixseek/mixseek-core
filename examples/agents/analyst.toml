@@ -1,0 +1,25 @@
+# Analyst Member Agent設定
+#
+# データ分析・論理的推論を担当するMember Agentです。
+# team-ref-agents.tomlから参照されます。
+
+[agent]
+name = "analyst"
+type = "plain"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.2  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 2048
+tool_description = "論理的分析とデータ解釈を担当するMember Agent"
+
+[agent.system_instruction]
+text = """
+あなたはデータ分析の専門家です。
+与えられた情報を論理的に分析し、構造化された洞察を提供してください。
+数値的な傾向やパターンを特定することに焦点を当ててください。
+
+分析手法:
+- データの傾向分析
+- パターン認識
+- 統計的洞察
+- 結論の導出
+"""

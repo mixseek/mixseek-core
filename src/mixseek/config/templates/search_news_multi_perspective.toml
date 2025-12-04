@@ -1,0 +1,45 @@
+# News Search Orchestrator - Multi-Perspective Configuration
+# 複数の視点からニュースを検索・分析するオーケストレーター設定
+#
+# 3つのチームがそれぞれ異なる視点でニュースを検索し、
+# 評価エージェントが最も優れた成果物を選定します。
+#
+# 使用方法:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#   export XAI_API_KEY=your-xai-api-key  # Grok用（視点2で使用）
+#
+#   mixseek exec \
+#     --workspace $MIXSEEK_WORKSPACE \
+#     --config configs/search_news_multi_perspective.toml \
+#     "最新のAI技術トレンドについて調査してください"
+
+[orchestrator]
+# Maximum execution time per team (seconds)
+timeout_per_team_seconds = 300
+
+# Round configuration
+min_rounds = 1
+max_rounds = 3
+
+# Timeout for each round submission (seconds)
+submission_timeout_seconds = 180
+
+# Timeout for judgment between rounds (seconds)
+judgment_timeout_seconds = 60
+
+# Evaluator configuration (external file)
+evaluator_config = "configs/evaluators/evaluator_search_news.toml"
+
+# Judgment configuration (external file)
+judgment_config = "configs/judgment/judgment_search_news.toml"
+
+# Team configurations - 3つの異なる視点でニュースを検索
+[[orchestrator.teams]]
+config = "configs/agents/team_general_researcher.toml"
+
+[[orchestrator.teams]]
+config = "configs/agents/team_sns_researcher.toml"
+
+[[orchestrator.teams]]
+config = "configs/agents/team_academic_researcher.toml"

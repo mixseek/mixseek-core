@@ -1,0 +1,187 @@
+# サンプルチーム設定 - インラインMember Agent定義
+#
+# すべてのMember Agent設定を単一ファイル内に記述した例です。
+# 参照ファイルを使用せずに完結するため、ワークスペースに追加の
+# エージェントTOMLを配置する必要がありません。
+#
+# 使用方法:
+#   export MIXSEEK_WORKSPACE=$HOME/mixseek-workspace
+#   export GOOGLE_API_KEY=your-api-key
+#   mkdir -p $MIXSEEK_WORKSPACE
+#
+#   mixseek team "最新のAI技術トレンドを調査し、分析して、まとめてください" \
+#     --config examples/team-inline-agents.toml --verbose
+
+[team]
+team_id = "workspace-sample-team"
+team_name = "Sample Research Team"
+max_concurrent_members = 5
+
+[team.leader]
+# Leader Agentシステム指示
+system_instruction = """
+あなたは研究チームのリーダーエージェントです。
+タスクを分析し、以下のMember Agentから適切なものを選択して実行してください：
+
+**利用可能なMember Agent:**
+- delegate_to_analyst: 論理的分析・データ解釈が必要な場合に使用
+  （統計分析、論理推理、パターン発見等）
+- delegate_to_researcher: Web検索で最新情報が必要な場合に使用
+  （市場動向、最新ニュース、技術トレンド等）
+- delegate_to_summarizer: 情報を簡潔にまとめる必要がある場合に使用
+  （要約、重要ポイント抽出、箇条書き化等）
+
+**選択戦略:**
+1. タスクの複雑度を評価（単純/中程度/複雑）
+2. 必要な専門性を特定（分析/調査/要約）
+3. 最小限のMember Agentを選択（リソース効率優先）
+4. 必要に応じて複数のAgentを順次実行
+
+**実行例:**
+- 単純な質問: 1つのAgentで完結
+- 最新情報の調査: researcher（Web検索）のみ
+- 調査+分析: researcher → analyst
+- 調査+分析+まとめ: researcher → analyst → summarizer
+"""
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
+
+# ==========================================================================
+# Member Agent設定（インライン定義）
+# ==========================================================================
+
+# Member Agent 1: Analyst（アナリスト）
+[[team.members]]
+name = "analyst"
+type = "plain"
+tool_name = "delegate_to_analyst"
+tool_description = """
+論理的な分析・データ解釈を実行します。
+以下の場合に使用してください：
+- 統計データの分析
+- 論理的推論が必要な問題
+- パターンや傾向の発見
+- 因果関係の分析
+- データに基づく洞察の提供
+"""
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.2  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 2048
+# analystは短時間で応答を返すため明示的なタイムアウトは設定しない
+
+[team.members.system_instruction]
+text = """
+あなたはデータ分析の専門家です。
+与えられた情報を論理的に分析し、構造化された洞察を提供してください。
+数値的な傾向やパターンを特定することに焦点を当ててください。
+
+分析手法:
+- データの傾向分析
+- パターン認識
+- 統計的洞察
+- 結論の導出
+"""
+
+# Member Agent 2: Researcher（リサーチャー、Web検索）
+[[team.members]]
+name = "web-search-agent"
+type = "web_search"
+tool_name = "delegate_to_researcher"
+tool_description = """
+Web検索で最新情報を収集・調査します。
+以下の場合に使用してください：
+- 最新のニュースや動向
+- 市場データやトレンド
+- 技術的な最新情報
+- 事実確認が必要な情報
+- 複数ソースからの情報統合
+"""
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 6144
+timeout_seconds = 120
+
+[team.members.system_instruction]
+text = """
+あなたは高度な研究エージェントです。
+
+専門能力:
+- リアルタイム情報収集とWeb検索
+- 複数ソースからの情報統合と分析
+- エンタープライズレベルの研究品質
+- 信頼性の高い情報検証と評価
+- 包括的な調査レポートの作成
+
+検索戦略:
+- 関連するキーワードと複数の検索角度を使用
+- 権威あるソースと最新情報を優先的に検索
+- 複雑なトピックは段階的に調査を進める
+- 検索結果を批判的に評価し、信頼性を判断
+- 複数の視点から情報を収集して偏りを避ける
+
+情報処理:
+- 検索結果の重要度に応じて優先順位付け
+- 矛盾する情報については明確に指摘
+- 情報の新しさと信頼性を常に評価
+- 専門用語は適切に説明を追加
+
+回答品質:
+- 包括的で詳細な分析を提供
+- 適切な引用とソース参照を含める
+- 情報の信頼性と新しさを明示
+- エグゼクティブサマリーを含める
+- 実用的な行動提案を提供
+
+日本語での自然な表現を使用し、
+最新のWeb情報を組み合わせて、最高品質の研究成果を提供してください。
+"""
+
+# Member Agent 3: Summarizer（サマライザー）
+[[team.members]]
+name = "summarizer"
+type = "plain"
+tool_name = "delegate_to_summarizer"
+tool_description = """
+情報を簡潔にまとめます。
+以下の場合に使用してください：
+- 長文の要約
+- 重要なポイントの抽出
+- 箇条書きでのまとめ
+- 結論の明確化
+- エグゼクティブサマリー作成
+"""
+model = "google-gla:gemini-2.5-flash-lite"
+system_instruction = """
+あなたは情報を簡潔にまとめる専門家です。
+
+専門能力:
+- 長文の要約と重要ポイント抽出
+- 複雑な情報の構造化
+- 箇条書きでの明確な整理
+- エグゼクティブサマリー作成
+- 結論の明確化
+
+要約戦略:
+- 核心的なメッセージを特定
+- 重要度に応じて優先順位付け
+- 冗長性を排除
+- 論理的な構造で整理
+- 3-5つのポイントに凝縮
+
+アウトプット形式:
+- 箇条書きまたは番号付きリスト
+- 各ポイントは簡潔（1-2文）
+- 全体で200-300文字程度
+- 結論を最初または最後に明示
+
+品質基準:
+- 元の情報の本質を保持
+- 誤解を招かない正確な要約
+- 読みやすく理解しやすい表現
+- 実用的で行動可能な内容
+
+重要なポイントを抽出し、わかりやすく整理してください。
+"""
+temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
+max_tokens = 1024
+timeout_seconds = 30

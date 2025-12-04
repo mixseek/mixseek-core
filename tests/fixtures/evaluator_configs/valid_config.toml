@@ -1,0 +1,17 @@
+# Valid evaluator configuration for testing
+default_model = "anthropic:claude-sonnet-4-5-20250929"
+max_retries = 3
+
+[[metrics]]
+name = "clarity_coherence"
+weight = 0.4
+model = "anthropic:claude-sonnet-4-5-20250929"
+
+[[metrics]]
+name = "coverage"
+weight = 0.3
+
+[[metrics]]
+name = "relevance"
+weight = 0.3
+model = "openai:gpt-5"

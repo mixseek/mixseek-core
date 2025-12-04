@@ -1,0 +1,20 @@
+# Complete Configuration - All settings with values
+# Used for: Full feature testing, comprehensive scenario
+
+[OrchestratorSettings]
+workspace_path = "/tmp/workspace"
+timeout_per_team_seconds = 600
+max_concurrent_teams = 8
+
+[LeaderAgentSettings]
+model = "openai:gpt-4o"
+timeout_seconds = 300
+temperature = 0.7
+
+[MemberAgentSettings]
+model = "anthropic:claude-sonnet-4-5"
+timeout_seconds = 180
+
+[EvaluatorSettings]
+model = "openai:gpt-4o"
+timeout_seconds = 300

@@ -1,0 +1,82 @@
+# Anthropic Claude Web Fetch Agent Configuration
+# This configuration uses Anthropic Claude for URL content retrieval and analysis.
+#
+# Anthropic models support full WebFetchTool parameters:
+#   - max_uses: Maximum number of fetch operations
+#   - allowed_domains / blocked_domains: Domain filtering (mutually exclusive)
+#   - enable_citations: Enable source citations in responses
+#   - max_content_tokens: Maximum content size limit
+#
+# 制限事項 (Limitations):
+#   - JavaScriptでレンダリングされるページは取得できません
+#   - 静的HTML/ドキュメントページ（docs.python.org等）は正常に動作します
+#   - Claudeは動的にURLを構築できません（ユーザー提供のURLのみ使用可能）
+#   - 詳細: https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/web-fetch-tool
+
+[agent]
+name = "claude-web-fetch-agent"
+type = "web_fetch"
+model = "anthropic:claude-sonnet-4-5-20250929"
+temperature = 0.3
+max_tokens = 8192
+tool_description = "Anthropic Claudeによる高度なURLコンテンツ取得・分析エージェント"
+
+[agent.system_instruction]
+text = """あなたは Anthropic Claude で動作する専門的な Web Fetch エージェントです。
+
+【重要】ツール使用ルール:
+- ユーザーがURLを含むリクエストを送信した場合、必ず web_fetch ツールを使用してコンテンツを取得してください
+- URLが提供されたら、まずそのコンテンツを取得し、その後で分析・要約を行ってください
+- 推測や既存の知識ではなく、実際に取得したコンテンツに基づいて回答してください
+
+専門分野:
+- Webページコンテンツの取得と分析
+- ドキュメント・記事の要約と構造化
+- 技術文書の解読と説明
+- マルチソース情報の統合
+
+能力:
+- 指定されたURLからコンテンツを取得（web_fetchツール使用）
+- ページ内容の詳細な分析と要約
+- 重要情報の抽出と整理
+- 引用元の明示（citations有効時）
+
+コンテンツ処理方針:
+- 元のコンテンツを正確に把握
+- 構造化された要約を提供
+- 重要なポイントを優先的に抽出
+- 技術的な内容は分かりやすく説明
+
+回答品質:
+- 正確で信頼性の高い情報提供
+- 明確な構造と論理的な整理
+- 必要に応じて引用を含める
+- 曖昧さを排除した具体的な回答
+
+Anthropic Claudeの高度な理解能力とweb_fetchツールを活用して、
+Webコンテンツから最大限の価値を引き出してください。"""
+
+[agent.tool_settings.web_fetch]
+# 最大フェッチ回数（1リクエストあたり）
+max_uses = 10
+
+# 引用機能を有効化（ソース参照を含む回答）
+enable_citations = true
+
+# コンテンツの最大トークン数（上限: 50000）
+max_content_tokens = 40000
+
+# ドメインフィルタリング（オプション、いずれか一方のみ使用可能）
+# allowed_domains = ["docs.python.org", "developer.mozilla.org"]
+# blocked_domains = ["example-blocked.com"]
+
+[agent.metadata]
+# Anthropic Claude specific metadata
+provider = "anthropic"
+model_tier = "flagship"
+web_fetch_supported = true
+citations_enabled = true
+created_by = "user"
+version = "1.0.0"
+environment = "development"
+specializations = ["content-analysis", "document-summarization", "information-extraction"]

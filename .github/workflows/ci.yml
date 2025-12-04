@@ -1,0 +1,151 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Get runner user info
+        id: runner-info
+        run: |
+          echo "username=$(whoami)" >> $GITHUB_OUTPUT
+          echo "uid=$(id -u)" >> $GITHUB_OUTPUT
+          echo "gid=$(id -g)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build CI Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/ci/Dockerfile
+          tags: mixseek-core/ci:latest
+          build-args: |
+            MIXSEEK_USERNAME=${{ steps.runner-info.outputs.username }}
+            MIXSEEK_UID=${{ steps.runner-info.outputs.uid }}
+            MIXSEEK_GID=${{ steps.runner-info.outputs.gid }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Run ruff check
+        run: make -C dockerfiles/ci lint
+        env:
+          MIXSEEK_USERNAME: ${{ steps.runner-info.outputs.username }}
+          MIXSEEK_UID: ${{ steps.runner-info.outputs.uid }}
+          MIXSEEK_GID: ${{ steps.runner-info.outputs.gid }}
+
+      - name: Run ruff format check
+        run: make -C dockerfiles/ci format-check
+        env:
+          MIXSEEK_USERNAME: ${{ steps.runner-info.outputs.username }}
+          MIXSEEK_UID: ${{ steps.runner-info.outputs.uid }}
+          MIXSEEK_GID: ${{ steps.runner-info.outputs.gid }}
+
+  mypy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Get runner user info
+        id: runner-info
+        run: |
+          echo "username=$(whoami)" >> $GITHUB_OUTPUT
+          echo "uid=$(id -u)" >> $GITHUB_OUTPUT
+          echo "gid=$(id -g)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build CI Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/ci/Dockerfile
+          tags: mixseek-core/ci:latest
+          build-args: |
+            MIXSEEK_USERNAME=${{ steps.runner-info.outputs.username }}
+            MIXSEEK_UID=${{ steps.runner-info.outputs.uid }}
+            MIXSEEK_GID=${{ steps.runner-info.outputs.gid }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Run mypy
+        run: make -C dockerfiles/ci type-check
+        env:
+          MIXSEEK_USERNAME: ${{ steps.runner-info.outputs.username }}
+          MIXSEEK_UID: ${{ steps.runner-info.outputs.uid }}
+          MIXSEEK_GID: ${{ steps.runner-info.outputs.gid }}
+
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Get runner user info
+        id: runner-info
+        run: |
+          echo "username=$(whoami)" >> $GITHUB_OUTPUT
+          echo "uid=$(id -u)" >> $GITHUB_OUTPUT
+          echo "gid=$(id -g)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build CI Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/ci/Dockerfile
+          tags: mixseek-core/ci:latest
+          build-args: |
+            MIXSEEK_USERNAME=${{ steps.runner-info.outputs.username }}
+            MIXSEEK_UID=${{ steps.runner-info.outputs.uid }}
+            MIXSEEK_GID=${{ steps.runner-info.outputs.gid }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Run tests (excluding E2E tests)
+        run: make -C dockerfiles/ci test-fast
+        env:
+          MIXSEEK_USERNAME: ${{ steps.runner-info.outputs.username }}
+          MIXSEEK_UID: ${{ steps.runner-info.outputs.uid }}
+          MIXSEEK_GID: ${{ steps.runner-info.outputs.gid }}
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --group docs
+
+      - name: Build documentation
+        run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html

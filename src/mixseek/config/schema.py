@@ -116,12 +116,18 @@ class MappedDotEnvSettingsSource(DotEnvSettingsSource):
         # 親クラスから.envファイルの値を取得
         data = super().__call__()
 
-        # env_prefixでフィルタリング（extra="forbid"対策, Issue #2）
-        # DotEnvSettingsSourceはenv_prefixに関係なく全変数を返すため、
-        # ここでプレフィックスにマッチする変数のみを保持する
-        env_prefix = (self.env_prefix or "").lower()
-        if env_prefix:
-            data = {k: v for k, v in data.items() if k.lower().startswith(env_prefix)}
+        # 設定クラスのフィールド名でフィルタリング（extra="forbid"対策, Issue #2）
+        # DotEnvSettingsSourceは.envファイルの全変数を返すため、
+        # 設定クラスに定義されているフィールド名またはマッパーの既知キーのみを保持する
+        valid_field_names = set(self.settings_cls.model_fields.keys())
+        # マッパーの既知キーも追加（workspace → workspace_path へのマッピング用）
+        from mixseek.config.env_mappers import EnvMapperFactory
+
+        mapper = EnvMapperFactory.get_mapper(self.settings_cls_name)
+        if mapper and hasattr(mapper, "_SOURCE_KEYS"):
+            valid_field_names.update(mapper._SOURCE_KEYS)
+        # フィルタリング実行
+        data = {k: v for k, v in data.items() if k.lower() in valid_field_names}
 
         # case_sensitive設定を取得（Noneの場合はmodel_configから）
         case_sensitive = self.case_sensitive
@@ -133,11 +139,8 @@ class MappedDotEnvSettingsSource(DotEnvSettingsSource):
         if not case_sensitive:
             data = {k.lower(): v for k, v in data.items()}
 
-        # ファクトリーからマッパーを取得してマッピング適用
+        # マッパーでマッピング適用（mapperは上でフィルタリング用に既に取得済み）
         # Note: マッパーがソースキーのクリーンアップも担当（extra="forbid"対策）
-        from mixseek.config.env_mappers import EnvMapperFactory
-
-        mapper = EnvMapperFactory.get_mapper(self.settings_cls_name)
         if mapper:
             data = mapper.map(data)
         else:

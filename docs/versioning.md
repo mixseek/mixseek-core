@@ -212,26 +212,35 @@ $ uv run bump2version --dry-run --verbose minor
 
 ### bump2version による更新
 
-bump2version 実行時に、`## [0.1.0a1]` が自動的に `## [Unreleased]` の下に移動して、新しい `## [x.x.x]` セクションが作成されます。
+bump2version 実行時に、`## [Unreleased]` セクションの直後に新しいバージョンセクション `## [x.x.x]` が挿入されます。`## [Unreleased]` セクション自体は残り、次のリリースのための変更を記録する場所として使用されます。
 
+**実行前:**
 ```markdown
 # Changelog
 
 ## [Unreleased]
-
-### Added
-- (新機能追加時にここに記載)
-
-## [0.2.0a1] - 2025-12-18  ← bump2version で自動作成
-
-### Added
-- New features from 0.2.0a1
 
 ## [0.1.0a1] - 2025-12-04
 
 ### Added
 - Initial alpha release
 ```
+
+**実行後 (`uv run bump2version minor`):**
+```markdown
+# Changelog
+
+## [Unreleased]
+
+## [0.2.0a1] - 2025-12-18  ← bump2version で自動作成
+
+## [0.1.0a1] - 2025-12-04
+
+### Added
+- Initial alpha release
+```
+
+新しいリリース内容は、開発者が `## [0.2.0a1]` セクションに手動で追加します。`## [Unreleased]` セクションは常に最新のまま残り、次のリリースに向けた変更を記録します。
 
 ## セマンティックバージョニング（参考）
 

@@ -197,7 +197,29 @@ mixseek ui --workspace $HOME/mixseek-workspace
 
 ### 4. データベース分析
 
-実行結果はDuckDBに保存されます：
+実行結果はDuckDBに保存されます。
+
+**DuckDB CLIのインストール**:
+
+DuckDBコマンドラインツールをインストールすることで、SQLクエリによるデータ分析が可能になります。
+
+インストール方法については [DuckDB公式ドキュメント](https://duckdb.org/docs/installation/) を参照してください。
+
+**主要なインストール方法**:
+
+```bash
+# macOS (Homebrew)
+brew install duckdb
+
+# Windows (Chocolatey)
+choco install duckdb
+
+# Linux (wget)
+wget https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip
+unzip duckdb_cli-linux-amd64.zip
+```
+
+**使用例**:
 
 ```bash
 # データベースに接続

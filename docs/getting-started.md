@@ -9,7 +9,7 @@
 
 ### uvのインストール
 
-`uv`は高速なPythonパッケージマネージャーで、Python本体のバージョン管理も行います。Python 3.13.9が手元になくても、`uv`が自動的にダウンロード・管理します。
+`uv`は高速なPythonパッケージマネージャーで、Python本体のバージョン管理も行います。必要なPythonバージョンは`uv`が自動的にダウンロード・管理します。
 
 **macOS / Linux:**
 ```bash
@@ -45,7 +45,7 @@ pipx install uv
 # uvを最新版にアップデート
 uv self update
 
-# CLIツールとしてインストール（Python 3.13.9も自動的にダウンロードされます）
+# CLIツールとしてインストール（必要なPythonバージョンも自動的にダウンロードされます）
 uv tool install git+https://github.com/mixseek/mixseek-core.git
 
 # コマンドが使えることを確認

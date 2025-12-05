@@ -2,14 +2,20 @@
 
 ## Supported Versions
 
-Currently supported versions for security updates:
+**⚠️ Alpha Release Notice**
 
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
-| < 1.0   | :x:                |
+This project is currently in **alpha stage** (version 0.x). Security updates are provided on a **best-effort basis** but are **not guaranteed** until version 1.0.0 is released.
 
-We recommend always using the latest version for the best security posture.
+| Version | Security Support   | Status |
+| ------- | ------------------ | ------ |
+| 0.x (Latest) | Best effort | :warning: Alpha |
+| < 1.0.0 | Not guaranteed | :x: No formal support |
+
+**Recommendations:**
+- Use the latest version for the most recent fixes
+- Be aware that breaking changes may occur in alpha versions
+- For production use, wait for version 1.0.0 or later
+- Security guarantees will begin with version 1.0.0
 
 ## Reporting a Vulnerability
 

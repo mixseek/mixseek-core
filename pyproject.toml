@@ -63,7 +63,6 @@ dev = [
     "pandas-stubs",
     "logfire>=4.15.1",  # Observability for development/debugging
     "aiohttp>=3.13.0",  # Required for WebhookIntegrationHook tests
-    "bump2version>=1.0.1",
 ]
 docs = [
     "sphinx>=8.2.3,<9",

@@ -245,8 +245,7 @@ Documentation is managed with Sphinx.
 # Build documentation
 $ cd docs && uv run sphinx-build -M html . _build
 
-# View in browser
-$ open _build/html/index.html
+# Open docs/_build/html/index.html in your browser
 ```
 
 ## Security Reporting

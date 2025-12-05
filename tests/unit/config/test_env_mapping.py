@@ -336,3 +336,37 @@ class TestMappedDotEnvSettingsSourceBehavior:
 
         # Assert: workspace_pathが追加されていない
         assert "workspace_path" not in data
+
+    def test_dotenv_filters_by_env_prefix(
+        self,
+        tmp_path: Path,
+        monkeypatch: Any,
+    ) -> None:
+        """env_prefixにマッチしない変数がフィルタリングされることを確認（Issue #2）。"""
+        from mixseek.config.schema import MappedDotEnvSettingsSource
+
+        # Arrange
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        # .envファイルを作成（複数の環境変数を設定）
+        env_file = tmp_path / ".env"
+        env_file.write_text(f"MIXSEEK_WORKSPACE={workspace}\nLOGFIRE_TOKEN=test_token\nAWS_ACCESS_KEY_ID=test_key\n")
+
+        # 環境変数をクリア
+        monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
+
+        # Act
+        source = MappedDotEnvSettingsSource(
+            OrchestratorSettings,
+            env_file=str(env_file),
+            case_sensitive=False,
+            env_prefix="MIXSEEK_",
+            env_nested_delimiter="__",
+        )
+        data = source()
+
+        # Assert: MIXSEEK_プレフィックスの変数のみ含まれる
+        assert "workspace_path" in data  # マッピング後の値
+        assert "logfire_token" not in data  # フィルタリングで除外
+        assert "aws_access_key_id" not in data  # フィルタリングで除外

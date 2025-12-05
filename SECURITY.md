@@ -40,11 +40,13 @@ Please include the following information:
 - Potential impact
 - Any suggested fixes (if available)
 
-### Response Timeline
+### Response Timeline (Target)
 
-- **Initial Response**: Within 7 days
-- **Status Update**: Within 14 days
-- **Fix Timeline**: Depends on severity (we'll work with you to establish a reasonable timeline)
+We are a small team, so response times may vary. However, we will do our best to meet the following targets:
+
+- Initial Triage: We aim to assess and acknowledge the report within **7 business days**.
+- Status Updates: We aim to provide status updates at least **every 14 days**.
+- Fix Timeline: Depends on severity (we'll work with you to establish a reasonable timeline)
 
 ### Disclosure Policy
 

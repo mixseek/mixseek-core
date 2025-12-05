@@ -18,9 +18,10 @@ advanced-features
 observability
 database-schema
 api/index
+developer-guide
+versioning
 docker-setup.md
 ui-docker.md
-developer-guide
 appendix/pydantic-ai.md
 appendix/valid-models.md
 glossary

@@ -212,7 +212,14 @@ $ uv run bump2version --dry-run --verbose minor
 
 ### bump2version による更新
 
-bump2version 実行時に、`## [Unreleased]` セクションの直後に新しいバージョンセクション `## [x.x.x]` が挿入されます。`## [Unreleased]` セクション自体は残り、次のリリースのための変更を記録する場所として使用されます。
+**重要**: CHANGELOG.md は **bump2version では更新されません**。手動で管理する必要があります。
+
+**手動更新手順:**
+
+1. リリース前に `## [Unreleased]` セクションに変更内容を記載
+2. bump2version 実行後、新しいバージョンセクションを手動で追加
+
+**例 (`0.1.0a1 → 0.2.0` へのバージョンアップ):**
 
 **実行前:**
 ```markdown
@@ -220,19 +227,33 @@ bump2version 実行時に、`## [Unreleased]` セクションの直後に新し�
 
 ## [Unreleased]
 
+### Added
+- Multi-agent orchestration framework
+- CLI commands
+
 ## [0.1.0a1] - 2025-12-04
 
 ### Added
 - Initial alpha release
 ```
 
-**実行後 (`uv run bump2version minor`):**
+**bump2version 実行:**
+```bash
+$ uv run bump2version minor
+# pyproject.toml が 0.1.0a1 → 0.2.0 に更新される
+```
+
+**実行後（手動で CHANGELOG.md を更新）:**
 ```markdown
 # Changelog
 
 ## [Unreleased]
 
-## [0.2.0a1] - 2025-12-18  ← bump2version で自動作成
+## [0.2.0] - 2025-12-18  ← 手動で追加
+
+### Added
+- Multi-agent orchestration framework
+- CLI commands
 
 ## [0.1.0a1] - 2025-12-04
 
@@ -240,7 +261,7 @@ bump2version 実行時に、`## [Unreleased]` セクションの直後に新し�
 - Initial alpha release
 ```
 
-新しいリリース内容は、開発者が `## [0.2.0a1]` セクションに手動で追加します。`## [Unreleased]` セクションは常に最新のまま残り、次のリリースに向けた変更を記録します。
+**将来の自動化（Issue #16）**: GitHub Actions により、タグ push 時に CHANGELOG.md からバージョンセクションを抽出し、GitHub Release を自動作成する予定です。
 
 ## セマンティックバージョニング（参考）
 

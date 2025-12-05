@@ -66,7 +66,8 @@ This project uses a **develop-based development workflow**.
 
 6. Release preparation (every 2 weeks)
    - Create release-x.x.x branch from develop
-   - Automatically update version and CHANGELOG with bump2version
+   - Update version with bump2version
+   - Manually update CHANGELOG.md (add version section under [Unreleased])
    - Final verification with PR to main
    - Create tag after merging to main
 ```
@@ -94,7 +95,7 @@ Version updates are automated using the **bump2version** tool.
 # Create a release branch (branched from develop)
 $ git checkout -b release-0.2.0 develop
 
-# Update minor version (0.1.0a1 → 0.2.0a1)
+# Update minor version (0.1.0a1 → 0.2.0)
 $ uv run bump2version minor
 
 # Or update patch version (0.1.0 → 0.1.1)
@@ -112,16 +113,18 @@ $ uv run bump2version --dry-run --verbose minor
 
 # Actual update
 $ uv run bump2version minor
-# → Automatically updates pyproject.toml and CHANGELOG.md
+# → Automatically updates pyproject.toml
 # → Automatically creates git commit and tag
+# Note: CHANGELOG.md must be updated manually
 ```
 
 ### Automatic Actions When Running bump2version
 
 1. Updates the version in **pyproject.toml**
-2. Adds a new version section to **CHANGELOG.md**
-3. Creates a git commit (`release: bump version to x.x.x`)
-4. Creates a git tag (`vx.x.x`)
+2. Creates a git commit (`release: bump version to x.x.x`)
+3. Creates a git tag (`vx.x.x`)
+
+**Note**: CHANGELOG.md is **not** automatically updated by bump2version. You must manually add release notes under the `## [Unreleased]` section before running bump2version.
 
 ## Release Process
 
@@ -135,11 +138,15 @@ $ git pull origin develop
 # 2. Create release branch
 $ git checkout -b release-0.2.0 develop
 
-# 3. Update version (automated with bump2version)
-$ uv run bump2version minor
-# → Automatically updates pyproject.toml, CHANGELOG.md, and tag
+# 3. Manually update CHANGELOG.md
+# Add release notes under ## [Unreleased] section
 
-# 4. Create PR to main
+# 4. Update version (automated with bump2version)
+$ uv run bump2version minor
+# → Automatically updates pyproject.toml
+# → Automatically creates git commit and tag
+
+# 5. Create PR to main
 $ git push origin release-0.2.0
 # Create PR to main on GitHub
 # PR title: "release: bump version to 0.2.0a1"

@@ -4,18 +4,18 @@
 
 **⚠️ Alpha Release Notice**
 
-This project is currently in **alpha stage** (version 0.x). Security updates are provided on a **best-effort basis** but are **not guaranteed** until version 1.0.0 is released.
+This project is currently in **alpha stage** (version 0.1.0a*). Security updates are provided on a **best-effort basis** but are **not guaranteed** until a stable release.
 
 | Version | Security Support   | Status |
 | ------- | ------------------ | ------ |
-| 0.x (Latest) | Best effort | :warning: Alpha |
-| < 1.0.0 | Not guaranteed | :x: No formal support |
+| 0.1.0a* (Latest alpha) | Best effort | :warning: Alpha |
+| Older versions | Not guaranteed | :x: No formal support |
 
 **Recommendations:**
 - Use the latest version for the most recent fixes
 - Be aware that breaking changes may occur in alpha versions
-- For production use, wait for version 1.0.0 or later
-- Security guarantees will begin with version 1.0.0
+- For production use, wait for a stable release
+- Security guarantees will begin with future stable releases
 
 ## Reporting a Vulnerability
 

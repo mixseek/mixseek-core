@@ -137,8 +137,8 @@ def ui(
     except KeyboardInterrupt:
         typer.echo("\nStreamlit server stopped.")
     except SystemExit as e:
-        # Streamlit may raise SystemExit(0) on normal termination
-        if e.code != 0:
+        # Streamlit may raise SystemExit(0) or SystemExit(None) on normal termination
+        if e.code:
             typer.echo(f"Error: Streamlit exited with code {e.code}", err=True)
             raise typer.Exit(1)
     except Exception as e:

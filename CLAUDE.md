@@ -208,6 +208,84 @@ Before starting ANY task:
 
 For complete governance rules: `.specify/memory/constitution.md`
 
+## Commit Message Conventions
+
+**CRITICAL**: This project requires [Conventional Commits](https://www.conventionalcommits.org/) format for **ALL commits**. This is mandatory for automated version management and CHANGELOG generation via python-semantic-release.
+
+### Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Required Types
+
+- `feat:` - Add new feature (triggers build number bump in alpha: 0.1.0a1 → 0.1.0a2)
+- `fix:` - Bug fix (triggers build number bump in alpha: 0.1.0a2 → 0.1.0a3)
+- `docs:` - Documentation changes only (no version bump)
+- `refactor:` - Code refactoring without functional changes (no version bump)
+- `test:` - Add or modify tests (no version bump)
+- `release:` - Version update or release (used by semantic-release)
+
+### Examples
+
+```bash
+# Feature addition
+git commit -m "feat: add multi-agent orchestration framework"
+git commit -m "feat(cli): add new mixseek exec command"
+
+# Bug fixes
+git commit -m "fix: resolve memory leak in agent cleanup"
+git commit -m "fix(ui): correct result pagination logic"
+
+# Documentation
+git commit -m "docs: update getting-started guide"
+git commit -m "docs(api): add docstrings to Agent class"
+
+# Refactoring and tests
+git commit -m "refactor: simplify configuration loading logic"
+git commit -m "test: add integration tests for team command"
+
+# Breaking changes (for stable releases only)
+git commit -m "feat!: redesign API interface"
+git commit -m "fix!: change default configuration format
+
+BREAKING CHANGE: Configuration files now use TOML instead of JSON"
+```
+
+### Alpha Version Behavior (Current State)
+
+In alpha releases (`prerelease = true` in pyproject.toml):
+- `feat:` commits → Build number increment only (0.1.0a1 → 0.1.0a2)
+- `fix:` commits → Build number increment only (0.1.0a2 → 0.1.0a3)
+- `docs:`, `refactor:`, `test:` → No version impact
+- Minor/major bumps → Manual override with `--minor` or `--major` flag
+
+### Important Notes
+
+- **All lowercase**: Type must be lowercase (`feat`, not `Feat`)
+- **Colon required**: Must have `:` after type (`feat:`, not `feat`)
+- **Scope optional**: Scope is optional but useful (`feat(cli):` or just `feat:`)
+- **Subject clarity**: Use imperative mood ("add feature" not "added feature")
+
+### Verification
+
+Before pushing commits, verify format compliance:
+
+```bash
+# View recent commits
+git log --oneline -5
+
+# Check if semantic-release can parse commits
+uv run semantic-release version --no-commit --no-tag --no-push
+```
+
+For detailed versioning strategy, see [docs/versioning.md](docs/versioning.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Key Development Guidelines
 
 ### Code Style

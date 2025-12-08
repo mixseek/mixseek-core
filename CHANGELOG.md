@@ -7,6 +7,9 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ## [Unreleased]
 
+### Fixed
+- Fix `mixseek ui` command not working in `uv tool install` environment ([#24](https://github.com/mixseek/mixseek-core/issues/24))
+
 ## [0.1.0a1] - 2025-12-04
 
 ### Added

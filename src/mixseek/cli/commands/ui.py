@@ -1,10 +1,10 @@
 """UI command for launching Streamlit app."""
 
 import os
-import subprocess
 from pathlib import Path
 
 import typer
+from streamlit.web import cli as stcli
 
 from mixseek.cli.common_options import (
     LOG_LEVEL_OPTION,
@@ -133,15 +133,14 @@ def ui(
         raise typer.Exit(1)
 
     try:
-        subprocess.run(
-            ["streamlit", "run", str(app_path), "--server.port", str(final_port)],
-            check=True,
-        )
+        stcli.main_run([str(app_path), "--server.port", str(final_port)], standalone_mode=False)
     except KeyboardInterrupt:
         typer.echo("\nStreamlit server stopped.")
-    except subprocess.CalledProcessError as e:
+    except SystemExit as e:
+        # Streamlit may raise SystemExit(0) or SystemExit(None) on normal termination
+        if e.code:
+            typer.echo(f"Error: Streamlit exited with code {e.code}", err=True)
+            raise typer.Exit(1)
+    except Exception as e:
         typer.echo(f"Error: Streamlit failed to start: {e}", err=True)
-        raise typer.Exit(1)
-    except FileNotFoundError:
-        typer.echo("Error: streamlit command not found. Please install streamlit.", err=True)
         raise typer.Exit(1)

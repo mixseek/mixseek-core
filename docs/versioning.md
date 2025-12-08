@@ -184,7 +184,7 @@ $ uv run cz bump --prerelease alpha --yes
 name = "cz_conventional_commits"
 version = "0.1.0a1"
 version_files = [
-    "pyproject.toml:project.version"
+    "pyproject.toml:version"
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true

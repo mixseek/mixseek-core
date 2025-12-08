@@ -51,7 +51,8 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Extract the section for this version from CHANGELOG.md
-          CHANGELOG_CONTENT=$(awk "/## \[${VERSION}\]/,/## \[/" CHANGELOG.md | head -n -1)
+          # commitizen format: ## v0.1.0a2 (2025-12-08)
+          CHANGELOG_CONTENT=$(awk "/## v${VERSION} /,/## v/" CHANGELOG.md | sed '$d' | tail -n +2)
 
           # If no content found, use a default message
           if [ -z "$CHANGELOG_CONTENT" ]; then

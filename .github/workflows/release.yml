@@ -52,7 +52,7 @@ jobs:
 
           # Extract the section for this version from CHANGELOG.md
           # commitizen format: ## v0.1.0a2 (2025-12-08)
-          CHANGELOG_CONTENT=$(awk "/## v${VERSION} /,/## v/" CHANGELOG.md | sed '$d' | tail -n +2)
+          CHANGELOG_CONTENT=$(awk "/## v${VERSION} \(/{flag=1; next} /^## v/{flag=0} flag" CHANGELOG.md)
 
           # If no content found, use a default message
           if [ -z "$CHANGELOG_CONTENT" ]; then

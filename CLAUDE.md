@@ -210,7 +210,7 @@ For complete governance rules: `.specify/memory/constitution.md`
 
 ## Commit Message Conventions
 
-**CRITICAL**: This project requires [Conventional Commits](https://www.conventionalcommits.org/) format for **ALL commits**. This is mandatory for automated version management and CHANGELOG generation via python-semantic-release.
+**CRITICAL**: This project requires [Conventional Commits](https://www.conventionalcommits.org/) format for **ALL commits**. This is mandatory for automated version management and CHANGELOG generation via commitizen.
 
 ### Format
 
@@ -229,7 +229,7 @@ For complete governance rules: `.specify/memory/constitution.md`
 - `docs:` - Documentation changes only (no version bump)
 - `refactor:` - Code refactoring without functional changes (no version bump)
 - `test:` - Add or modify tests (no version bump)
-- `release:` - Version update or release (used by semantic-release)
+- `release:` - Version update or release (used by commitizen)
 
 ### Examples
 
@@ -280,8 +280,8 @@ Before pushing commits, verify format compliance:
 # View recent commits
 git log --oneline -5
 
-# Check if semantic-release can parse commits
-uv run semantic-release version --no-commit --no-tag --no-push
+# Check if commitizen can parse commits and determine next version
+uv run cz bump --dry-run --yes
 ```
 
 For detailed versioning strategy, see [docs/versioning.md](docs/versioning.md) and [CONTRIBUTING.md](CONTRIBUTING.md).

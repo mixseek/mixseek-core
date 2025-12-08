@@ -95,22 +95,26 @@ Version updates are automated using **commitizen** based on [Conventional Commit
 $ git checkout -b release-0.2.0 develop
 
 # Update version (automatically determines version bump from commit messages)
-$ uv run cz bump --yes
+# For alpha releases, use --prerelease alpha to increment build number
+$ uv run cz bump --prerelease alpha --yes  # 0.1.0a1 → 0.1.0a2
 
 # For manual version control (if needed)
-$ uv run cz bump --increment MINOR --yes  # Force minor version bump
-$ uv run cz bump --increment PATCH --yes  # Force patch version bump
-$ uv run cz bump --increment MAJOR --yes  # Force major version bump
+$ uv run cz bump --prerelease alpha --increment MINOR --yes  # 0.1.0a1 → 0.2.0a1
+$ uv run cz bump --prerelease alpha --increment PATCH --yes  # 0.1.0a1 → 0.1.1a1
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes  # 0.1.0a1 → 1.0.0a1
+
+# To graduate from alpha to stable (remove prerelease suffix)
+$ uv run cz bump --yes  # 0.1.0a1 → 0.1.0
 ```
 
 #### Manual Version Update Verification
 
 ```bash
-# Dry run (no actual changes)
-$ uv run cz bump --dry-run --yes
+# Dry run (no actual changes) - for alpha releases
+$ uv run cz bump --prerelease alpha --dry-run --yes
 
-# Actual update
-$ uv run cz bump --yes
+# Actual update - for alpha releases
+$ uv run cz bump --prerelease alpha --yes
 # → Automatically updates pyproject.toml
 # → Automatically generates CHANGELOG.md from commit messages
 # → Automatically creates git commit and tag
@@ -139,7 +143,8 @@ $ git pull origin develop
 $ git checkout -b release-0.2.0 develop
 
 # 3. Update version with commitizen (automatic version determination)
-$ uv run cz bump --yes
+# For alpha releases, use --prerelease alpha
+$ uv run cz bump --prerelease alpha --yes
 # → Automatically determines version from commit messages
 # → Automatically updates pyproject.toml
 # → Automatically generates CHANGELOG.md

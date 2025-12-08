@@ -94,6 +94,10 @@ MAJOR.MINOR.PATCH[PRE-RELEASE]
 
 **コマンド**:
 ```bash
+# Alpha 版の場合 (0.1.0a1 → 0.1.1a1)
+$ uv run cz bump --prerelease alpha --increment PATCH --yes
+
+# Stable 版の場合 (0.1.0 → 0.1.1)
 $ uv run cz bump --increment PATCH --yes
 ```
 
@@ -106,6 +110,10 @@ $ uv run cz bump --increment PATCH --yes
 
 **コマンド**:
 ```bash
+# Alpha 版の場合 (0.1.0a1 → 0.2.0a1)
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
+
+# Stable 版の場合 (0.1.0 → 0.2.0)
 $ uv run cz bump --increment MINOR --yes
 ```
 
@@ -119,6 +127,10 @@ $ uv run cz bump --increment MINOR --yes
 
 **コマンド**:
 ```bash
+# Alpha 版の場合 (0.1.0a1 → 1.0.0a1)
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes
+
+# Stable 版の場合 (0.x.x → 1.0.0)
 $ uv run cz bump --increment MAJOR --yes
 ```
 
@@ -143,8 +155,11 @@ $ uv run cz bump --increment MAJOR --yes
 
 ### 動作概要
 
+**現在 Alpha 版のため、`--prerelease alpha` オプションが必須です。**
+
 ```bash
-$ uv run cz bump --yes
+# Alpha 版のビルド番号をインクリメント (0.1.0a1 → 0.1.0a2)
+$ uv run cz bump --prerelease alpha --yes
 ```
 
 実行時に以下が自動で行われます：
@@ -184,7 +199,8 @@ version_scheme = "pep440"
 変更を適用する前に確認したい場合：
 
 ```bash
-$ uv run cz bump --dry-run --yes
+# Alpha 版の場合
+$ uv run cz bump --prerelease alpha --dry-run --yes
 ```
 
 ### 手動でのバージョン制御
@@ -192,14 +208,17 @@ $ uv run cz bump --dry-run --yes
 自動判定を上書きしたい場合：
 
 ```bash
-# マイナーバージョン強制更新
-$ uv run cz bump --increment MINOR --yes
+# Alpha 版でマイナーバージョン強制更新 (0.1.0a1 → 0.2.0a1)
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
 
-# パッチバージョン強制更新
-$ uv run cz bump --increment PATCH --yes
+# Alpha 版でパッチバージョン強制更新 (0.1.0a1 → 0.1.1a1)
+$ uv run cz bump --prerelease alpha --increment PATCH --yes
 
-# メジャーバージョン強制更新
-$ uv run cz bump --increment MAJOR --yes
+# Alpha 版でメジャーバージョン強制更新 (0.1.0a1 → 1.0.0a1)
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes
+
+# Alpha 版から正式版へ昇格 (0.1.0a1 → 0.1.0)
+$ uv run cz bump --yes
 ```
 
 ## CHANGELOG.md との連携
@@ -297,15 +316,15 @@ $ uv run cz bump --yes
 # 現在のバージョン: 0.1.0a1
 
 $ git commit -m "feat: new agent integration system"
-$ uv run cz bump --yes
+$ uv run cz bump --prerelease alpha --yes
 # → 0.1.0a1 → 0.1.0a2 (build 番号のみインクリメント)
 
 $ git commit -m "fix: memory leak in processing"
-$ uv run cz bump --yes
+$ uv run cz bump --prerelease alpha --yes
 # → 0.1.0a2 → 0.1.0a3 (build 番号のみインクリメント)
 
 # マイナーバージョンアップを強制したい場合
-$ uv run cz bump --increment MINOR --yes
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
 # → 0.1.0a3 → 0.2.0a1
 ```
 

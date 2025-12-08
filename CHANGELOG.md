@@ -9,18 +9,12 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ### Feat
 
-- migrate from python-semantic-release to commitizen for PEP 440 compliance
-- migrate from bump2version to python-semantic-release
-- implement automated version management with bump2version (Issue #17)
+- adopt commitizen for automated version management with PEP 440 compliance
 
 ### Fix
 
 - replace result.stderr with result.stdout in CLI tests
-- remove docs/refactor/test from patch_tags to match documentation
-- use conventional parser instead of deprecated angular parser
 - use streamlit in-process launch for uv tool install compatibility (#24)
-- remove CHANGELOG.md from bump2version management
-- improve CHANGELOG.md update robustness in bump2version config
 - Use field-based filtering instead of env_prefix filtering
 - Filter dotenv variables by env_prefix (Issue #2)
 

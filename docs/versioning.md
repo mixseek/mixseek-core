@@ -252,8 +252,13 @@ jkl3456 docs: update getting-started guide
 
 **commitizen 実行:**
 ```bash
+# Alpha 版の場合（ビルド番号のみインクリメント）
+$ uv run cz bump --prerelease alpha --yes
+# → 0.1.0a1 → 0.1.0a2
+
+# Stable 版または Alpha → Stable 昇格の場合
 $ uv run cz bump --yes
-# → 自動的に CHANGELOG.md が生成される
+# → 0.1.0a1 → 0.2.0 (feat: コミットがあるため MINOR バージョン更新)
 ```
 
 **生成された CHANGELOG.md:**
@@ -280,22 +285,6 @@ $ uv run cz bump --yes
 - Initial alpha release
 - Multi-agent orchestration framework with Leader/Member agent hierarchy
 - ...
-```
-
-### Alpha 版での CHANGELOG 生成
-
-Alpha 版でも MINOR/PATCH バージョンが正しく更新されます：
-
-```bash
-# feat: コミット複数回
-$ git commit -m "feat: add feature A"
-$ git commit -m "feat: add feature B"
-$ git commit -m "fix: fix bug C"
-
-# commitizen 実行
-$ uv run cz bump --yes
-# → 0.1.0a1 → 0.2.0 (MINOR バージョン更新)
-# → CHANGELOG に上記3つのコミットがまとめて記載される
 ```
 
 ## Conventional Commits によるバージョン制御

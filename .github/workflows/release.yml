@@ -27,9 +27,6 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install python-semantic-release
-        run: uv tool install python-semantic-release
-
       - name: Extract version from tag
         id: version
         run: |
@@ -54,7 +51,8 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Extract the section for this version from CHANGELOG.md
-          CHANGELOG_CONTENT=$(awk "/## \[${VERSION}\]/,/## \[/" CHANGELOG.md | head -n -1)
+          # commitizen format: ## v0.1.0a2 (2025-12-08)
+          CHANGELOG_CONTENT=$(awk "/## v${VERSION} \(/{flag=1; next} /^## v/{flag=0} flag" CHANGELOG.md)
 
           # If no content found, use a default message
           if [ -z "$CHANGELOG_CONTENT" ]; then

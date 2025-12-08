@@ -94,7 +94,11 @@ MAJOR.MINOR.PATCH[PRE-RELEASE]
 
 **コマンド**:
 ```bash
-$ uv run bump2version patch
+# Alpha 版の場合 (0.1.0a1 → 0.1.1a1)
+$ uv run cz bump --prerelease alpha --increment PATCH --yes
+
+# Stable 版の場合 (0.1.0 → 0.1.1)
+$ uv run cz bump --increment PATCH --yes
 ```
 
 ### マイナーバージョン更新（0.1.0 → 0.2.0）
@@ -106,7 +110,11 @@ $ uv run bump2version patch
 
 **コマンド**:
 ```bash
-$ uv run bump2version minor
+# Alpha 版の場合 (0.1.0a1 → 0.2.0a1)
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
+
+# Stable 版の場合 (0.1.0 → 0.2.0)
+$ uv run cz bump --increment MINOR --yes
 ```
 
 ### メジャーバージョン更新（0.x.x → 1.0.0）
@@ -119,7 +127,11 @@ $ uv run bump2version minor
 
 **コマンド**:
 ```bash
-$ uv run bump2version major
+# Alpha 版の場合 (0.1.0a1 → 1.0.0a1)
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes
+
+# Stable 版の場合 (0.x.x → 1.0.0)
+$ uv run cz bump --increment MAJOR --yes
 ```
 
 ## リリーススケジュール
@@ -139,48 +151,48 @@ $ uv run bump2version major
 - **リリース実施**: 翌月曜日
 - **公式発表**: リリース当日
 
-## python-semantic-release による自動更新
+## commitizen による自動更新
 
 ### 動作概要
 
+**現在 Alpha 版のため、`--prerelease alpha` オプションが必須です。**
+
 ```bash
-$ uv run semantic-release version
+# Alpha 版のビルド番号をインクリメント (0.1.0a1 → 0.1.0a2)
+$ uv run cz bump --prerelease alpha --yes
 ```
 
 実行時に以下が自動で行われます：
 
 1. **コミット解析**: Conventional Commits 形式のコミットメッセージを解析
 2. **バージョン決定**: コミットタイプに基づいて自動的にバージョン更新レベルを決定
-   - `feat:` → minor バージョン更新（stable 版）/ build 番号更新（prerelease 版）
-   - `fix:` → patch バージョン更新（stable 版）/ build 番号更新（prerelease 版）
-   - `feat!:`, `fix!:` → major バージョン更新（破壊的変更）
+   - `feat:` → MINOR バージョン更新（stable 版）/ **ビルド番号更新**（prerelease 版）
+   - `fix:` → PATCH バージョン更新（stable 版）/ **ビルド番号更新**（prerelease 版）
+   - `feat!:`, `fix!:` → MAJOR バージョン更新（破壊的変更）
+   - **注**: `--prerelease alpha` 使用時は、コミットタイプに関わらずビルド番号のみインクリメント（0.1.0a1 → 0.1.0a2）
 3. **ファイル更新**:
    - `pyproject.toml`: version フィールド更新
    - `CHANGELOG.md`: Conventional Commits から自動生成
 4. **Git 操作**:
    - 変更をコミット（メッセージ: `release: bump version to x.x.x`）
-   - タグ作成（タグ名: `vx.x.x`）
+   - 注釈付きタグ作成（タグ名: `vx.x.x`）
 
 ### 設定ファイル（`pyproject.toml`）
 
 ```toml
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-branch = "main"
-build_command = ""
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0a1"
+version_files = [
+    "pyproject.toml:version"
+]
+tag_format = "v$version"
+update_changelog_on_bump = true
+annotated_tag = true
+bump_message = "release: bump version to $new_version"
 changelog_file = "CHANGELOG.md"
-
-# Prerelease configuration for alpha
-prerelease = true
-prerelease_tag = "alpha"
-
-# Commit parsing
-commit_parser = "conventional"
-commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix"] }
-
-# GitHub Release configuration
-upload_to_vcs_release = true
-vcs_release = true
+changelog_incremental = true
+version_scheme = "pep440"
 ```
 
 ### ドライラン（テスト実行）
@@ -188,7 +200,8 @@ vcs_release = true
 変更を適用する前に確認したい場合：
 
 ```bash
-$ uv run semantic-release version --no-commit --no-tag --no-push
+# Alpha 版の場合
+$ uv run cz bump --prerelease alpha --dry-run --yes
 ```
 
 ### 手動でのバージョン制御
@@ -196,31 +209,34 @@ $ uv run semantic-release version --no-commit --no-tag --no-push
 自動判定を上書きしたい場合：
 
 ```bash
-# マイナーバージョン強制更新
-$ uv run semantic-release version --minor
+# Alpha 版でマイナーバージョン強制更新 (0.1.0a1 → 0.2.0a1)
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
 
-# パッチバージョン強制更新
-$ uv run semantic-release version --patch
+# Alpha 版でパッチバージョン強制更新 (0.1.0a1 → 0.1.1a1)
+$ uv run cz bump --prerelease alpha --increment PATCH --yes
 
-# メジャーバージョン強制更新
-$ uv run semantic-release version --major
+# Alpha 版でメジャーバージョン強制更新 (0.1.0a1 → 1.0.0a1)
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes
+
+# Alpha 版から正式版へ昇格 (0.1.0a1 → 0.1.0)
+$ uv run cz bump --yes
 ```
 
 ## CHANGELOG.md との連携
 
 ### CHANGELOG 自動生成
 
-**重要**: CHANGELOG.md は **semantic-release により Conventional Commits から自動生成**されます。手動編集は不要です。
+**重要**: CHANGELOG.md は **commitizen により Conventional Commits から自動生成**されます。手動編集は不要です。
 
 ### 生成ロジック
 
-semantic-release は以下のルールで CHANGELOG を生成します：
+commitizen は以下のルールで CHANGELOG を生成します：
 
-- `feat:` コミット → **Added** セクション
-- `fix:` コミット → **Fixed** セクション
-- `docs:` コミット → **Documentation** セクション
-- `refactor:` コミット → **Changed** セクション（リファクタリング）
-- `test:` コミット → **Testing** セクション
+- `feat:` コミット → **Feat** セクション
+- `fix:` コミット → **Fix** セクション
+- `docs:` コミット → **Docs** セクション
+- `refactor:` コミット → **Refactor** セクション
+- `test:` コミット → **Test** セクション
 - `BREAKING CHANGE` → **BREAKING CHANGES** セクション
 
 ### 例: Conventional Commits から CHANGELOG 生成
@@ -234,50 +250,41 @@ ghi9012 fix: resolve memory leak in agent cleanup
 jkl3456 docs: update getting-started guide
 ```
 
-**semantic-release 実行:**
+**commitizen 実行:**
 ```bash
-$ uv run semantic-release version
-# → 自動的に CHANGELOG.md が生成される
+# Alpha 版の場合（ビルド番号のみインクリメント）
+$ uv run cz bump --prerelease alpha --yes
+# → 0.1.0a1 → 0.1.0a2
+
+# Stable 版または Alpha → Stable 昇格の場合
+$ uv run cz bump --yes
+# → 0.1.0a1 → 0.2.0 (feat: コミットがあるため MINOR バージョン更新)
 ```
 
 **生成された CHANGELOG.md:**
 ```markdown
-# Changelog
+## v0.2.0 (2025-12-18)
 
-## [0.2.0a1] - 2025-12-18
+### Feat
 
-### Added
 - add multi-agent orchestration framework
 - **cli**: add mixseek exec command
 
-### Fixed
+### Fix
+
 - resolve memory leak in agent cleanup
 
-### Documentation
+### Docs
+
 - update getting-started guide
 
-## [0.1.0a1] - 2025-12-04
+## v0.1.0a1 (2025-12-04)
 
-### Added
+### Feat
+
 - Initial alpha release
 - Multi-agent orchestration framework with Leader/Member agent hierarchy
 - ...
-```
-
-### Alpha 版での CHANGELOG 生成
-
-Alpha 版（`prerelease = true`）では、build 番号のみがインクリメントされます：
-
-```bash
-# feat: コミット複数回
-$ git commit -m "feat: add feature A"
-$ git commit -m "feat: add feature B"
-$ git commit -m "fix: fix bug C"
-
-# semantic-release 実行
-$ uv run semantic-release version
-# → 0.1.0a1 → 0.1.0a2 にバージョンアップ
-# → CHANGELOG に上記3つのコミットがまとめて記載される
 ```
 
 ## Conventional Commits によるバージョン制御
@@ -299,15 +306,15 @@ $ uv run semantic-release version
 # 現在のバージョン: 0.1.0a1
 
 $ git commit -m "feat: new agent integration system"
-$ uv run semantic-release version
+$ uv run cz bump --prerelease alpha --yes
 # → 0.1.0a1 → 0.1.0a2 (build 番号のみインクリメント)
 
 $ git commit -m "fix: memory leak in processing"
-$ uv run semantic-release version
+$ uv run cz bump --prerelease alpha --yes
 # → 0.1.0a2 → 0.1.0a3 (build 番号のみインクリメント)
 
 # マイナーバージョンアップを強制したい場合
-$ uv run semantic-release version --minor
+$ uv run cz bump --prerelease alpha --increment MINOR --yes
 # → 0.1.0a3 → 0.2.0a1
 ```
 
@@ -317,37 +324,37 @@ $ uv run semantic-release version --minor
 # 現在のバージョン: 1.2.3
 
 $ git commit -m "feat: new agent integration system"
-$ uv run semantic-release version
+$ uv run cz bump --yes
 # → 1.2.3 → 1.3.0 (MINOR バージョン更新)
 
 $ git commit -m "fix: memory leak in processing"
-$ uv run semantic-release version
+$ uv run cz bump --yes
 # → 1.3.0 → 1.3.1 (PATCH バージョン更新)
 
 $ git commit -m "feat!: redesigned API structure"
-$ uv run semantic-release version
+$ uv run cz bump --yes
 # → 1.3.1 → 2.0.0 (MAJOR バージョン更新)
 ```
 
 ## トラブルシューティング
 
-### semantic-release が動作しない場合
+### commitizen が動作しない場合
 
 ```bash
 # 1. インストール確認
-$ uv run semantic-release --version
+$ uv run cz version
 
 # 2. 設定ファイル確認
-$ grep -A 20 "\[tool.semantic_release\]" pyproject.toml
+$ grep -A 20 "\[tool.commitizen\]" pyproject.toml
 
 # 3. ドライラン確認
-$ uv run semantic-release version --no-commit --no-tag --no-push
+$ uv run cz bump --dry-run --yes
 ```
 
 ### Conventional Commits フォーマットエラー
 
 ```bash
-# エラー例: semantic-release がバージョンを決定できない
+# エラー例: commitizen がバージョンを決定できない
 # 原因: Conventional Commits 形式に従っていないコミットメッセージ
 
 # ✅ 正しい形式
@@ -360,27 +367,26 @@ $ git commit -m "feat add feature"  # コロンがない
 $ git commit -m "Feat: add feature"  # 大文字（小文字を使用）
 ```
 
-### Alpha 版からの移行方法
+### プレリリース版の作成方法
 
-Beta 版や Stable 版に移行する場合：
+Beta 版や Release Candidate 版を作成する場合：
 
 ```bash
-# 1. pyproject.toml の設定を変更
-[tool.semantic_release]
-prerelease = true
-prerelease_tag = "beta"  # alpha → beta に変更
+# Alpha リリース作成
+$ uv run cz bump --prerelease alpha --yes
+# → 0.1.0 → 0.2.0a1
 
-# 2. バージョン更新
-$ uv run semantic-release version --minor
-# → 0.1.0a10 → 0.2.0b1
+# Beta リリース作成
+$ uv run cz bump --prerelease beta --yes
+# → 0.2.0a1 → 0.2.0b1
 
-# Stable 版に移行する場合
-[tool.semantic_release]
-prerelease = false  # prerelease を無効化
-# prerelease_tag は削除
+# Release Candidate 作成
+$ uv run cz bump --prerelease rc --yes
+# → 0.2.0b1 → 0.2.0rc1
 
-$ uv run semantic-release version --major
-# → 0.9.0rc5 → 1.0.0
+# プレリリースを正式版に昇格
+$ uv run cz bump --yes
+# → 0.2.0rc1 → 0.2.0
 ```
 
 ## 関連リンク
@@ -391,4 +397,4 @@ $ uv run semantic-release version --major
 - [Semantic Versioning](https://semver.org/) - セマンティック バージョニング
 - [Keep a Changelog](https://keepachangelog.com/) - CHANGELOG 形式
 - [Conventional Commits](https://www.conventionalcommits.org/) - コミットメッセージ形式
-- [python-semantic-release 公式ドキュメント](https://python-semantic-release.readthedocs.io/)
+- [commitizen 公式ドキュメント](https://commitizen-tools.github.io/commitizen/)

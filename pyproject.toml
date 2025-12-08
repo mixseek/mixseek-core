@@ -63,7 +63,7 @@ dev = [
     "pandas-stubs",
     "logfire>=4.15.1",  # Observability for development/debugging
     "aiohttp>=3.13.0",  # Required for WebhookIntegrationHook tests
-    "bump2version>=1.0.1",
+    "python-semantic-release>=9.17.0",
 ]
 docs = [
     "sphinx>=8.2.3,<9",
@@ -150,3 +150,21 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
 ]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+build_command = ""
+changelog_file = "CHANGELOG.md"
+
+# Prerelease configuration for alpha
+prerelease = true
+prerelease_tag = "alpha"
+
+# Commit parsing
+commit_parser = "angular"
+commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix", "docs", "refactor", "test"] }
+
+# GitHub Release configuration
+upload_to_vcs_release = true
+vcs_release = true

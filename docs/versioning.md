@@ -139,45 +139,48 @@ $ uv run bump2version major
 - **リリース実施**: 翌月曜日
 - **公式発表**: リリース当日
 
-## bump2version による自動更新
+## python-semantic-release による自動更新
 
 ### 動作概要
 
 ```bash
-$ uv run bump2version minor
+$ uv run semantic-release version
 ```
 
 実行時に以下が自動で行われます：
 
-1. **バージョンの解析**: `.bumpversion.cfg` から現在のバージョンを読込
-2. **新バージョンの計算**: 指定したパートでバージョン更新（major/minor/patch）
+1. **コミット解析**: Conventional Commits 形式のコミットメッセージを解析
+2. **バージョン決定**: コミットタイプに基づいて自動的にバージョン更新レベルを決定
+   - `feat:` → minor バージョン更新（stable 版）/ build 番号更新（prerelease 版）
+   - `fix:` → patch バージョン更新（stable 版）/ build 番号更新（prerelease 版）
+   - `feat!:`, `fix!:` → major バージョン更新（破壊的変更）
 3. **ファイル更新**:
    - `pyproject.toml`: version フィールド更新
-   - `CHANGELOG.md`: 新バージョンセクション追加
+   - `CHANGELOG.md`: Conventional Commits から自動生成
 4. **Git 操作**:
    - 変更をコミット（メッセージ: `release: bump version to x.x.x`）
    - タグ作成（タグ名: `vx.x.x`）
 
-### 設定ファイル（`.bumpversion.cfg`）
+### 設定ファイル（`pyproject.toml`）
 
-```ini
-[bumpversion]
-current_version = 0.1.0a1
-# バージョン形式を定義
-parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)((?P<release>[ab]|rc)(?P<build>\d+))?
-serialize =
-    {major}.{minor}.{patch}{release}{build}
-    {major}.{minor}.{patch}
+```toml
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+build_command = ""
+changelog_file = "CHANGELOG.md"
 
-# 自動コミット・タグ作成
-commit = True
-tag = True
-tag_name = v{new_version}
-message = release: bump version to {new_version}
+# Prerelease configuration for alpha
+prerelease = true
+prerelease_tag = "alpha"
 
-# 管理対象ファイル
-[bumpversion:file:pyproject.toml]
-[bumpversion:file:CHANGELOG.md]
+# Commit parsing
+commit_parser = "angular"
+commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix", "docs", "refactor", "test"] }
+
+# GitHub Release configuration
+upload_to_vcs_release = true
+vcs_release = true
 ```
 
 ### ドライラン（テスト実行）
@@ -185,127 +188,199 @@ message = release: bump version to {new_version}
 変更を適用する前に確認したい場合：
 
 ```bash
-$ uv run bump2version --dry-run --verbose minor
+$ uv run semantic-release version --no-commit --no-tag --no-push
+```
+
+### 手動でのバージョン制御
+
+自動判定を上書きしたい場合：
+
+```bash
+# マイナーバージョン強制更新
+$ uv run semantic-release version --minor
+
+# パッチバージョン強制更新
+$ uv run semantic-release version --patch
+
+# メジャーバージョン強制更新
+$ uv run semantic-release version --major
 ```
 
 ## CHANGELOG.md との連携
 
-### CHANGELOG 構造
+### CHANGELOG 自動生成
 
+**重要**: CHANGELOG.md は **semantic-release により Conventional Commits から自動生成**されます。手動編集は不要です。
+
+### 生成ロジック
+
+semantic-release は以下のルールで CHANGELOG を生成します：
+
+- `feat:` コミット → **Added** セクション
+- `fix:` コミット → **Fixed** セクション
+- `docs:` コミット → **Documentation** セクション
+- `refactor:` コミット → **Changed** セクション（リファクタリング）
+- `test:` コミット → **Testing** セクション
+- `BREAKING CHANGE` → **BREAKING CHANGES** セクション
+
+### 例: Conventional Commits から CHANGELOG 生成
+
+**コミット履歴:**
+```bash
+$ git log --oneline
+abc1234 feat: add multi-agent orchestration framework
+def5678 feat(cli): add mixseek exec command
+ghi9012 fix: resolve memory leak in agent cleanup
+jkl3456 docs: update getting-started guide
+```
+
+**semantic-release 実行:**
+```bash
+$ uv run semantic-release version
+# → 自動的に CHANGELOG.md が生成される
+```
+
+**生成された CHANGELOG.md:**
 ```markdown
 # Changelog
 
-## [Unreleased]  ← 次のリリース用
+## [0.2.0a1] - 2025-12-18
 
 ### Added
-- (新機能追加時にここに記載)
+- add multi-agent orchestration framework
+- **cli**: add mixseek exec command
 
 ### Fixed
-- (バグ修正時にここに記載)
+- resolve memory leak in agent cleanup
 
-## [0.1.0a1] - 2025-12-04  ← リリース済みバージョン
+### Documentation
+- update getting-started guide
+
+## [0.1.0a1] - 2025-12-04
 
 ### Added
 - Initial alpha release
+- Multi-agent orchestration framework with Leader/Member agent hierarchy
 - ...
 ```
 
-### bump2version による更新
+### Alpha 版での CHANGELOG 生成
 
-**重要**: CHANGELOG.md は **bump2version では更新されません**。手動で管理する必要があります。
+Alpha 版（`prerelease = true`）では、build 番号のみがインクリメントされます：
 
-**手動更新手順:**
-
-1. リリース前に `## [Unreleased]` セクションに変更内容を記載
-2. bump2version 実行後、新しいバージョンセクションを手動で追加
-
-**例 (`0.1.0a1 → 0.2.0` へのバージョンアップ):**
-
-**実行前:**
-```markdown
-# Changelog
-
-## [Unreleased]
-
-### Added
-- Multi-agent orchestration framework
-- CLI commands
-
-## [0.1.0a1] - 2025-12-04
-
-### Added
-- Initial alpha release
-```
-
-**bump2version 実行:**
 ```bash
-$ uv run bump2version minor
-# pyproject.toml が 0.1.0a1 → 0.2.0 に更新される
+# feat: コミット複数回
+$ git commit -m "feat: add feature A"
+$ git commit -m "feat: add feature B"
+$ git commit -m "fix: fix bug C"
+
+# semantic-release 実行
+$ uv run semantic-release version
+# → 0.1.0a1 → 0.1.0a2 にバージョンアップ
+# → CHANGELOG に上記3つのコミットがまとめて記載される
 ```
 
-**実行後（手動で CHANGELOG.md を更新）:**
-```markdown
-# Changelog
+## Conventional Commits によるバージョン制御
 
-## [Unreleased]
+このプロジェクトでは [Conventional Commits](https://www.conventionalcommits.org/) が**必須**です。
 
-## [0.2.0] - 2025-12-18  ← 手動で追加
+### バージョンアップルール
 
-### Added
-- Multi-agent orchestration framework
-- CLI commands
+| コミットタイプ | Stable 版（1.0.0+） | Prerelease 版（0.x.ya*） |
+|-------------|------------------|----------------------|
+| `feat:` | MINOR バージョン更新 | build 番号更新 |
+| `fix:` | PATCH バージョン更新 | build 番号更新 |
+| `feat!:`, `fix!:` | MAJOR バージョン更新 | build 番号更新 |
+| `docs:`, `refactor:`, `test:` | 影響なし | 影響なし |
 
-## [0.1.0a1] - 2025-12-04
+### 例: Alpha 版（現在）
 
-### Added
-- Initial alpha release
-```
-
-**将来の自動化（Issue #16）**: GitHub Actions により、タグ push 時に CHANGELOG.md からバージョンセクションを抽出し、GitHub Release を自動作成する予定です。
-
-## セマンティックバージョニング（参考）
-
-今後 1.0.0 以降で [Conventional Commits](https://www.conventionalcommits.org/) を導入する場合：
-
-```
-feat:     → MINOR バージョン更新
-fix:      → PATCH バージョン更新
-feat!:    → MAJOR バージョン更新（破壊的変更）
-```
-
-例：
 ```bash
-$ git commit -m "feat: new agent integration system"   # 0.3.0 → 0.4.0
-$ git commit -m "fix: memory leak in processing"       # 0.4.0 → 0.4.1
-$ git commit -m "feat!: redesigned API structure"      # 1.0.0 → 2.0.0
+# 現在のバージョン: 0.1.0a1
+
+$ git commit -m "feat: new agent integration system"
+$ uv run semantic-release version
+# → 0.1.0a1 → 0.1.0a2 (build 番号のみインクリメント)
+
+$ git commit -m "fix: memory leak in processing"
+$ uv run semantic-release version
+# → 0.1.0a2 → 0.1.0a3 (build 番号のみインクリメント)
+
+# マイナーバージョンアップを強制したい場合
+$ uv run semantic-release version --minor
+# → 0.1.0a3 → 0.2.0a1
+```
+
+### 例: Stable 版（1.0.0 以降）
+
+```bash
+# 現在のバージョン: 1.2.3
+
+$ git commit -m "feat: new agent integration system"
+$ uv run semantic-release version
+# → 1.2.3 → 1.3.0 (MINOR バージョン更新)
+
+$ git commit -m "fix: memory leak in processing"
+$ uv run semantic-release version
+# → 1.3.0 → 1.3.1 (PATCH バージョン更新)
+
+$ git commit -m "feat!: redesigned API structure"
+$ uv run semantic-release version
+# → 1.3.1 → 2.0.0 (MAJOR バージョン更新)
 ```
 
 ## トラブルシューティング
 
-### bump2version が動作しない場合
+### semantic-release が動作しない場合
 
 ```bash
 # 1. インストール確認
-$ uv run bump2version --version
+$ uv run semantic-release --version
 
 # 2. 設定ファイル確認
-$ cat .bumpversion.cfg
+$ grep -A 20 "\[tool.semantic_release\]" pyproject.toml
 
 # 3. ドライラン確認
-$ uv run bump2version --dry-run --verbose minor
+$ uv run semantic-release version --no-commit --no-tag --no-push
 ```
 
-### .bumpversion.cfg を編集した場合
+### Conventional Commits フォーマットエラー
 
 ```bash
-# 1. キャッシュクリア
-$ rm -rf .venv
+# エラー例: semantic-release がバージョンを決定できない
+# 原因: Conventional Commits 形式に従っていないコミットメッセージ
 
-# 2. 再度インストール
-$ uv sync --group dev
+# ✅ 正しい形式
+$ git commit -m "feat: add new feature"
+$ git commit -m "fix: resolve bug"
 
-# 3. テスト実行
-$ uv run bump2version --dry-run --verbose minor
+# ❌ 間違った形式
+$ git commit -m "Add new feature"  # タイプがない
+$ git commit -m "feat add feature"  # コロンがない
+$ git commit -m "Feat: add feature"  # 大文字（小文字を使用）
+```
+
+### Alpha 版からの移行方法
+
+Beta 版や Stable 版に移行する場合：
+
+```bash
+# 1. pyproject.toml の設定を変更
+[tool.semantic_release]
+prerelease = true
+prerelease_tag = "beta"  # alpha → beta に変更
+
+# 2. バージョン更新
+$ uv run semantic-release version --minor
+# → 0.1.0a10 → 0.2.0b1
+
+# Stable 版に移行する場合
+[tool.semantic_release]
+prerelease = false  # prerelease を無効化
+# prerelease_tag は削除
+
+$ uv run semantic-release version --major
+# → 0.9.0rc5 → 1.0.0
 ```
 
 ## 関連リンク
@@ -315,4 +390,5 @@ $ uv run bump2version --dry-run --verbose minor
 - [PEP 440](https://peps.python.org/pep-0440/) - Python バージョニング標準
 - [Semantic Versioning](https://semver.org/) - セマンティック バージョニング
 - [Keep a Changelog](https://keepachangelog.com/) - CHANGELOG 形式
-- [bump2version 公式ドキュメント](https://github.com/c4urself/bump2version)
+- [Conventional Commits](https://www.conventionalcommits.org/) - コミットメッセージ形式
+- [python-semantic-release 公式ドキュメント](https://python-semantic-release.readthedocs.io/)

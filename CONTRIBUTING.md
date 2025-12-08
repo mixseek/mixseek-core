@@ -66,10 +66,9 @@ This project uses a **develop-based development workflow**.
 
 6. Release preparation (every 2 weeks)
    - Create release-x.x.x branch from develop
-   - Update version with bump2version
-   - Manually update CHANGELOG.md (add version section under [Unreleased])
+   - Run semantic-release to update version and CHANGELOG automatically
    - Final verification with PR to main
-   - Create tag after merging to main
+   - After merge, push tag to trigger GitHub Release creation
 ```
 
 ## Version Management
@@ -87,7 +86,7 @@ This project uses versioning compliant with [PEP 440](https://peps.python.org/pe
 
 ### Version Update Method
 
-Version updates are automated using the **bump2version** tool.
+Version updates are automated using **python-semantic-release** based on [Conventional Commits](https://www.conventionalcommits.org/).
 
 #### Updating Version on Release Branch
 
@@ -95,36 +94,37 @@ Version updates are automated using the **bump2version** tool.
 # Create a release branch (branched from develop)
 $ git checkout -b release-0.2.0 develop
 
-# Update minor version (0.1.0a1 → 0.2.0)
-$ uv run bump2version minor
+# Update version (automatically determines version bump from commit messages)
+$ uv run semantic-release version
 
-# Or update patch version (0.1.0 → 0.1.1)
-$ uv run bump2version patch
-
-# Or major update (0.1.0 → 1.0.0)
-$ uv run bump2version major
+# For manual version control (if needed)
+$ uv run semantic-release version --minor  # Force minor version bump
+$ uv run semantic-release version --patch  # Force patch version bump
+$ uv run semantic-release version --major  # Force major version bump
 ```
 
 #### Manual Version Update Verification
 
 ```bash
 # Dry run (no actual changes)
-$ uv run bump2version --dry-run --verbose minor
+$ uv run semantic-release version --no-commit --no-tag --no-push
 
 # Actual update
-$ uv run bump2version minor
+$ uv run semantic-release version
 # → Automatically updates pyproject.toml
+# → Automatically generates CHANGELOG.md from commit messages
 # → Automatically creates git commit and tag
-# Note: CHANGELOG.md must be updated manually
 ```
 
-### Automatic Actions When Running bump2version
+### Automatic Actions When Running semantic-release
 
-1. Updates the version in **pyproject.toml**
-2. Creates a git commit (`release: bump version to x.x.x`)
-3. Creates a git tag (`vx.x.x`)
+1. Analyzes commit messages (feat, fix, docs, etc.) to determine version bump
+2. Updates the version in **pyproject.toml**
+3. Generates **CHANGELOG.md** from Conventional Commits
+4. Creates a git commit (`release: bump version to x.x.x`)
+5. Creates a git tag (`vx.x.x`)
 
-**Note**: CHANGELOG.md is **not** automatically updated by bump2version. You must manually add release notes under the `## [Unreleased]` section before running bump2version.
+**Important**: All commits MUST follow Conventional Commits format for proper automation.
 
 ## Release Process
 
@@ -138,15 +138,14 @@ $ git pull origin develop
 # 2. Create release branch
 $ git checkout -b release-0.2.0 develop
 
-# 3. Manually update CHANGELOG.md
-# Add release notes under ## [Unreleased] section
-
-# 4. Update version (automated with bump2version)
-$ uv run bump2version minor
+# 3. Update version with semantic-release (automatic version determination)
+$ uv run semantic-release version
+# → Automatically determines version from commit messages
 # → Automatically updates pyproject.toml
+# → Automatically generates CHANGELOG.md
 # → Automatically creates git commit and tag
 
-# 5. Create PR to main
+# 4. Create PR to main
 $ git push origin release-0.2.0
 # Create PR to main on GitHub
 # PR title: "release: bump version to 0.2.0a1"
@@ -161,12 +160,9 @@ $ git pull origin main
 
 # 2. Push the tag
 $ git push origin v0.2.0a1
-
-# 3. Create GitHub Release
-# Current: Manually create GitHub Release
-# Future: GitHub Actions will automatically create Release (to be implemented in Issue #16 Phase 1)
-#   → Automatically extract the relevant section from CHANGELOG.md
-#   → Set it to GitHub Release
+# → GitHub Actions automatically creates GitHub Release
+# → Extracts CHANGELOG section for this version
+# → Sets prerelease flag for alpha/beta/rc versions
 ```
 
 ### After Release
@@ -180,24 +176,57 @@ $ git push origin develop
 
 ## Commit Message Conventions
 
-Please write clear commit messages. Reference: [Conventional Commits](https://www.conventionalcommits.org/)
+**IMPORTANT**: This project requires [Conventional Commits](https://www.conventionalcommits.org/) format for ALL commits. This is mandatory for automated version management and CHANGELOG generation.
+
+### Format
 
 ```
-feat:     Add new feature
-fix:      Bug fix
-docs:     Documentation changes
-refactor: Code refactoring
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Required Types
+
+```
+feat:     Add new feature (triggers minor version bump in stable, build bump in prerelease)
+fix:      Bug fix (triggers patch version bump)
+docs:     Documentation changes only
+refactor: Code refactoring (no functional changes)
 test:     Add or modify tests
-release:  Version update or release
+release:  Version update or release (used by semantic-release)
 ```
 
 ### Examples
 
 ```bash
-$ git commit -m "feat: add multi-agent orchestration"
+# Feature addition
+$ git commit -m "feat: add multi-agent orchestration framework"
+$ git commit -m "feat(cli): add new mixseek exec command"
+
+# Bug fixes
 $ git commit -m "fix: resolve memory leak in agent cleanup"
+$ git commit -m "fix(ui): correct result pagination logic"
+
+# Documentation
 $ git commit -m "docs: update getting-started guide"
+$ git commit -m "docs(api): add docstrings to Agent class"
+
+# Breaking changes (triggers major version bump in stable releases)
+$ git commit -m "feat!: redesign API interface"
+$ git commit -m "fix!: change default configuration format
+
+BREAKING CHANGE: Configuration files now use TOML instead of JSON"
 ```
+
+### Alpha Version Behavior
+
+In alpha releases (current state), version bumps work as follows:
+- `feat:` commits → Build number increment (0.1.0a1 → 0.1.0a2)
+- `fix:` commits → Build number increment (0.1.0a2 → 0.1.0a3)
+- Minor/major bumps → Manual override with `--minor` or `--major` flag
 
 ## Running Tests
 

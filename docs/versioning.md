@@ -175,8 +175,8 @@ prerelease = true
 prerelease_tag = "alpha"
 
 # Commit parsing
-commit_parser = "angular"
-commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix", "docs", "refactor", "test"] }
+commit_parser = "conventional"
+commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix"] }
 
 # GitHub Release configuration
 upload_to_vcs_release = true

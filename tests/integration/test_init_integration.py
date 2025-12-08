@@ -152,7 +152,7 @@ class TestExistingWorkspaceHandling:
         result = runner.invoke(app, ["init", "--workspace", str(workspace_path)], input="n\n")
 
         assert result.exit_code != 0
-        output = result.stdout + (result.stderr or "")
+        output = result.stdout  # CliRunner mixes stdout and stderr by default
         assert "aborted" in output.lower()
 
     def test_init_partial_workspace(self, tmp_path: Path) -> None:
@@ -179,7 +179,7 @@ class TestErrorScenarios:
         result = runner.invoke(app, ["init", "--workspace", str(invalid_path)])
 
         assert result.exit_code != 0
-        output = result.stdout + (result.stderr or "")
+        output = result.stdout  # CliRunner mixes stdout and stderr by default
         assert "parent directory" in output.lower() or "does not exist" in output.lower()
 
     def test_init_no_write_permission(self, tmp_path: Path) -> None:
@@ -196,7 +196,7 @@ class TestErrorScenarios:
 
             # Might succeed on some systems, but if it fails, should be permission error
             if result.exit_code != 0:
-                output = result.stdout + (result.stderr or "")
+                output = result.stdout  # CliRunner mixes stdout and stderr by default
                 assert "permission" in output.lower() or "Permission" in output
         finally:
             # Restore permissions for cleanup

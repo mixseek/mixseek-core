@@ -57,8 +57,8 @@ class TestOutputFormat:
         result = runner.invoke(app, ["init", "--workspace", str(invalid_path)])
 
         assert result.exit_code != 0
-        # CliRunner combines stdout and stderr in result.stdout by default
-        output = result.stdout + (result.stderr or "")
+        # CliRunner mixes stdout and stderr by default
+        output = result.stdout
         assert len(output) > 0
         assert "error" in output.lower() or "Error" in output
 

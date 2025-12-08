@@ -33,8 +33,8 @@ class TestMemberCommand:
         result = runner.invoke(app, ["member", "こんにちは", "--agent", "plain", "--workspace", str(tmp_path)])
 
         assert result.exit_code == 0
-        # Warning message should be in stderr
-        assert "Development/Testing only" in result.stderr or "⚠" in result.stderr
+        # Warning message should be in stdout (CliRunner mixes stdout and stderr)
+        assert "Development/Testing only" in result.stdout or "⚠" in result.stdout
 
     @patch("mixseek.cli.commands.member.execute_agent_from_config")
     def test_agent_option_web_search_success(self, mock_execute: AsyncMock, tmp_path: Path) -> None:
@@ -73,8 +73,8 @@ class TestMemberCommand:
         result = runner.invoke(app, ["member", "test", "--agent", "invalid", "--workspace", str(tmp_path)])
 
         assert result.exit_code == 1
-        assert "Unknown member agent 'invalid'" in result.stderr
-        assert "Available agents:" in result.stderr
+        assert "Unknown member agent 'invalid'" in result.stdout
+        assert "Available agents:" in result.stdout
 
     def test_mutually_exclusive_config_and_agent(self, tmp_path: Path) -> None:
         """Test that --config and --agent are mutually exclusive."""
@@ -85,14 +85,14 @@ class TestMemberCommand:
         result = runner.invoke(app, ["member", "test", "--config", str(config_file), "--agent", "plain"])
 
         assert result.exit_code == 2  # typer.BadParameter returns exit code 2
-        assert "mutually exclusive" in result.stderr.lower()
+        assert "mutually exclusive" in result.stdout.lower()
 
     def test_neither_config_nor_agent_error(self, tmp_path: Path) -> None:
         """Test error when neither --config nor --agent specified."""
         result = runner.invoke(app, ["member", "test", "--workspace", str(tmp_path)])
 
         assert result.exit_code == 1
-        assert "Either --config or --agent must be specified" in result.stderr
+        assert "Either --config or --agent must be specified" in result.stdout
 
     def test_logfire_flags_mutually_exclusive(self) -> None:
         """Test that multiple Logfire flags cannot be specified together."""
@@ -109,7 +109,7 @@ class TestMemberCommand:
         )
 
         assert result.exit_code == 1
-        assert "Only one of --logfire" in result.stderr
+        assert "Only one of --logfire" in result.stdout
 
     def test_logfire_http_and_metadata_mutually_exclusive(self) -> None:
         """Test that --logfire-http and --logfire-metadata are mutually exclusive."""
@@ -126,7 +126,7 @@ class TestMemberCommand:
         )
 
         assert result.exit_code == 1
-        assert "Only one of --logfire" in result.stderr
+        assert "Only one of --logfire" in result.stdout
 
     @patch("mixseek.cli.commands.member.setup_logging_from_cli")
     @patch("mixseek.cli.commands.member.setup_logfire_from_cli")
@@ -179,5 +179,5 @@ class TestMemberCommand:
         result = runner.invoke(app, ["member", "test prompt", "--agent", "plain", "-v", "--workspace", str(tmp_path)])
 
         assert result.exit_code == 0
-        # Verbose flag should trigger verbose output (logging configured message or development warning)
-        assert "Logging configured" in result.stderr or "Development/Testing" in result.stderr
+        # Verbose flag should trigger verbose output (CliRunner mixes stdout and stderr)
+        assert "Logging configured" in result.stdout or "Development/Testing" in result.stdout

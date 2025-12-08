@@ -58,7 +58,7 @@ class TestEvaluateCommand:
         )
 
         assert result.exit_code == 1
-        assert "Only one of --logfire" in result.stderr
+        assert "Only one of --logfire" in result.stdout
 
     def test_logfire_http_and_metadata_mutually_exclusive(self) -> None:
         """Test that --logfire-http and --logfire-metadata are mutually exclusive."""
@@ -74,7 +74,7 @@ class TestEvaluateCommand:
         )
 
         assert result.exit_code == 1
-        assert "Only one of --logfire" in result.stderr
+        assert "Only one of --logfire" in result.stdout
 
     def test_all_three_logfire_flags_error(self) -> None:
         """Test that all three Logfire flags cannot be specified together."""
@@ -91,7 +91,7 @@ class TestEvaluateCommand:
         )
 
         assert result.exit_code == 1
-        assert "Only one of --logfire" in result.stderr
+        assert "Only one of --logfire" in result.stdout
 
     @patch("mixseek.cli.commands.evaluate.setup_logging_from_cli")
     @patch("mixseek.cli.commands.evaluate.setup_logfire_from_cli")

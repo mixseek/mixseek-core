@@ -94,7 +94,7 @@ MAJOR.MINOR.PATCH[PRE-RELEASE]
 
 **コマンド**:
 ```bash
-$ uv run bump2version patch
+$ uv run cz bump --increment PATCH --yes
 ```
 
 ### マイナーバージョン更新（0.1.0 → 0.2.0）
@@ -106,7 +106,7 @@ $ uv run bump2version patch
 
 **コマンド**:
 ```bash
-$ uv run bump2version minor
+$ uv run cz bump --increment MINOR --yes
 ```
 
 ### メジャーバージョン更新（0.x.x → 1.0.0）
@@ -119,7 +119,7 @@ $ uv run bump2version minor
 
 **コマンド**:
 ```bash
-$ uv run bump2version major
+$ uv run cz bump --increment MAJOR --yes
 ```
 
 ## リリーススケジュール

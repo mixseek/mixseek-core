@@ -27,9 +27,6 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install python-semantic-release
-        run: uv tool install python-semantic-release
-
       - name: Extract version from tag
         id: version
         run: |

@@ -63,7 +63,7 @@ dev = [
     "pandas-stubs",
     "logfire>=4.15.1",  # Observability for development/debugging
     "aiohttp>=3.13.0",  # Required for WebhookIntegrationHook tests
-    "python-semantic-release>=9.17.0",
+    "commitizen>=4.0.0",  # PEP 440-native version management
 ]
 docs = [
     "sphinx>=8.2.3,<9",
@@ -151,20 +151,16 @@ filterwarnings = [
     "ignore::DeprecationWarning",
 ]
 
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-branch = "main"
-build_command = ""
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0a1"
+version_files = [
+    "pyproject.toml:project.version"
+]
+tag_format = "v$version"
+update_changelog_on_bump = true
+annotated_tag = true
+bump_message = "release: bump version to $new_version"
 changelog_file = "CHANGELOG.md"
-
-# Prerelease configuration for alpha
-prerelease = true
-prerelease_tag = "alpha"
-
-# Commit parsing
-commit_parser = "conventional"
-commit_parser_options = { allowed_tags = ["feat", "fix", "docs", "refactor", "test", "release"], minor_tags = ["feat"], patch_tags = ["fix"] }
-
-# GitHub Release configuration
-upload_to_vcs_release = true
-vcs_release = true
+changelog_incremental = true
+version_scheme = "pep440"

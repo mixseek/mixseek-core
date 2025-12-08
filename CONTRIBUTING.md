@@ -66,7 +66,7 @@ This project uses a **develop-based development workflow**.
 
 6. Release preparation (every 2 weeks)
    - Create release-x.x.x branch from develop
-   - Run semantic-release to update version and CHANGELOG automatically
+   - Run commitizen to update version and CHANGELOG automatically
    - Final verification with PR to main
    - After merge, push tag to trigger GitHub Release creation
 ```
@@ -86,7 +86,7 @@ This project uses versioning compliant with [PEP 440](https://peps.python.org/pe
 
 ### Version Update Method
 
-Version updates are automated using **python-semantic-release** based on [Conventional Commits](https://www.conventionalcommits.org/).
+Version updates are automated using **commitizen** based on [Conventional Commits](https://www.conventionalcommits.org/).
 
 #### Updating Version on Release Branch
 
@@ -95,34 +95,38 @@ Version updates are automated using **python-semantic-release** based on [Conven
 $ git checkout -b release-0.2.0 develop
 
 # Update version (automatically determines version bump from commit messages)
-$ uv run semantic-release version
+# For alpha releases, use --prerelease alpha to increment build number
+$ uv run cz bump --prerelease alpha --yes  # 0.1.0a1 → 0.1.0a2
 
 # For manual version control (if needed)
-$ uv run semantic-release version --minor  # Force minor version bump
-$ uv run semantic-release version --patch  # Force patch version bump
-$ uv run semantic-release version --major  # Force major version bump
+$ uv run cz bump --prerelease alpha --increment MINOR --yes  # 0.1.0a1 → 0.2.0a1
+$ uv run cz bump --prerelease alpha --increment PATCH --yes  # 0.1.0a1 → 0.1.1a1
+$ uv run cz bump --prerelease alpha --increment MAJOR --yes  # 0.1.0a1 → 1.0.0a1
+
+# To graduate from alpha to stable (remove prerelease suffix)
+$ uv run cz bump --yes  # 0.1.0a1 → 0.1.0
 ```
 
 #### Manual Version Update Verification
 
 ```bash
-# Dry run (no actual changes)
-$ uv run semantic-release version --no-commit --no-tag --no-push
+# Dry run (no actual changes) - for alpha releases
+$ uv run cz bump --prerelease alpha --dry-run --yes
 
-# Actual update
-$ uv run semantic-release version
+# Actual update - for alpha releases
+$ uv run cz bump --prerelease alpha --yes
 # → Automatically updates pyproject.toml
 # → Automatically generates CHANGELOG.md from commit messages
 # → Automatically creates git commit and tag
 ```
 
-### Automatic Actions When Running semantic-release
+### Automatic Actions When Running commitizen
 
 1. Analyzes commit messages (feat, fix, docs, etc.) to determine version bump
 2. Updates the version in **pyproject.toml**
 3. Generates **CHANGELOG.md** from Conventional Commits
 4. Creates a git commit (`release: bump version to x.x.x`)
-5. Creates a git tag (`vx.x.x`)
+5. Creates an annotated git tag (`vx.x.x`)
 
 **Important**: All commits MUST follow Conventional Commits format for proper automation.
 
@@ -138,8 +142,9 @@ $ git pull origin develop
 # 2. Create release branch
 $ git checkout -b release-0.2.0 develop
 
-# 3. Update version with semantic-release (automatic version determination)
-$ uv run semantic-release version
+# 3. Update version with commitizen (automatic version determination)
+# For alpha releases, use --prerelease alpha
+$ uv run cz bump --prerelease alpha --yes
 # → Automatically determines version from commit messages
 # → Automatically updates pyproject.toml
 # → Automatically generates CHANGELOG.md
@@ -196,7 +201,7 @@ fix:      Bug fix (triggers patch version bump)
 docs:     Documentation changes only
 refactor: Code refactoring (no functional changes)
 test:     Add or modify tests
-release:  Version update or release (used by semantic-release)
+release:  Version update or release (used by commitizen)
 ```
 
 ### Examples

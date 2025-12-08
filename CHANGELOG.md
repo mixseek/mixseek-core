@@ -5,12 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
-## [Unreleased]
+## v0.1.0a2 (2025-12-08)
 
-### Fixed
-- Fix `mixseek ui` command not working in `uv tool install` environment ([#24](https://github.com/mixseek/mixseek-core/issues/24))
+### Feat
 
-## [0.1.0a1] - 2025-12-04
+- adopt commitizen for automated version management with PEP 440 compliance
+
+### Fix
+
+- replace result.stderr with result.stdout in CLI tests
+- use streamlit in-process launch for uv tool install compatibility (#24)
+- Use field-based filtering instead of env_prefix filtering
+- Filter dotenv variables by env_prefix (Issue #2)
+
+### Refactor
+
+- address code review feedback for PR #25
+
+## v0.1.0a1 (2025-12-04)
 
 ### Added
 - Initial alpha release of MixSeek-Core

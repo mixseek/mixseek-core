@@ -1224,8 +1224,8 @@ class TestConfigInitCommand:
         # Assertion: Error
         assert result.exit_code != 0, "Should fail for invalid component"
 
-        # Error message should be helpful (in stdout or stderr)
-        output = (result.stdout + result.stderr).lower()
+        # Error message should be helpful (CliRunner mixes stdout and stderr)
+        output = result.stdout.lower()
         assert any(keyword in output for keyword in ["component", "invalid", "valid", "orchestrator", "unknown"]), (
             f"Should suggest valid components in error. Output: {output}"
         )

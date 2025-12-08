@@ -126,8 +126,8 @@ max_tokens = 1024
 
         # Then: 成功
         assert result.exit_code == 0
-        # 警告メッセージはstderrに出力される
-        assert "WARNING" in result.stderr or "⚠" in result.stderr or "development" in result.stderr.lower()
+        # 警告メッセージはstdoutに出力される (CliRunner mixes stdout and stderr)
+        assert "WARNING" in result.stdout or "⚠" in result.stdout or "development" in result.stdout.lower()
         assert "Test Team" in result.stdout
 
     @pytest.mark.skipif(
@@ -320,8 +320,8 @@ max_tokens = 1024
 
         # Then: Exit Code 2（全Agent失敗）
         assert result.exit_code == 2
-        # エラーメッセージはstderrに出力される
-        assert "failed" in result.stderr.lower() or "error" in result.stderr.lower()
+        # エラーメッセージはstdoutに出力される (CliRunner mixes stdout and stderr)
+        assert "failed" in result.stdout.lower() or "error" in result.stdout.lower()
 
     def test_environment_variable_missing(self, runner: CliRunner, sample_team_toml: Path) -> None:
         """MIXSEEK_WORKSPACE未設定エラー（FR-20）"""
@@ -348,7 +348,7 @@ max_tokens = 1024
 
         # Then: エラー終了、厳格なメッセージ確認
         assert result.exit_code == 1
-        output = result.stdout + result.stderr
+        output = result.stdout  # CliRunner mixes stdout and stderr by default
         # 正確なエラーメッセージ文言を確認（TeamTomlSourceから出力される）
         assert "ERROR: Team config file not found:" in output or "ERROR: Failed to resolve workspace path:" in output
 

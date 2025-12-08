@@ -166,9 +166,10 @@ $ uv run cz bump --prerelease alpha --yes
 
 1. **コミット解析**: Conventional Commits 形式のコミットメッセージを解析
 2. **バージョン決定**: コミットタイプに基づいて自動的にバージョン更新レベルを決定
-   - `feat:` → MINOR バージョン更新（stable 版）/ MINOR バージョン更新（prerelease 版）
-   - `fix:` → PATCH バージョン更新（stable 版）/ PATCH バージョン更新（prerelease 版）
+   - `feat:` → MINOR バージョン更新（stable 版）/ **ビルド番号更新**（prerelease 版）
+   - `fix:` → PATCH バージョン更新（stable 版）/ **ビルド番号更新**（prerelease 版）
    - `feat!:`, `fix!:` → MAJOR バージョン更新（破壊的変更）
+   - **注**: `--prerelease alpha` 使用時は、コミットタイプに関わらずビルド番号のみインクリメント（0.1.0a1 → 0.1.0a2）
 3. **ファイル更新**:
    - `pyproject.toml`: version フィールド更新
    - `CHANGELOG.md`: Conventional Commits から自動生成

@@ -175,7 +175,7 @@ class AggregationStore:
             )
         """)
 
-        # leader_boardテーブル (Feature 037: New schema with 'score' column 0-100)
+        # leader_boardテーブル (Feature 037: New schema with 'score' column, unlimited range)
         # Note: Old schema removed. Use initialize_schema() for Feature 037 tables.
         conn.execute("""
             CREATE TABLE IF NOT EXISTS leader_board (
@@ -188,7 +188,7 @@ class AggregationStore:
                 submission_content TEXT NOT NULL,
                 submission_format VARCHAR NOT NULL DEFAULT 'md',
 
-                score FLOAT NOT NULL CHECK (score >= 0.0 AND score <= 100.0),
+                score FLOAT NOT NULL,
                 score_details JSON NOT NULL,
 
                 final_submission BOOLEAN NOT NULL DEFAULT FALSE,
@@ -430,7 +430,7 @@ class AggregationStore:
         conn = self._get_connection()
 
         # JSON内部クエリで統計集計（FR-013）
-        # Feature 037: Use 'score' column (0-100 scale) instead of 'evaluation_score'
+        # Feature 037: Use 'score' column (unlimited range) instead of 'evaluation_score'
         result = conn.execute(
             """
             SELECT
@@ -742,7 +742,7 @@ class AggregationStore:
     ) -> None:
         """Save to leader_board table (synchronous version)
 
-        This is the new leader_board table with 0-100 score scale.
+        This is the new leader_board table with unlimited score range.
 
         Args:
             execution_id: Execution identifier (UUID)
@@ -751,18 +751,14 @@ class AggregationStore:
             round_number: Round number
             submission_content: Submission content
             submission_format: Submission format (default: 'md')
-            score: Evaluation score (0-100 scale)
+            score: Evaluation score (any real value, unlimited range)
             score_details: Detailed score breakdown (JSON)
             final_submission: Whether this is the final submission
             exit_reason: Exit reason (e.g., 'max rounds reached')
 
         Raises:
-            ValueError: Invalid score range
+            ValueError: Invalid parameters
         """
-        # Validate score (0-100 scale)
-        if not (0.0 <= score <= 100.0):
-            raise ValueError(f"score must be between 0.0 and 100.0, got {score}")
-
         conn = self._get_connection()
 
         # Get current timestamp for updated_at
@@ -815,7 +811,7 @@ class AggregationStore:
     ) -> None:
         """Save to leader_board table (asynchronous version)
 
-        This is the leader_board table with 0-100 score scale.
+        This is the leader_board table with unlimited score range.
 
         Args:
             execution_id: Execution identifier (UUID)
@@ -824,7 +820,7 @@ class AggregationStore:
             round_number: Round number
             submission_content: Submission content
             submission_format: Submission format (default: 'md')
-            score: Evaluation score (0-100 scale)
+            score: Evaluation score (any real value, unlimited range)
             score_details: Detailed score breakdown (JSON)
             final_submission: Whether this is the final submission
             exit_reason: Exit reason (e.g., 'max rounds reached')

@@ -299,14 +299,17 @@ Orchestrator実行時、各チームの`RoundResult`がこのテーブルに記�
 - **保存処理**: `RoundController.run_round()` (controller.py) → `AggregationStore._save_to_leader_board_sync()` (aggregation_store.py)
 
 ##### `evaluation_score`
-- **説明**: 評価スコア（0.0～1.0スケール、内部保存形式）
-- **発行元**: `Evaluator.evaluate()` → `EvaluationResult.overall_score`（0-100スケール）
-- **スコア変換**: `RoundController.run_round()` (controller.py) - `evaluation_result.overall_score / 100.0`で0.0-1.0に変換
+- **説明**: 評価スコア（内部保存形式）
+- **発行元**: `Evaluator.evaluate()` → `EvaluationResult.overall_score`（任意の実数値）
+- **スコア変換**: 実装依存（LLMJudgeMetricsのみを使用する場合は通常0-100スケール、カスタムメトリクスを含む場合は任意の値）
 - **保存処理**: `AggregationStore.save_to_leader_board()` → `AggregationStore._save_to_leader_board_sync()` (aggregation_store.py)
-- **バリデーション**: `AggregationStore._save_to_leader_board_sync()`が0.0-1.0範囲チェックを実施
+- **バリデーション**: 実装依存（現在は制約なし）
 
 :::{note}
-**スコア変換の理由**: Evaluatorは0-100スケールで生成しますが、データベースには0.0-1.0スケールで保存します。CLI表示時は再度100倍して0-100スケールに戻します。
+**スコア範囲について**:
+- 組み込みLLMJudgeMetrics（ClarityCoherence、Coverage、Relevance等）は0-100スケールを返します
+- カスタムメトリクスでは負の値や100を超える値を含む任意の実数値が許容されます
+- 重み付き平均の`overall_score`も同様に任意の実数値を取り得ます
 :::
 
 ##### `evaluation_feedback`

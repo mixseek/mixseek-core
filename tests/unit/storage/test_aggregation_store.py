@@ -340,33 +340,41 @@ class TestLeaderBoard:
         assert len(df) == 3
 
     @pytest.mark.asyncio
-    async def test_save_to_leader_board_score_validation(self, store: AggregationStore) -> None:
-        """異常系: score範囲外（契約違反、憲章Article 9）"""
-        # When/Then: スコア < 0.0
-        with pytest.raises(ValueError, match="must be between 0.0 and 100.0"):
-            await store.save_to_leader_board(
-                execution_id="550e8400-e29b-41d4-a716-446655440000",
-                team_id="t1",
-                team_name="Team",
-                round_number=1,
-                submission_content="content",
-                submission_format="md",
-                score=-0.1,
-                score_details={"feedback": "feedback"},
-            )
+    async def test_save_to_leader_board_accepts_unlimited_score_range(self, store: AggregationStore) -> None:
+        """正常系: score無制限範囲（負の値、100超も許容）"""
+        # When: 負の値を保存
+        await store.save_to_leader_board(
+            execution_id="550e8400-e29b-41d4-a716-446655440000",
+            team_id="t1",
+            team_name="Team Negative",
+            round_number=1,
+            submission_content="content",
+            submission_format="md",
+            score=-50.0,
+            score_details={"feedback": "Performance degraded by 50%"},
+        )
 
-        # When/Then: スコア > 100.0
-        with pytest.raises(ValueError, match="must be between 0.0 and 100.0"):
-            await store.save_to_leader_board(
-                execution_id="550e8400-e29b-41d4-a716-446655440000",
-                team_id="t2",
-                team_name="Team",
-                round_number=1,
-                submission_content="content",
-                submission_format="md",
-                score=150.0,
-                score_details={"feedback": "feedback"},
-            )
+        # When: 100超の値を保存
+        await store.save_to_leader_board(
+            execution_id="550e8400-e29b-41d4-a716-446655440000",
+            team_id="t2",
+            team_name="Team High",
+            round_number=1,
+            submission_content="content",
+            submission_format="md",
+            score=250.0,
+            score_details={"feedback": "Performance improved by 250%"},
+        )
+
+        # Then: 両方のスコアがDBに正しく保存される
+        conn = store._get_connection()
+        results = conn.execute("SELECT team_id, score FROM leader_board ORDER BY team_id").fetchall()
+
+        assert len(results) == 2
+        assert results[0][0] == "t1"
+        assert results[0][1] == -50.0
+        assert results[1][0] == "t2"
+        assert results[1][1] == 250.0
 
     @pytest.mark.asyncio
     async def test_get_leader_board_tie_breaker(self, store: AggregationStore) -> None:

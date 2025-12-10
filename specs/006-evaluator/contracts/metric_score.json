@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MetricScore",
-  "description": "Evaluation score for a single metric, containing both quantitative score (0-100) and qualitative comment explaining the evaluation.",
+  "description": "Evaluation score for a single metric, containing both quantitative score and qualitative comment explaining the evaluation. Built-in LLMJudgeMetrics return 0-100, but custom metrics may return any real value including negative values or values above 100.",
   "type": "object",
   "properties": {
     "metric_name": {
@@ -12,10 +12,8 @@
     },
     "score": {
       "type": "number",
-      "description": "Numerical score between 0 and 100 (FR-002)",
-      "minimum": 0.0,
-      "maximum": 100.0,
-      "examples": [85.5, 72.33, 91.0, 68.75]
+      "description": "Numerical score (any real value). Built-in LLMJudgeMetrics return 0-100, but custom metrics may return negative values or values above 100.",
+      "examples": [85.5, 72.33, 91.0, 68.75, -15.2, 150.0]
     },
     "evaluator_comment": {
       "type": "string",
@@ -45,6 +43,11 @@
       "metric_name": "relevance",
       "score": 92.0,
       "evaluator_comment": "Highly relevant to the user's query, directly addresses the question with appropriate focus."
+    },
+    {
+      "metric_name": "performance_delta",
+      "score": -15.2,
+      "evaluator_comment": "Performance degraded by 15.2% compared to baseline."
     }
   ]
 }

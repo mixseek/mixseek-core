@@ -7,28 +7,36 @@ class MetricScore(BaseModel):
     """単一メトリクスの評価スコア。
 
     このモデルは、1つの特定のメトリクス（例：明瞭性/一貫性、包括性、または関連性）を
-    評価した結果を表します。量的スコア（0-100）と評価を説明する質的コメントの
-    両方が含まれます。
+    評価した結果を表します。量的スコアと評価を説明する質的コメントの両方が含まれます。
 
     Attributes:
         metric_name: メトリクスの名前（例："clarity_coherence"、"coverage"、"relevance"）
-        score: 0から100の間の数値スコア（FR-002）
+        score: 数値スコア（任意の実数値）。組み込みLLMJudgeMetricsは0-100を返しますが、
+            カスタムメトリクスでは負の値や100を超える値も許容されます
         evaluator_comment: スコアの詳細な説明（FR-012）
 
     Example:
         ```python
         from mixseek.models.evaluation_result import MetricScore
 
+        # LLMJudgeMetricの例（通常0-100）
         metric = MetricScore(
             metric_name="clarity_coherence",
             score=85.5,
             evaluator_comment="The response is well-structured and easy to understand..."
         )
+
+        # カスタムメトリクスの例（任意の値）
+        custom_metric = MetricScore(
+            metric_name="performance_delta",
+            score=-15.2,
+            evaluator_comment="Performance degraded by 15.2%"
+        )
         ```
 
     Validation Rules:
         - metric_name: 空でない文字列でなければならない
-        - score: 0から100の間でなければならない（包括的）（FR-002）
+        - score: 任意の実数値（制約なし）
         - evaluator_comment: 文字列（空文字列も許容される）
     """
 
@@ -38,10 +46,8 @@ class MetricScore(BaseModel):
 
     score: float = Field(
         ...,
-        ge=0.0,
-        le=100.0,
-        description="0から100の間の数値スコア（FR-002）",
-        examples=[85.5, 72.3, 91.0],
+        description="数値スコア（任意の実数値、カスタムメトリクスでは負の値や100超も許容）",
+        examples=[85.5, 72.3, 91.0, -10.5, 150.0],
     )
 
     evaluator_comment: str = Field(
@@ -98,12 +104,15 @@ class EvaluationResult(BaseModel):
 
     Attributes:
         metrics: 個別のメトリクススコアのリスト
-        overall_score: すべてのメトリクススコアの重み付き平均（0-100）
+        overall_score: すべてのメトリクススコアの重み付き平均（任意の実数値）。
+            組み込みLLMJudgeMetricsのみを使用する場合は通常0-100ですが、
+            カスタムメトリクスを含む場合は負の値や100を超える値も許容されます
 
     Example:
         ```python
         from mixseek.models.evaluation_result import EvaluationResult, MetricScore
 
+        # LLMJudgeMetricsのみの例（通常0-100）
         result = EvaluationResult(
             metrics=[
                 MetricScore(metric_name="clarity_coherence", score=85.5, evaluator_comment="Clear..."),
@@ -111,11 +120,20 @@ class EvaluationResult(BaseModel):
             ],
             overall_score=87.2
         )
+
+        # カスタムメトリクスを含む例（任意の値）
+        result_with_custom = EvaluationResult(
+            metrics=[
+                MetricScore(metric_name="clarity_coherence", score=85.5, evaluator_comment="Clear..."),
+                MetricScore(metric_name="performance_delta", score=-20.0, evaluator_comment="Degraded..."),
+            ],
+            overall_score=32.75  # 重み付き平均
+        )
         ```
 
     Validation Rules:
         - metrics: 少なくとも1つのメトリクスを含む必要がある（FR-001は3つの組み込みメトリクスを要求）
-        - overall_score: 0から100の間でなければならない（FR-004）
+        - overall_score: 任意の実数値（制約なし）
         - overall_score: メトリクススコアの重み付き平均と一致する必要がある
     """
 
@@ -123,10 +141,8 @@ class EvaluationResult(BaseModel):
 
     overall_score: float = Field(
         ...,
-        ge=0.0,
-        le=100.0,
-        description="すべてのメトリクススコアの重み付き平均（FR-004）",
-        examples=[87.2, 75.5, 92.3],
+        description="すべてのメトリクススコアの重み付き平均（任意の実数値、負の値や100超も許容）",
+        examples=[87.2, 75.5, 92.3, -5.3, 120.0],
     )
 
     @field_validator("overall_score")

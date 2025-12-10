@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "EvaluationResult",
-  "description": "Complete evaluation result containing all metric scores and an aggregated overall score computed as a weighted average.",
+  "description": "Complete evaluation result containing all metric scores and an aggregated overall score computed as a weighted average. Typically 0-100 when using only LLMJudgeMetrics, but may be any real value when custom metrics are included.",
   "type": "object",
   "properties": {
     "metrics": {
@@ -14,10 +14,8 @@
     },
     "overall_score": {
       "type": "number",
-      "description": "Weighted average of all metric scores (0-100)",
-      "minimum": 0.0,
-      "maximum": 100.0,
-      "examples": [87.25, 75.50, 92.33]
+      "description": "Weighted average of all metric scores (any real value). Typically 0-100 when using only LLMJudgeMetrics, but may be negative or above 100 when custom metrics are included.",
+      "examples": [87.25, 75.50, 92.33, -5.3, 120.0]
     }
   },
   "required": ["metrics", "overall_score"],
@@ -35,10 +33,8 @@
         },
         "score": {
           "type": "number",
-          "description": "Numerical score between 0 and 100",
-          "minimum": 0.0,
-          "maximum": 100.0,
-          "examples": [85.5, 72.3, 91.0]
+          "description": "Numerical score (any real value). Built-in LLMJudgeMetrics return 0-100, but custom metrics may return any real value.",
+          "examples": [85.5, 72.3, 91.0, -15.2, 150.0]
         },
         "evaluator_comment": {
           "type": "string",

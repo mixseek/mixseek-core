@@ -816,10 +816,10 @@ Output:
 | EvaluationRequest | submission | Not empty/whitespace (FR-013) |
 | EvaluationRequest | team_id | Not empty |
 | MetricScore | metric_name | Not empty |
-| MetricScore | score | 0-100 range, rounded to 2 decimals (FR-002) |
+| MetricScore | score | Any real value, rounded to 2 decimals |
 | MetricScore | evaluator_comment | Not empty (FR-012) |
 | EvaluationResult | metrics | Min 1 item, unique names |
-| EvaluationResult | overall_score | 0-100 range, rounded to 2 decimals (FR-004) |
+| EvaluationResult | overall_score | Any real value, rounded to 2 decimals |
 | MetricConfig | name | Not empty |
 | MetricConfig | weight | 0.0-1.0 range (FR-003) |
 | MetricConfig | model | "provider:model-name" format if set (FR-015) |

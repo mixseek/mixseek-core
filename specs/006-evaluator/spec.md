@@ -59,7 +59,7 @@ Evaluatorは、どの応答がユーザのユースケースに最も適して�
 
 **受け入れシナリオ**:
 
-1. **前提** ユーザクエリとAIエージェントの応答がある時、**実行** Evaluatorがデフォルトの組み込み指標（ClarityCoherence、Coverage、Relevance）で評価を実行する、**結果** システムは各指標について0-100のスコアと統合スコアをPydanticモデル（EvaluationResult）で返す
+1. **前提** ユーザクエリとAIエージェントの応答がある時、**実行** Evaluatorがデフォルトの組み込み指標（ClarityCoherence、Coverage、Relevance）で評価を実行する、**結果** システムは各指標の個別スコアと統合スコアをPydanticモデル（EvaluationResult）で返す
 2. **前提** 単一のクエリ-応答ペアがある時、**実行** 評価を実行する、**結果** 複数の評価指標（ClarityCoherence、Coverage、Relevance）が評価され、各指標のscoreとevaluator_commentを含むMetricScoreオブジェクトのリストと統合スコア（overall_score）を持つEvaluationResultオブジェクトが返却される
 
 ---
@@ -115,7 +115,7 @@ Evaluatorは、特定の品質要件とドメイン専門知識に合わせて�
 ### 機能要件
 
 - **FR-001**: システムは4つの組み込み指標（ClarityCoherence、Coverage、Relevance、LLMPlain）を使用してAIエージェントの出力を評価しなければならない。すべての組み込み指標はデフォルトのsystem_instructionを持ち、TOML設定でsystem_instructionを指定することでデフォルトのプロンプトを上書きできる
-- **FR-002**: システムは各評価指標について0-100の範囲でスコアを返さなければならない
+- **FR-002**: システムは各評価指標について実数値のスコアを返さなければならない。組み込みLLMJudgeMetricsは通常0-100の範囲のスコアを返すが、カスタムメトリクスは任意の実数値（負の値や100を超える値を含む）を返すことができる
 - **FR-003**: システムは `{workspace}/configs/evaluator.toml` ファイルで [[metrics]] name = "ClarityCoherence", weight = 0.4, model = "anthropic:claude-4-5-sonnet", system_instruction = "..." 形式での指標重み、LLMモデル、system_instruction上書き、その他のLLMパラメータについての設定をサポートしなければならない。system_instructionが指定された場合、デフォルトのプロンプトを完全に置き換える
 - **FR-004**: システムは加重平均を使用して個別指標スコアを統合しなければならない
 - **FR-005**: システムはクラウドベースLLM API（OpenAI、Anthropic等）を使用したLLM-as-a-Judge実装にPydantic AIのDirect Model Request API（`model_request_sync`）を使用しなければならない
@@ -140,11 +140,11 @@ Evaluatorは、特定の品質要件とドメイン専門知識に合わせて�
 すべてのエンティティはPydanticモデルとして `src/mixseek/models/` 配下に定義される（FR-006）：
 
 - **EvaluationRequest（評価リクエスト）**: Pydanticモデル。フィールド: user_query（str）、submission（str）、team_id（str）、config（Optional[EvaluationConfig]）
-- **EvaluationResult（評価結果）**: Pydanticモデル。フィールド: metrics（List[MetricScore]）、overall_score（float、0-100の範囲）
+- **EvaluationResult（評価結果）**: Pydanticモデル。フィールド: metrics（List[MetricScore]）、overall_score（float、任意の実数値）
 - **EvaluationConfig（評価設定）**: Pydanticモデル。`{workspace}/configs/evaluator.toml` からロード。フィールド: metric_weights（Dict[str, float]）、enabled_metrics（List[str]）、custom_metrics（Optional[Dict]）、llm_default（Optional[LLMDefaultConfig]、`[llm_default]`セクションに対応）
 - **LLMDefaultConfig（LLMデフォルト設定）**: `[llm_default]`セクションに対応。フィールド: model（Optional[str]、デフォルト: "anthropic:claude-sonnet-4-5-20250929"）、temperature（Optional[float]、デフォルト: 0.0）、max_tokens（Optional[int]、デフォルト: None）、max_retries（Optional[int]、デフォルト: 3）
 - **MetricConfig（指標設定）**: TOMLの[[metrics]]配列要素に対応。フィールド: name（str）、weight（float）、model（Optional[str]、`"provider:model-name"`形式）、system_instruction（Optional[str]）、temperature（Optional[float]）、max_tokens（Optional[int]）、max_retries（Optional[int]）。各LLMパラメータは、指定時はその値を使用、未指定時は`[llm_default]`にフォールバック、それもない場合はハードコードされたデフォルト値を使用（FR-019）
-- **MetricScore（指標スコア）**: Pydanticモデル。フィールド: metric_name（str）、score（float、0-100の範囲）、evaluator_comment（str）
+- **MetricScore（指標スコア）**: Pydanticモデル。フィールド: metric_name（str）、score（float、任意の実数値）、evaluator_comment（str）
 
 ## 成功基準 *(必須)*
 

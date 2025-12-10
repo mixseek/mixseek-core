@@ -34,8 +34,8 @@
 │                           ↓                                   │
 │  Output: EvaluationResult                                    │
 │  ├─ metrics: List[MetricScore]                               │
-│  │   └─ Each with score (0-100) + evaluator_comment          │
-│  └─ overall_score: float (0-100)                             │
+│  │   └─ Each with score + evaluator_comment                  │
+│  └─ overall_score: float (weighted average)                  │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -77,7 +77,7 @@
                              ↓
 ┌────────────────────────────────────────────────────────────────┐
 │  4. Pydantic Validation                                        │
-│     ├─ score in range [0, 100] ✓                              │
+│     ├─ score is valid float ✓                                  │
 │     ├─ sub_scores sum to score ✓                              │
 │     ├─ all required fields present ✓                          │
 │     └─ types match schema ✓                                   │
@@ -323,7 +323,7 @@ MetricConfig (TOML array element)
 
 MetricScore
 ├─ metric_name: str
-├─ score: float (0-100)
+├─ score: float (any real value)
 └─ evaluator_comment: str
 
 EvaluationResult
@@ -331,7 +331,7 @@ EvaluationResult
 │   ├─ MetricScore (clarity_coherence)
 │   ├─ MetricScore (coverage)
 │   └─ MetricScore (relevance)
-└─ overall_score: float (0-100)
+└─ overall_score: float (any real value)
     = Σ(metric.score × metric.weight)
 ```
 

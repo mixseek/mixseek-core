@@ -112,7 +112,7 @@ Evaluatorコンポーネントは、AIエージェントが生成したSubmissio
 **MixSeek-Core要件**: Evaluatorは定量的スコアと定性的フィードバックコメントの両方を提供しなければならない。出力は`EvaluationResult` Pydantic Modelで型安全に保証される。
 
 **本仕様の実装**:
-- 各評価指標について0-100の範囲でスコアを返す (FR-002)
+- 各評価指標についてスコアを返す（組み込みLLMJudgeMetricsは通常0-100、カスタムメトリクスは任意の実数値） (FR-002)
 - Pydanticモデル（EvaluationResult）で型安全性を保証 (FR-006, FR-012)
 - MetricScoreオブジェクトに`evaluator_comment`フィールドを含む (FR-012)
 - 統合スコア（overall_score）を提供 (FR-004, FR-012)

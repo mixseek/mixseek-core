@@ -109,7 +109,7 @@ result = model_request_sync(
 ### Functional Requirements (FR)
 
 - **FR-001**: Three built-in metrics (clarity_coherence, coverage, relevance)
-- **FR-002**: Scores 0-100 for each metric
+- **FR-002**: Scores for each metric (built-in: 0-100, custom: any real value)
 - **FR-003**: TOML configuration support
 - **FR-005**: Use Pydantic AI Direct Model Request API (`model_request_sync`)
 - **FR-010**: Retry logic (max 3 attempts)

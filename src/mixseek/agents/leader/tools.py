@@ -83,7 +83,7 @@ def register_member_tools(
                     content = result_obj.content
                     all_messages = result_obj.all_messages  # FR-034: Member Agent message history
                     # Issue #59: MemberAgentResult.status を MemberSubmission に伝播
-                    status = result_obj.status.value.upper()  # "SUCCESS" or "ERROR"
+                    status = result_obj.status.value.upper()  # "SUCCESS", "ERROR", or "WARNING"
                     error_message = result_obj.error_message
                     usage = RunUsage(
                         input_tokens=result_obj.usage_info.get("input_tokens", 0) if result_obj.usage_info else 0,

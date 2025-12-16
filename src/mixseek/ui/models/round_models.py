@@ -94,7 +94,7 @@ class TeamScoreHistory(BaseModel):
         team_id: チーム識別子
         team_name: チーム名
         round_number: ラウンド番号
-        score: 評価スコア（0.0-100.0）
+        score: 評価スコア
 
     Example:
         >>> history = TeamScoreHistory.from_db_row(
@@ -107,7 +107,7 @@ class TeamScoreHistory(BaseModel):
     team_id: str = Field(..., description="チーム識別子")
     team_name: str = Field(..., description="チーム名")
     round_number: int = Field(..., ge=1, description="ラウンド番号")
-    score: float = Field(..., ge=0.0, description="評価スコア")
+    score: float = Field(..., description="評価スコア")
 
     @classmethod
     def from_db_row(cls, row: tuple[str | int | float, ...]) -> "TeamScoreHistory":
@@ -145,7 +145,7 @@ class TeamSubmission(BaseModel):
         team_name: チーム名
         round_number: ラウンド番号
         submission_content: サブミッション内容（マークダウン形式）
-        score: 評価スコア（0.0-100.0）
+        score: 評価スコア
         score_details: スコア詳細（JSON）
         created_at: 作成日時
         final_submission: 最終サブミッションフラグ
@@ -163,7 +163,7 @@ class TeamSubmission(BaseModel):
     team_name: str = Field(..., description="チーム名")
     round_number: int = Field(..., ge=1, description="ラウンド番号")
     submission_content: str = Field(..., description="サブミッション内容")
-    score: float = Field(..., ge=0.0, description="評価スコア")
+    score: float = Field(..., description="評価スコア")
     score_details: str | None = Field(None, description="スコア詳細JSON")
     created_at: datetime = Field(..., description="作成日時")
     final_submission: bool = Field(False, description="最終サブミッションフラグ")

@@ -88,19 +88,34 @@ def test_round_result_creation() -> None:
 
 
 def test_round_result_validation() -> None:
-    """RoundResult バリデーションテスト"""
-    with pytest.raises(ValueError):
-        RoundResult(
-            execution_id="550e8400-e29b-41d4-a716-446655440000",
-            team_id="team-001",
-            team_name="Test Team",
-            round_number=1,
-            submission_content="テスト",
-            evaluation_score=1.5,  # 範囲外
-            evaluation_feedback="",
-            usage=RunUsage(),
-            execution_time_seconds=30.0,
-        )
+    """RoundResult unlimited score support test"""
+    # Test that unlimited score range is supported (negative, >100, etc.)
+    result = RoundResult(
+        execution_id="550e8400-e29b-41d4-a716-446655440000",
+        team_id="team-001",
+        team_name="Test Team",
+        round_number=1,
+        submission_content="テスト",
+        evaluation_score=150.5,  # Score > 100 allowed
+        evaluation_feedback="",
+        usage=RunUsage(),
+        execution_time_seconds=30.0,
+    )
+    assert result.evaluation_score == 150.5
+
+    # Test negative scores are also allowed
+    result_negative = RoundResult(
+        execution_id="550e8400-e29b-41d4-a716-446655440000",
+        team_id="team-002",
+        team_name="Test Team 2",
+        round_number=1,
+        submission_content="テスト",
+        evaluation_score=-42.3,  # Negative score allowed
+        evaluation_feedback="",
+        usage=RunUsage(),
+        execution_time_seconds=30.0,
+    )
+    assert result_negative.evaluation_score == -42.3
 
 
 # T006: ExecutionSummary Tests

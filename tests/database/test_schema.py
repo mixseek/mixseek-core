@@ -136,7 +136,7 @@ class TestDuckDBSchema:
                 team_id TEXT NOT NULL,
                 team_name TEXT NOT NULL,
                 round_number INTEGER NOT NULL,
-                evaluation_score DOUBLE NOT NULL CHECK (evaluation_score >= 0.0 AND evaluation_score <= 1.0),
+                evaluation_score DOUBLE NOT NULL,
                 evaluation_feedback TEXT,
                 submission_content TEXT NOT NULL,
                 submission_format TEXT DEFAULT 'structured_json',
@@ -149,47 +149,53 @@ class TestDuckDBSchema:
         tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='leader_board'").fetchall()
         assert len(tables) == 1
 
-        # submission_format デフォルト値確認
+        # submission_format デフォルト値確認 + unlimited score support
         conn.execute(
             "INSERT INTO leader_board (team_id, team_name, round_number, "
             "evaluation_score, submission_content) VALUES (?, ?, ?, ?, ?)",
-            ["team-001", "Team A", 1, 0.85, "test"],
+            ["team-001", "Team A", 1, 150.5, "test"],  # Score > 100 allowed
         )
         row = conn.execute("SELECT submission_format FROM leader_board").fetchone()
         assert row is not None
         assert row[0] == "structured_json"  # デフォルト値
 
-    def test_leader_board_score_check_constraint(self, conn: duckdb.DuckDBPyConnection) -> None:
-        """LeaderBoard evaluation_score CHECK制約（0.0-1.0）"""
+    def test_leader_board_unlimited_score_support(self, conn: duckdb.DuckDBPyConnection) -> None:
+        """LeaderBoard unlimited score support (negative and >100 allowed)"""
         # Arrange
         conn.execute("CREATE SEQUENCE IF NOT EXISTS leader_board_id_seq")
         conn.execute("""
             CREATE TABLE leader_board (
                 id INTEGER PRIMARY KEY DEFAULT nextval('leader_board_id_seq'),
                 team_id TEXT NOT NULL,
-                evaluation_score DOUBLE NOT NULL CHECK (evaluation_score >= 0.0 AND evaluation_score <= 1.0),
+                evaluation_score DOUBLE NOT NULL,
                 submission_content TEXT NOT NULL
             )
         """)
 
-        # Act: 有効な範囲（0.0-1.0）
+        # Act & Assert: Positive scores
         conn.execute(
             "INSERT INTO leader_board (team_id, evaluation_score, submission_content) VALUES (?, ?, ?)",
             ["team-001", 0.85, "test"],
         )
 
-        # Assert: 範囲外はエラー
-        with pytest.raises(duckdb.ConstraintException):
-            conn.execute(
-                "INSERT INTO leader_board (team_id, evaluation_score, submission_content) VALUES (?, ?, ?)",
-                ["team-002", 1.5, "test"],  # 1.0超過
-            )
+        # Act & Assert: Scores > 100 allowed
+        conn.execute(
+            "INSERT INTO leader_board (team_id, evaluation_score, submission_content) VALUES (?, ?, ?)",
+            ["team-002", 150.5, "test"],
+        )
 
-        with pytest.raises(duckdb.ConstraintException):
-            conn.execute(
-                "INSERT INTO leader_board (team_id, evaluation_score, submission_content) VALUES (?, ?, ?)",
-                ["team-003", -0.1, "test"],  # 負の値
-            )
+        # Act & Assert: Negative scores allowed
+        conn.execute(
+            "INSERT INTO leader_board (team_id, evaluation_score, submission_content) VALUES (?, ?, ?)",
+            ["team-003", -42.3, "test"],
+        )
+
+        # Verify all inserts succeeded
+        rows = conn.execute("SELECT team_id, evaluation_score FROM leader_board ORDER BY team_id").fetchall()
+        assert len(rows) == 3
+        assert rows[0][1] == 0.85
+        assert rows[1][1] == 150.5
+        assert rows[2][1] == -42.3
 
     def test_leader_board_ranking_index(self, conn: duckdb.DuckDBPyConnection) -> None:
         """LeaderBoardランキングインデックス（FR-011）"""

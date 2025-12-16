@@ -24,7 +24,7 @@ class LeaderBoardEntry(BaseModel):
     round_number: int = Field(ge=1, description="Round number")
     submission_content: str = Field(description="Submission content from team")
     submission_format: str = Field(default="md", description="Submission format (default: md)")
-    score: float = Field(ge=0.0, le=100.0, description="Evaluation score from Evaluator (0-100)")
+    score: float = Field(description="Evaluation score from Evaluator")
     score_details: dict[str, Any] = Field(description="Detailed score breakdown and comments (JSON format)")
     final_submission: bool = Field(default=False, description="Flag indicating if this is the final round submission")
     exit_reason: str | None = Field(

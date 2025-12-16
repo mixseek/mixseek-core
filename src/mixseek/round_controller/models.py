@@ -35,7 +35,7 @@ class RoundState(BaseModel):
 
     round_number: int = Field(ge=1, description="Round number")
     submission_content: str = Field(description="Submission content")
-    evaluation_score: float = Field(ge=0.0, le=100.0, description="Evaluation score (0-100 scale)")
+    evaluation_score: float = Field(description="Evaluation score")
     score_details: dict[str, Any] = Field(
         description="Detailed score breakdown (JSON format, consistent with LeaderBoardEntry)"
     )

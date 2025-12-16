@@ -242,7 +242,7 @@ execution_idとチームIDによる高速検索を実現します。
 | `team_id` | TEXT | NOT NULL |
 | `team_name` | TEXT | NOT NULL |
 | `round_number` | INTEGER | NOT NULL |
-| `evaluation_score` | DOUBLE | NOT NULL, CHECK (evaluation_score >= 0.0 AND evaluation_score <= 1.0) |
+| `evaluation_score` | DOUBLE | NOT NULL |
 | `evaluation_feedback` | TEXT | - |
 | `submission_content` | TEXT | NOT NULL |
 | `submission_format` | TEXT | DEFAULT 'structured_json' |
@@ -252,11 +252,11 @@ execution_idとチームIDによる高速検索を実現します。
 #### 制約
 
 ```sql
--- 評価スコア範囲チェック（DB level validation）
-CHECK (evaluation_score >= 0.0 AND evaluation_score <= 1.0)
+-- UNIQUE制約（execution_id, team_id, round_number）
+UNIQUE (execution_id, team_id, round_number)
 ```
 
-評価スコアは0.0～1.0の範囲内である必要があります。範囲外の値を保存しようとした場合、データベースレベルでエラーが発生します（憲章Article 9準拠）。
+同一実行・同一チーム・同一ラウンドの組み合わせは一意です。
 
 ```{admonition} Orchestrator実行との関係
 :class: info
@@ -265,7 +265,7 @@ Orchestrator実行時、各チームの`RoundResult`がこのテーブルに記�
 
 - **複数チーム記録**: 並列実行された全チームの結果が個別に記録されます
 - **スコアベース選択**: `evaluation_score`を基準に最高スコアチームが特定されます
-- **スコア表示**: 内部は0.0-1.0スケールで記録、CLI表示時は0-100に変換されます
+- **スコア表示**: 任意の実数値（無制限範囲、負の値や100を超える値も許容）
 - **失敗チーム**: 失敗したチームは記録されません（Orchestrator層で隔離）
 
 詳細は [Orchestratorガイド](orchestrator-guide.md) を参照してください。
@@ -299,17 +299,18 @@ Orchestrator実行時、各チームの`RoundResult`がこのテーブルに記�
 - **保存処理**: `RoundController.run_round()` (controller.py) → `AggregationStore._save_to_leader_board_sync()` (aggregation_store.py)
 
 ##### `evaluation_score`
-- **説明**: 評価スコア（内部保存形式）
+- **説明**: 評価スコア（無制限範囲、任意の実数値）
 - **発行元**: `Evaluator.evaluate()` → `EvaluationResult.overall_score`（任意の実数値）
-- **スコア変換**: 実装依存（LLMJudgeMetricsのみを使用する場合は通常0-100スケール、カスタムメトリクスを含む場合は任意の値）
+- **スコア範囲**: 無制限（負の値、100を超える値、任意の実数値を許容）
 - **保存処理**: `AggregationStore.save_to_leader_board()` → `AggregationStore._save_to_leader_board_sync()` (aggregation_store.py)
-- **バリデーション**: 実装依存（現在は制約なし）
+- **バリデーション**: なし（Pydanticモデル、データベース共に制約なし）
 
 :::{note}
 **スコア範囲について**:
-- 組み込みLLMJudgeMetrics（ClarityCoherence、Coverage、Relevance等）は0-100スケールを返します
+- 組み込みLLMJudgeMetrics（ClarityCoherence、Coverage、Relevance等）は通常0-100スケールを返します
 - カスタムメトリクスでは負の値や100を超える値を含む任意の実数値が許容されます
 - 重み付き平均の`overall_score`も同様に任意の実数値を取り得ます
+- Feature 037 (evaluator-score-unlimited) により、スコア制限が完全に撤廃されました
 :::
 
 ##### `evaluation_feedback`
@@ -512,7 +513,7 @@ CHECK (status IN ('completed', 'partial_failure', 'failed'))
 - **NULL条件**: チーム結果が空の場合（全チーム失敗）はNULL
 
 ##### `best_score`
-- **説明**: 最高評価スコア（0.0-1.0スケール）
+- **説明**: 最高評価スコア（無制限範囲、任意の実数値）
 - **発行元**: `Orchestrator.execute()` (orchestrator.py) - 最大`evaluation_score`を特定
 - **保存処理**: `AggregationStore._save_execution_summary_sync()` (aggregation_store.py)
 - **NULL条件**: チーム結果が空の場合（全チーム失敗）はNULL
@@ -731,13 +732,8 @@ raise EnvironmentError(
 
 ### 評価スコア範囲
 
-`evaluation_score`は0.0～1.0の範囲内である必要があります。範囲外の値を保存しようとした場合：
+`evaluation_score`は無制限範囲の任意の実数値を許容します（Feature 037: evaluator-score-unlimited）。
 
-```python
-raise ValueError(
-    f"evaluation_score must be between 0.0 and 1.0, got {evaluation_score}. "
-    "This violates the contract specification."
-)
-```
-
-データベースレベルのCHECK制約も設定されており、二重の検証により契約違反を防止します。
+- 負の値や100を超える値も有効です
+- Pydanticモデルレベル、データベースレベルともに制約はありません
+- カスタムメトリクスの実装により自由にスコアリング方式を定義できます

@@ -7,15 +7,22 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ## v0.1.0a3 (2025-12-16)
 
+### Breaking Changes
+
+- **evaluator**: Score constraints removed from `MetricScore.score` and `EvaluationResult.overall_score`
+  - Custom metrics can now use any real-number values (negative, above 100, etc.)
+  - **Migration**: Existing databases must be either recreated or migrated according to the procedure documented in [PR #55](https://github.com/mixseek/mixseek-core/pull/55)
+  - Existing `BaseLLMEvaluation.score` field remains constrained to 0-100 for LLM output compatibility
+
 ### Feat
 
-- **evaluator**: remove score constraints to support unlimited range
+- **evaluator**: remove score constraints to support unlimited range (#55)
+- **storage**: remove score constraints from AggregationStore
 
 ### Fix
 
 - address code review feedback from gemini-code-assist
 - Propagate MemberAgentResult.status to MemberSubmission (#59)
-- **storage**: remove score constraints from AggregationStore
 - **docs**: change deploy trigger from push to release and manual
 
 ## v0.1.0a2 (2025-12-08)

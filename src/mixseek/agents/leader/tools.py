@@ -82,6 +82,9 @@ def register_member_tools(
                     result_obj = await ma.execute(task)
                     content = result_obj.content
                     all_messages = result_obj.all_messages  # FR-034: Member Agent message history
+                    # Issue #59: MemberAgentResult.status を MemberSubmission に伝播
+                    status = result_obj.status.value.upper()  # "SUCCESS", "ERROR", or "WARNING"
+                    error_message = result_obj.error_message
                     usage = RunUsage(
                         input_tokens=result_obj.usage_info.get("input_tokens", 0) if result_obj.usage_info else 0,
                         output_tokens=result_obj.usage_info.get("output_tokens", 0) if result_obj.usage_info else 0,
@@ -92,6 +95,9 @@ def register_member_tools(
                     result_obj = await ma.run(task, deps=ctx.deps, usage=ctx.usage)
                     content = str(result_obj.output)
                     all_messages = result_obj.all_messages()  # FR-034: Member Agent message history
+                    # Pydantic AI Agent にはエラー概念がないため常に SUCCESS
+                    status = "SUCCESS"
+                    error_message = None
                     usage = result_obj.usage()
 
                 end_time = datetime.now(UTC)
@@ -102,7 +108,8 @@ def register_member_tools(
                     agent_name=mc.agent_name,
                     agent_type=mc.agent_type,
                     content=content,
-                    status="SUCCESS",
+                    status=status,  # Issue #59: result_obj.status から取得
+                    error_message=error_message,  # Issue #59: エラーメッセージを伝播
                     usage=usage,
                     execution_time_ms=execution_time_ms,
                     timestamp=end_time,

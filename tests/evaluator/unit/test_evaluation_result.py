@@ -21,43 +21,41 @@ class TestMetricScoreValidation:
         assert metric.score == 85.5
         assert metric.evaluator_comment == "Well-structured response."
 
-    def test_score_within_range_0_to_100(self) -> None:
-        """Test that score must be within 0-100 range (FR-002)."""
-        # Test minimum bound
-        metric_min = MetricScore(metric_name="test_metric", score=0.0, evaluator_comment="Minimum score")
-        assert metric_min.score == 0.0
+    def test_score_accepts_any_real_value(self) -> None:
+        """Test that score accepts any real value (no constraints)."""
+        # Test typical LLMJudgeMetric range (0-100)
+        metric_zero = MetricScore(metric_name="test_metric", score=0.0, evaluator_comment="Zero score")
+        assert metric_zero.score == 0.0
 
-        # Test maximum bound
-        metric_max = MetricScore(metric_name="test_metric", score=100.0, evaluator_comment="Maximum score")
-        assert metric_max.score == 100.0
+        metric_hundred = MetricScore(metric_name="test_metric", score=100.0, evaluator_comment="Max score")
+        assert metric_hundred.score == 100.0
 
-        # Test mid-range
         metric_mid = MetricScore(metric_name="test_metric", score=50.5, evaluator_comment="Mid-range score")
         assert metric_mid.score == 50.5
 
-    def test_score_below_zero_raises_error(self) -> None:
-        """Test that score below 0 raises ValidationError (FR-002)."""
-        with pytest.raises(ValidationError) as exc_info:
-            MetricScore(
-                metric_name="test_metric",
-                score=-1.0,
-                evaluator_comment="Invalid negative score",
-            )
+        # Test negative values (custom metrics)
+        metric_negative = MetricScore(
+            metric_name="performance_delta",
+            score=-15.5,
+            evaluator_comment="Performance degraded by 15.5%",
+        )
+        assert metric_negative.score == -15.5
 
-        error = exc_info.value
-        assert "score" in str(error)
+        # Test values above 100 (custom metrics)
+        metric_above = MetricScore(
+            metric_name="improvement_ratio",
+            score=250.0,
+            evaluator_comment="Performance improved by 250%",
+        )
+        assert metric_above.score == 250.0
 
-    def test_score_above_100_raises_error(self) -> None:
-        """Test that score above 100 raises ValidationError (FR-002)."""
-        with pytest.raises(ValidationError) as exc_info:
-            MetricScore(
-                metric_name="test_metric",
-                score=101.0,
-                evaluator_comment="Invalid high score",
-            )
-
-        error = exc_info.value
-        assert "score" in str(error)
+        # Test large negative value
+        metric_large_negative = MetricScore(
+            metric_name="loss_metric",
+            score=-1000.0,
+            evaluator_comment="Large loss",
+        )
+        assert metric_large_negative.score == -1000.0
 
     def test_empty_metric_name_raises_error(self) -> None:
         """Test that empty metric_name raises ValidationError."""
@@ -155,37 +153,37 @@ class TestEvaluationResultValidation:
         assert "duplicate" in str(error).lower()
         assert "clarity_coherence" in str(error)
 
-    def test_overall_score_within_range(self) -> None:
-        """Test that overall_score must be within 0-100 range (FR-004)."""
+    def test_overall_score_accepts_any_real_value(self) -> None:
+        """Test that overall_score accepts any real value (no constraints)."""
         metric = MetricScore(metric_name="test_metric", score=50.0, evaluator_comment="Test")
 
-        # Test minimum
-        result_min = EvaluationResult(metrics=[metric], overall_score=0.0)
-        assert result_min.overall_score == 0.0
+        # Test typical LLMJudgeMetric range (0-100)
+        result_zero = EvaluationResult(metrics=[metric], overall_score=0.0)
+        assert result_zero.overall_score == 0.0
 
-        # Test maximum
-        result_max = EvaluationResult(metrics=[metric], overall_score=100.0)
-        assert result_max.overall_score == 100.0
+        result_hundred = EvaluationResult(metrics=[metric], overall_score=100.0)
+        assert result_hundred.overall_score == 100.0
 
-    def test_overall_score_below_zero_raises_error(self) -> None:
-        """Test that overall_score below 0 raises ValidationError (FR-004)."""
-        metric = MetricScore(metric_name="test_metric", score=50.0, evaluator_comment="Test")
+        result_mid = EvaluationResult(metrics=[metric], overall_score=50.5)
+        assert result_mid.overall_score == 50.5
 
-        with pytest.raises(ValidationError) as exc_info:
-            EvaluationResult(metrics=[metric], overall_score=-1.0)
+        # Test negative values (with custom metrics)
+        metric_negative = MetricScore(metric_name="custom", score=-20.0, evaluator_comment="Negative")
+        result_negative = EvaluationResult(metrics=[metric_negative], overall_score=-20.0)
+        assert result_negative.overall_score == -20.0
 
-        error = exc_info.value
-        assert "overall_score" in str(error)
+        # Test values above 100 (with custom metrics)
+        metric_high = MetricScore(metric_name="custom", score=150.0, evaluator_comment="High")
+        result_above = EvaluationResult(metrics=[metric_high], overall_score=150.0)
+        assert result_above.overall_score == 150.0
 
-    def test_overall_score_above_100_raises_error(self) -> None:
-        """Test that overall_score above 100 raises ValidationError (FR-004)."""
-        metric = MetricScore(metric_name="test_metric", score=50.0, evaluator_comment="Test")
-
-        with pytest.raises(ValidationError) as exc_info:
-            EvaluationResult(metrics=[metric], overall_score=101.0)
-
-        error = exc_info.value
-        assert "overall_score" in str(error)
+        # Test mixed positive and negative (weighted average can be anywhere)
+        metrics_mixed = [
+            MetricScore(metric_name="positive", score=100.0, evaluator_comment="Good"),
+            MetricScore(metric_name="negative", score=-50.0, evaluator_comment="Bad"),
+        ]
+        result_mixed = EvaluationResult(metrics=metrics_mixed, overall_score=25.0)
+        assert result_mixed.overall_score == 25.0
 
     def test_overall_score_rounding(self) -> None:
         """Test that overall_score is rounded to 2 decimal places."""

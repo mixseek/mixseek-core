@@ -178,28 +178,36 @@ class MetricScore(BaseModel):
 
     This model represents the result of evaluating one specific metric
     (e.g., clarity_coherence, coverage, or relevance). It includes both
-    a quantitative score (0-100) and a qualitative comment explaining
-    the evaluation.
+    a quantitative score and a qualitative comment explaining the evaluation.
 
     Attributes:
         metric_name: Name of the metric (e.g., "clarity_coherence", "coverage", "relevance")
-        score: Numerical score between 0 and 100 (FR-002)
+        score: Numerical score (any real value). Built-in LLMJudgeMetrics return 0-100,
+            but custom metrics may return negative values or values above 100
         evaluator_comment: Detailed explanation of the score (FR-012)
 
     Example:
         ```python
         from mixseek.models.evaluation_result import MetricScore
 
+        # LLMJudgeMetric example (typically 0-100)
         metric = MetricScore(
             metric_name="clarity_coherence",
             score=85.5,
             evaluator_comment="The response is well-structured and easy to understand..."
         )
+
+        # Custom metric example (arbitrary value)
+        custom_metric = MetricScore(
+            metric_name="performance_delta",
+            score=-15.2,
+            evaluator_comment="Performance degraded by 15.2%"
+        )
         ```
 
     Validation Rules:
         - metric_name: Must be non-empty string
-        - score: Must be between 0 and 100 (inclusive) (FR-002)
+        - score: Any real value (no constraints)
         - evaluator_comment: Must be non-empty string
     """
 
@@ -211,10 +219,8 @@ class MetricScore(BaseModel):
 
     score: float = Field(
         ...,
-        ge=0.0,
-        le=100.0,
-        description="Numerical score between 0 and 100 (FR-002)",
-        examples=[85.5, 72.3, 91.0]
+        description="Numerical score (any real value, custom metrics may use negative values or values above 100)",
+        examples=[85.5, 72.3, 91.0, -15.2, 150.0]
     )
 
     evaluator_comment: str = Field(
@@ -281,12 +287,15 @@ class EvaluationResult(BaseModel):
 
     Attributes:
         metrics: List of individual metric scores
-        overall_score: Weighted average of all metric scores (0-100)
+        overall_score: Weighted average of all metric scores (any real value).
+            Typically 0-100 when using only LLMJudgeMetrics, but may be negative
+            or above 100 when custom metrics are included
 
     Example:
         ```python
         from mixseek.models.evaluation_result import EvaluationResult, MetricScore
 
+        # LLMJudgeMetrics only example (typically 0-100)
         result = EvaluationResult(
             metrics=[
                 MetricScore(metric_name="clarity_coherence", score=85.5, evaluator_comment="Clear..."),
@@ -294,11 +303,20 @@ class EvaluationResult(BaseModel):
             ],
             overall_score=87.2
         )
+
+        # With custom metrics example (arbitrary value)
+        result_with_custom = EvaluationResult(
+            metrics=[
+                MetricScore(metric_name="clarity_coherence", score=85.5, evaluator_comment="Clear..."),
+                MetricScore(metric_name="performance_delta", score=-20.0, evaluator_comment="Degraded..."),
+            ],
+            overall_score=32.75  # Weighted average
+        )
         ```
 
     Validation Rules:
         - metrics: Must contain at least 1 metric (FR-001 requires 3 built-in metrics)
-        - overall_score: Must be between 0 and 100 (FR-004)
+        - overall_score: Any real value (no constraints)
         - overall_score: Should match weighted average of metric scores
     """
 
@@ -310,10 +328,8 @@ class EvaluationResult(BaseModel):
 
     overall_score: float = Field(
         ...,
-        ge=0.0,
-        le=100.0,
-        description="Weighted average of all metric scores (FR-004)",
-        examples=[87.2, 75.5, 92.3]
+        description="Weighted average of all metric scores (any real value)",
+        examples=[87.2, 75.5, 92.3, -5.3, 120.0]
     )
 
     @field_validator("overall_score")
@@ -800,10 +816,10 @@ Output:
 | EvaluationRequest | submission | Not empty/whitespace (FR-013) |
 | EvaluationRequest | team_id | Not empty |
 | MetricScore | metric_name | Not empty |
-| MetricScore | score | 0-100 range, rounded to 2 decimals (FR-002) |
+| MetricScore | score | Any real value, rounded to 2 decimals |
 | MetricScore | evaluator_comment | Not empty (FR-012) |
 | EvaluationResult | metrics | Min 1 item, unique names |
-| EvaluationResult | overall_score | 0-100 range, rounded to 2 decimals (FR-004) |
+| EvaluationResult | overall_score | Any real value, rounded to 2 decimals |
 | MetricConfig | name | Not empty |
 | MetricConfig | weight | 0.0-1.0 range (FR-003) |
 | MetricConfig | model | "provider:model-name" format if set (FR-015) |

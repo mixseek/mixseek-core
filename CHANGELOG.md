@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a3 (2025-12-16)
+
+### Feat
+
+- **evaluator**: remove score constraints to support unlimited range
+
+### Fix
+
+- address code review feedback from gemini-code-assist
+- Propagate MemberAgentResult.status to MemberSubmission (#59)
+- **storage**: remove score constraints from AggregationStore
+- **docs**: change deploy trigger from push to release and manual
+
 ## v0.1.0a2 (2025-12-08)
 
 ### Feat

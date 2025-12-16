@@ -31,7 +31,7 @@ class Execution(BaseModel):
     prompt: str = Field(..., description="ユーザプロンプト")
     status: ExecutionStatus = Field(..., description="実行ステータス")
     best_team_id: str | None = Field(None, description="最高スコアチームID")
-    best_score: float | None = Field(None, description="最高評価スコア（0-100）")
+    best_score: float | None = Field(None, description="最高評価スコア")
     duration_seconds: float | None = Field(None, description="実行時間（秒）")
     created_at: datetime = Field(..., description="実行開始日時")
     completed_at: datetime | None = Field(None, description="実行完了日時")
@@ -49,8 +49,7 @@ class Execution(BaseModel):
     def result_summary(self) -> str | None:
         """結果サマリー（best_team_idとbest_scoreから生成）."""
         if self.best_team_id and self.best_score is not None:
-            score_display = round(self.best_score)  # 整数に四捨五入（既に0-100の範囲）
-            return f"Best Team: {self.best_team_id} (Score: {score_display})"
+            return f"Best Team: {self.best_team_id} (Score: {self.best_score})"
         return None
 
     class Config:

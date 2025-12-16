@@ -73,7 +73,7 @@ class RoundResult(BaseModel):
     team_name: str = Field(description="チーム名")
     round_number: int = Field(ge=1, description="ラウンド番号")
     submission_content: str = Field(description="Submissionテキスト")
-    evaluation_score: float = Field(ge=0.0, le=1.0, description="評価スコア（0.0-1.0スケール）")
+    evaluation_score: float = Field(description="評価スコア")
     evaluation_feedback: str = Field(description="評価フィードバック")
     usage: RunUsage = Field(description="リソース使用量")
     execution_time_seconds: float = Field(gt=0, description="実行時間（秒）")
@@ -105,7 +105,7 @@ class ExecutionSummary(BaseModel):
         default_factory=list, description="各チームの最高スコアSubmission (LeaderBoardEntry)"
     )
     best_team_id: str | None = Field(default=None, description="最高スコアチームID")
-    best_score: float | None = Field(default=None, ge=0.0, le=100.0, description="最高評価スコア（0-100スケール）")
+    best_score: float | None = Field(default=None, description="最高評価スコア")
     total_execution_time_seconds: float = Field(gt=0, description="総実行時間（秒）")
     failed_teams_info: list[FailedTeamInfo] = Field(default_factory=list, description="失敗チームの詳細情報")
     created_at: datetime = Field(

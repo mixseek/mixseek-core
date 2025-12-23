@@ -110,6 +110,7 @@ async def get_all_team_statuses(self) -> list[TeamStatus]:
 
 ```python
 from pathlib import Path
+from mixseek.agents.leader.models import MemberSubmission
 from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
 from mixseek.round_controller import RoundState
 
@@ -120,7 +121,7 @@ settings = load_orchestrator_settings(Path("orchestrator.toml"))
 orchestrator = Orchestrator(settings=settings)
 
 # コールバック付きの使用
-async def on_round_complete(round_state: RoundState, member_submissions: list) -> None:
+async def on_round_complete(round_state: RoundState, member_submissions: list[MemberSubmission]) -> None:
     print(f"Round {round_state.round_number} completed with score {round_state.evaluation_score}")
 
 orchestrator = Orchestrator(

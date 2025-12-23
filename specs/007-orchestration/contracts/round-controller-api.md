@@ -13,19 +13,34 @@
 ### Constructor
 
 ```python
+from mixseek.round_controller import OnRoundCompleteCallback
+from mixseek.orchestrator.models import OrchestratorTask
+from mixseek.config.schema import EvaluatorSettings, JudgmentSettings, PromptBuilderSettings
+
 class RoundController:
     def __init__(
         self,
         team_config_path: Path,
         workspace: Path,
-        round_number: int = 1,
+        task: OrchestratorTask,
+        evaluator_settings: EvaluatorSettings,
+        judgment_settings: JudgmentSettings,
+        prompt_builder_settings: PromptBuilderSettings,
+        save_db: bool = True,
+        on_round_complete: OnRoundCompleteCallback | None = None,
     ) -> None:
         """RoundControllerインスタンス作成
 
         Args:
             team_config_path: チーム設定TOMLファイルパス
             workspace: ワークスペースパス
-            round_number: ラウンド番号（初期実装では常に1）
+            task: Orchestratorタスク（execution_id、max_rounds、min_roundsを含む）
+            evaluator_settings: Evaluator設定（Orchestratorから渡される）
+            judgment_settings: Judgment設定（Orchestratorから渡される）
+            prompt_builder_settings: PromptBuilder設定（Orchestratorから渡される）
+            save_db: DuckDBへの保存フラグ（デフォルト: True）
+            on_round_complete: ラウンド完了時に呼び出されるコールバック（オプション）。
+                (RoundState, list[MemberSubmission])を受け取り、例外が発生しても実行は継続されます。
 
         Raises:
             FileNotFoundError: team_config_pathが存在しない場合
@@ -42,19 +57,32 @@ async def run_round(
     self,
     user_prompt: str,
     timeout_seconds: int,
-) -> RoundResult:
-    """1ラウンドを実行し、結果を返す
+) -> LeaderBoardEntry:
+    """マルチラウンドを実行し、最良のLeaderBoardEntryを返す
+
+    処理フロー:
+    1. max_roundsまでラウンドを繰り返す
+    2. 各ラウンド:
+       - Leader Agent実行
+       - Evaluator実行（0-100スケール）
+       - DuckDB記録（round_history, leader_board）
+       - on_round_completeコールバック呼び出し（設定されている場合）
+       - 改善見込み判定（min_rounds以降）
+    3. 最高スコアの提出を返す
 
     Args:
         user_prompt: ユーザプロンプト
         timeout_seconds: タイムアウト（秒）
 
     Returns:
-        RoundResult: ラウンド実行結果
+        LeaderBoardEntry: 最良の提出エントリ（全ラウンド中の最高スコア）
 
     Raises:
         TimeoutError: タイムアウト発生時
         Exception: Leader AgentまたはEvaluatorでエラー発生時
+
+    Note:
+        execution_idはOrchestratorTaskに含まれています
     """
 ```
 
@@ -115,24 +143,58 @@ def get_team_name(self) -> str:
 
 ```python
 from pathlib import Path
-from mixseek.orchestrator import RoundController
+from mixseek.config.manager import ConfigurationManager
+from mixseek.orchestrator.models import OrchestratorTask
+from mixseek.round_controller import RoundController, RoundState
+from mixseek.agents.leader.models import MemberSubmission
 
-# RoundController作成
-controller = RoundController(
-    team_config_path=Path("workspace/configs/team1.toml"),
-    workspace=Path("workspace"),
-    round_number=1,
+# Evaluator設定を取得
+workspace = Path("/path/to/workspace")
+config_manager = ConfigurationManager(workspace=workspace)
+evaluator_settings = config_manager.get_evaluator_settings()
+judgment_settings = config_manager.get_judgment_settings()
+prompt_builder_settings = config_manager.get_prompt_builder_settings()
+
+# OrchestratorTask作成
+task = OrchestratorTask(
+    user_prompt="...",
+    team_configs=[Path("team.toml")],
+    timeout_seconds=600,
+    max_rounds=3,
+    min_rounds=1,
 )
 
-# 1ラウンド実行
+# コールバック定義（オプション）
+async def on_round_complete(
+    round_state: RoundState,
+    member_submissions: list[MemberSubmission],
+) -> None:
+    print(f"Round {round_state.round_number} completed with score {round_state.evaluation_score}")
+
+# RoundController初期化
+controller = RoundController(
+    team_config_path=Path("team.toml"),
+    workspace=workspace,
+    task=task,
+    evaluator_settings=evaluator_settings,
+    judgment_settings=judgment_settings,
+    prompt_builder_settings=prompt_builder_settings,
+    save_db=True,
+    on_round_complete=on_round_complete,
+)
+
+# マルチラウンド実行
 result = await controller.run_round(
     user_prompt="最新のAI技術トレンドを調査してください",
     timeout_seconds=600,
 )
 
-print(f"チーム: {result.team_name}")
-print(f"スコア: {result.evaluation_score}")
-print(f"実行時間: {result.execution_time_seconds}秒")
+print(f"Execution ID: {result.execution_id}")
+print(f"Team: {result.team_name}")
+print(f"Best Round: {result.round_number}")
+print(f"Score: {result.score}")  # 0-100スケール
+print(f"Submission: {result.submission_content}")
+print(f"Exit Reason: {result.exit_reason}")
 ```
 
 ### Timeout Implementation

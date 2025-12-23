@@ -1,0 +1,7 @@
+# DDD Phase 2: Non-Code Files Index
+# Issue #68: Orchestrator on_round_complete Callback Exposure
+
+[x] docs/orchestrator-guide.md - Orchestratorでのコールバック使用例を追加
+[x] docs/api/orchestrator/index.md - Orchestrator APIリファレンスにパラメータ追加
+[x] specs/007-orchestration/contracts/orchestrator-api.md - Orchestrator契約にパラメータ追加
+[x] specs/007-orchestration/contracts/round-controller-api.md - RoundController契約を現在の実装と同期

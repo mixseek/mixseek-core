@@ -11,10 +11,6 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 - **orchestrator**: add on_round_complete callback parameter
 
-### Fix
-
-- address code review feedback from gemini-code-assist
-
 ## v0.1.0a3 (2025-12-16)
 
 ### Breaking Changes

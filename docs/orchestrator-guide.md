@@ -533,6 +533,64 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+### ラウンド完了時のコールバック
+
+Orchestratorは`on_round_complete`パラメータを受け付け、各チームの各ラウンド完了時にカスタム処理を実行できます。このコールバックは全チームの全RoundControllerに渡され、ラウンド完了時に呼び出されます。
+
+```python
+import asyncio
+from pathlib import Path
+from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
+from mixseek.round_controller import RoundState
+from mixseek.agents.leader.models import MemberSubmission
+
+async def on_round_complete(
+    round_state: RoundState,
+    member_submissions: list[MemberSubmission],
+) -> None:
+    """各ラウンド完了時に呼び出されるコールバック"""
+    print(f"Round {round_state.round_number} completed with score {round_state.evaluation_score}")
+
+    # Member Agentの結果を処理
+    for sub in member_submissions:
+        print(f"  - {sub.agent_name}: {sub.status}")
+
+    # カスタム処理（例: 外部サービスへの通知、追加データ保存など）
+    # await external_service.notify(round_state)
+
+async def main():
+    settings = load_orchestrator_settings(
+        Path("orchestrator.toml"),
+        workspace=Path("/path/to/workspace"),
+    )
+
+    # on_round_completeコールバックを設定
+    orchestrator = Orchestrator(
+        settings=settings,
+        on_round_complete=on_round_complete,
+    )
+
+    summary = await orchestrator.execute(
+        user_prompt="最新のAI技術トレンドを調査してください",
+        timeout_seconds=600,
+    )
+
+    print(f"Best Team: {summary.best_team_id} (Score: {summary.best_score})")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**ユースケース**:
+- リアルタイム進捗追跡（UIへの更新通知など）
+- カスタムデータ保存（拡張プロジェクト固有のストレージへの保存）
+- 外部サービス連携（Slack通知、メトリクス送信など）
+- 研究用途（citation情報の収集、search結果の保存など）
+
+**注意事項**:
+- コールバック内で例外が発生しても、RoundControllerの実行は継続されます
+- 例外は警告ログとして記録されます
+
 ### RoundControllerの直接使用
 
 **Note**: RoundControllerは通常Orchestrator経由で使用します。直接使用する場合は、必要なパラメータ（task、evaluator_settings）を自分で準備する必要があります。
@@ -588,84 +646,35 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### ラウンド完了時のフック機構
+### ラウンド完了時のフック機構（RoundController直接使用時）
 
-RoundControllerは、各ラウンド完了時にカスタム処理を実行するためのフック機構を提供します。拡張プロジェクトがRoundControllerを継承せずにカスタム処理を追加できます。
-
-#### OnRoundCompleteCallback型
-
-フックは以下の型エイリアスで定義されています：
+RoundControllerを直接使用する場合も、`on_round_complete`パラメータでコールバックを設定できます。Orchestrator経由で使用する場合は、[ラウンド完了時のコールバック](#ラウンド完了時のコールバック)を参照してください。
 
 ```python
-from typing import Callable, Awaitable
-from mixseek.round_controller.models import RoundState
-from mixseek.models.leader_agent import MemberSubmission
-
-OnRoundCompleteCallback = Callable[
-    [RoundState, list[MemberSubmission]],
-    Awaitable[None]
-]
-```
-
-#### 基本的な使い方
-
-```python
-from mixseek.round_controller import RoundController, RoundState, OnRoundCompleteCallback
+from mixseek.round_controller import RoundController, RoundState
 from mixseek.agents.leader.models import MemberSubmission
 
 async def on_round_complete(round_state: RoundState, member_submissions: list[MemberSubmission]) -> None:
     """ラウンド完了時に呼び出されるフック"""
     print(f"Round {round_state.round_number} completed with score {round_state.evaluation_score}")
-    for sub in member_submissions:
-        print(f"  - {sub.agent_name}: {sub.status}")
 
-# RoundController初期化時にフックを設定
 controller = RoundController(
     team_config_path=Path("team.toml"),
     workspace=workspace,
     task=task,
     evaluator_settings=evaluator_settings,
-    on_round_complete=on_round_complete,  # フックを設定
+    on_round_complete=on_round_complete,
 )
 
 result = await controller.run_round(user_prompt, timeout_seconds=600)
 ```
 
-#### フック関数の引数
-
-フック関数は以下の引数を受け取ります：
+**コールバック引数**:
 
 | 引数 | 型 | 説明 |
 |------|-----|------|
 | `round_state` | `RoundState` | ラウンドの状態（スコア、submission内容、タイムスタンプ等） |
 | `member_submissions` | `list[MemberSubmission]` | Member Agentの応答リスト（Leaderの最終submissionとは別） |
-
-#### ユースケース例: カスタムデータ保存
-
-拡張プロジェクトで独自のデータ保存を行う例：
-
-```python
-async def on_round_complete(round_state: RoundState, member_submissions: list[MemberSubmission]) -> None:
-    """ラウンド完了時にsearch_resultsを保存"""
-    for submission in member_submissions:
-        if submission.metadata and "search_result_id" in submission.metadata:
-            await research_store.save_from_submission(submission)
-
-controller = RoundController(
-    ...,
-    on_round_complete=on_round_complete,
-)
-```
-
-#### エラーハンドリング
-
-フック内で例外が発生しても、RoundControllerの実行は継続されます。例外は警告ログとして記録されます：
-
-```
-WARNING - on_round_complete hook failed: [エラーメッセージ]
-```
-
-フック内でエラーハンドリングが必要な場合は、フック関数内で`try-except`を使用してください。
 
 ### 非同期実行の扱い
 

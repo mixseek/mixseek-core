@@ -13,17 +13,22 @@
 ### Constructor
 
 ```python
+from mixseek.round_controller import OnRoundCompleteCallback
+
 class Orchestrator:
     def __init__(
         self,
         settings: OrchestratorSettings,
         save_db: bool = True,
+        on_round_complete: OnRoundCompleteCallback | None = None,
     ) -> None:
         """Orchestratorインスタンス作成
 
         Args:
             settings: オーケストレータ設定
             save_db: DuckDBへの保存フラグ
+            on_round_complete: ラウンド完了時に呼び出されるコールバック（オプション）。
+                全チームの全RoundControllerに渡され、各ラウンド完了時に呼び出されます。
 
         Raises:
             EnvironmentError: MIXSEEK_WORKSPACE未設定時
@@ -105,13 +110,24 @@ async def get_all_team_statuses(self) -> list[TeamStatus]:
 
 ```python
 from pathlib import Path
+from mixseek.agents.leader.models import MemberSubmission
 from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
+from mixseek.round_controller import RoundState
 
 # 設定読み込み
 settings = load_orchestrator_settings(Path("orchestrator.toml"))
 
-# Orchestrator作成
+# 基本的な使用
 orchestrator = Orchestrator(settings=settings)
+
+# コールバック付きの使用
+async def on_round_complete(round_state: RoundState, member_submissions: list[MemberSubmission]) -> None:
+    print(f"Round {round_state.round_number} completed with score {round_state.evaluation_score}")
+
+orchestrator = Orchestrator(
+    settings=settings,
+    on_round_complete=on_round_complete,
+)
 
 # 実行
 summary = await orchestrator.execute(

@@ -20,14 +20,15 @@ try:
 except ImportError:
     LOGFIRE_AVAILABLE = False
 
-if TYPE_CHECKING:
-    from mixseek.round_controller import RoundController
 from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator.models import (
     ExecutionSummary,
     OrchestratorTask,
     TeamStatus,
 )
+
+if TYPE_CHECKING:
+    from mixseek.round_controller import OnRoundCompleteCallback, RoundController
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +75,15 @@ class Orchestrator:
         self,
         settings: OrchestratorSettings,
         save_db: bool = True,
+        on_round_complete: OnRoundCompleteCallback | None = None,
     ) -> None:
         """Orchestratorインスタンス作成（FR-011: OrchestratorSettings直接受け取り）
 
         Args:
             settings: オーケストレータ設定（OrchestratorSettings）
             save_db: DuckDBへの保存フラグ
+            on_round_complete: ラウンド完了時に呼び出されるコールバック（オプション）。
+                全チームの全RoundControllerに渡され、各ラウンド完了時に呼び出されます。
 
         Raises:
             ValidationError: 設定バリデーション失敗時
@@ -90,6 +94,7 @@ class Orchestrator:
         """
         self.settings = settings
         self.save_db = save_db
+        self._on_round_complete = on_round_complete
 
         self.workspace = self.settings.workspace_path
         self.max_retries = self.settings.max_retries_per_team
@@ -231,6 +236,7 @@ class Orchestrator:
                 judgment_settings=judgment_settings,
                 prompt_builder_settings=prompt_builder_settings,
                 save_db=self.save_db,
+                on_round_complete=self._on_round_complete,
             )
             for team_config_path in task.team_configs
         ]
@@ -302,20 +308,20 @@ class Orchestrator:
             failed_teams_info=failed_teams_info,
         )
 
+        # ステータス決定（全成功=completed、一部失敗=partial_failure、全失敗=failed）
+        execution_status: str
+        if len(failed_teams_info) == 0:
+            execution_status = "completed"
+        elif len(team_results) == 0:
+            execution_status = "failed"
+        else:
+            execution_status = "partial_failure"
+
         # DuckDBに保存（Orchestrator統合、025-mixseek-core-orchestration）
         if self.save_db:
             from mixseek.storage.aggregation_store import AggregationStore
 
             store = AggregationStore(db_path=self.workspace / "mixseek.db")
-
-            # ステータス決定（全成功=completed、一部失敗=partial_failure、全失敗=failed）
-            execution_status: str
-            if len(failed_teams_info) == 0:
-                execution_status = "completed"
-            elif len(team_results) == 0:
-                execution_status = "failed"
-            else:
-                execution_status = "partial_failure"
 
             await store.save_execution_summary(
                 execution_id=summary.execution_id,

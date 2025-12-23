@@ -1,11 +1,14 @@
 """Unit tests for Orchestrator"""
 
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from mixseek.agents.leader.models import MemberSubmission
 from mixseek.config.schema import OrchestratorSettings
 from mixseek.orchestrator import Orchestrator
+from mixseek.round_controller import RoundState
 
 
 @pytest.fixture
@@ -156,3 +159,101 @@ async def test_orchestrator_receives_leaderboard_entries(tmp_path: Path, monkeyp
         # Verify: best_score is on 0-100 scale
         assert summary.best_score == 85.0
         assert summary.best_team_id == "test-team-001"
+
+
+# =============================================================================
+# Issue #68: on_round_complete callback tests
+# =============================================================================
+
+
+def test_orchestrator_with_on_round_complete(orchestrator_settings: OrchestratorSettings) -> None:
+    """Orchestrator on_round_complete パラメータテスト
+
+    Issue #68: OrchestratorがRoundControllerにon_round_completeをパススルーする
+    """
+
+    async def dummy_callback(
+        round_state: RoundState,
+        member_submissions: list[MemberSubmission],
+    ) -> None:
+        pass
+
+    orchestrator = Orchestrator(
+        settings=orchestrator_settings,
+        on_round_complete=dummy_callback,
+    )
+    assert orchestrator._on_round_complete is dummy_callback
+
+
+def test_orchestrator_on_round_complete_none_default(orchestrator_settings: OrchestratorSettings) -> None:
+    """Orchestrator on_round_complete デフォルト値テスト
+
+    Issue #68: on_round_completeのデフォルト値はNone
+    """
+    orchestrator = Orchestrator(settings=orchestrator_settings)
+    assert orchestrator._on_round_complete is None
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_passes_on_round_complete_to_round_controller(tmp_path: Path) -> None:
+    """Orchestrator が on_round_complete を RoundController に渡すことを検証
+
+    Issue #68: OrchestratorはRoundController作成時にon_round_completeをパススルーする
+    """
+    from datetime import UTC, datetime
+
+    from mixseek.models.leaderboard import LeaderBoardEntry
+
+    async def dummy_callback(
+        round_state: RoundState,
+        member_submissions: list[MemberSubmission],
+    ) -> None:
+        pass
+
+    # 絶対パスに変換
+    team1_path = str(Path("tests/fixtures/team1.toml").resolve())
+
+    settings = OrchestratorSettings(
+        workspace_path=tmp_path,
+        timeout_per_team_seconds=600,
+        teams=[{"config": team1_path}],
+    )
+
+    orchestrator = Orchestrator(
+        settings=settings,
+        save_db=False,
+        on_round_complete=dummy_callback,
+    )
+
+    # Mock RoundController to capture constructor arguments
+    # Note: RoundController is lazy imported inside _execute_impl, so patch the source module
+    with patch("mixseek.round_controller.RoundController") as mock_rc_class:
+        mock_rc = AsyncMock()
+        mock_rc.get_team_id.return_value = "test-team-001"
+        mock_rc.get_team_name.return_value = "Test Team 1"
+
+        # Create a mock LeaderBoardEntry
+        mock_entry = LeaderBoardEntry(
+            execution_id="test-execution-id",
+            team_id="test-team-001",
+            team_name="Test Team 1",
+            round_number=1,
+            submission_content="Test submission",
+            score=80.0,
+            score_details={"metric1": 80.0},
+            final_submission=True,
+            exit_reason="max rounds reached",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        mock_rc.run_round.return_value = mock_entry
+        mock_rc_class.return_value = mock_rc
+
+        # Execute
+        await orchestrator.execute(user_prompt="Test prompt", timeout_seconds=300)
+
+        # Verify RoundController was instantiated with on_round_complete
+        mock_rc_class.assert_called_once()
+        call_kwargs = mock_rc_class.call_args.kwargs
+        assert "on_round_complete" in call_kwargs
+        assert call_kwargs["on_round_complete"] is dummy_callback

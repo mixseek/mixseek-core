@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a5 (2025-12-24)
+
+### Feat
+
+- skip model prefix validation for custom agents
+
+### Fix
+
+- separate empty model and missing colon error messages
+
 ## v0.1.0a4 (2025-12-23)
 
 ### Feat

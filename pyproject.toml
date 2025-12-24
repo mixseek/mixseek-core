@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "mixseek-core"
-version = "0.1.0a4"
+version = "0.1.0a5"
 description = "Pydantic AI-based multi-agent framework with hierarchical task delegation, round-based evaluation, and workspace CLI"
 readme = "README.md"
 requires-python = ">=3.13.7"
@@ -153,7 +153,7 @@ filterwarnings = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0a4"
+version = "0.1.0a5"
 version_files = [
     "pyproject.toml:version"
 ]

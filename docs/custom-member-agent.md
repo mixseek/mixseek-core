@@ -119,6 +119,26 @@ path = "/path/to/custom_agent.py"                          # フォールバッ�
 agent_class = "DataAnalystAgent"
 ```
 
+### カスタムモデルプレフィックス
+
+カスタムエージェント（`type = "custom"`）は、標準のモデルプレフィックス（`google-gla:`, `anthropic:` 等）に加えて、任意のモデルプレフィックスを使用できます。これにより、独自のLLMプロバイダーやカスタムモデルラッパーとの統合が可能です。
+
+```toml
+[agent]
+name = "custom-llm-agent"
+type = "custom"
+model = "my-provider:custom-model-v1"  # カスタムプレフィックス
+system_instruction = "Custom LLM integration example."
+
+[agent.plugin]
+agent_module = "my_package.agents.custom_llm"
+agent_class = "CustomLLMAgent"
+```
+
+```{note}
+ビルトインエージェント（`plain`, `web_search`, `code_execution`）では、標準のモデルプレフィックス（`google-gla:`, `google-vertex:`, `openai:`, `anthropic:`, `grok:`, `grok-responses:`）のみ使用可能です。
+```
+
 ## エラーハンドリング
 
 カスタムエージェントのロードに失敗した場合、詳細なエラーメッセージが表示されます（FR-022）

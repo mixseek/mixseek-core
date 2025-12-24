@@ -10,6 +10,7 @@ the implementation to ensure proper extensibility.
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from mixseek.agents.member.base import BaseMemberAgent
 from mixseek.agents.member.factory import MemberAgentFactory
@@ -139,3 +140,71 @@ class TestCustomAgentType:
 
         with pytest.raises(ValueError, match="Unsupported agent type"):
             MemberAgentFactory.create_agent(config)
+
+    def test_custom_agent_accepts_custom_model_prefix(self) -> None:
+        """Test that custom agents can use arbitrary model prefixes.
+
+        Issue #72: Custom agents (type="custom") should skip model prefix
+        validation and accept any provider:model format.
+        """
+        config = MemberAgentConfig(
+            name="my-agent",
+            type="custom",
+            model="my-provider:custom-model-v1",
+            system_instruction="Test instructions.",
+        )
+        assert config.model == "my-provider:custom-model-v1"
+
+    def test_builtin_agent_rejects_custom_model_prefix(self) -> None:
+        """Test that builtin agents reject non-standard model prefixes.
+
+        Builtin agents (plain, web_search, code_execution) must use standard
+        prefixes: google-gla:, google-vertex:, openai:, anthropic:, grok:, grok-responses:
+        """
+        with pytest.raises(ValidationError) as exc_info:
+            MemberAgentConfig(
+                name="my-agent",
+                type="plain",
+                model="custom-prefix:my-model",
+                system_instruction="Test instructions.",
+            )
+        # Use errors() for more robust assertion
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["loc"] == ("model",)
+        assert "Unsupported model" in errors[0]["msg"]
+
+    def test_custom_agent_rejects_empty_model(self) -> None:
+        """Test that custom agents reject empty model string.
+
+        Even custom agents require basic format validation:
+        model must be non-empty and contain colon separator.
+        """
+        with pytest.raises(ValidationError) as exc_info:
+            MemberAgentConfig(
+                name="my-agent",
+                type="custom",
+                model="",
+                system_instruction="Test instructions.",
+            )
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["loc"] == ("model",)
+        assert "cannot be empty" in errors[0]["msg"]
+
+    def test_custom_agent_rejects_model_without_colon(self) -> None:
+        """Test that custom agents reject model without colon separator.
+
+        Even custom agents require 'prefix:model' format.
+        """
+        with pytest.raises(ValidationError) as exc_info:
+            MemberAgentConfig(
+                name="my-agent",
+                type="custom",
+                model="no-colon-here",
+                system_instruction="Test instructions.",
+            )
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["loc"] == ("model",)
+        assert "prefix:model" in errors[0]["msg"]

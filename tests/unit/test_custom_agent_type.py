@@ -190,7 +190,7 @@ class TestCustomAgentType:
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["loc"] == ("model",)
-        assert "prefix:model" in errors[0]["msg"]
+        assert "cannot be empty" in errors[0]["msg"]
 
     def test_custom_agent_rejects_model_without_colon(self) -> None:
         """Test that custom agents reject model without colon separator.

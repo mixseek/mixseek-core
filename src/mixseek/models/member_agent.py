@@ -338,7 +338,9 @@ class MemberAgentConfig(BaseModel):
         # Skip prefix validation for custom agents - they can use any model prefix
         # but still require basic format: non-empty string with colon separator
         if info.data.get("type") == AgentType.CUSTOM.value:
-            if not v or ":" not in v:
+            if not v:
+                raise ValueError("Invalid model format. Custom agent model identifier cannot be empty.")
+            if ":" not in v:
                 raise ValueError(
                     f"Invalid model format '{v}'. Custom agents require "
                     f"'prefix:model' format (e.g., 'my-provider:my-model')."

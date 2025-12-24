@@ -45,7 +45,7 @@ config = MemberAgentConfig(
 
 - `name: str` - エージェントの一意な識別子（必須）
 - `type: str` - エージェントタイプ（必須、標準タイプ: "plain", "web_search", "code_execution"、またはカスタム文字列）
-- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-2.5-flash"）
+- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-2.5-flash"）。標準タイプでは `google-gla:`, `google-vertex:`, `openai:`, `anthropic:`, `grok:`, `grok-responses:` のプレフィックスが必須。`type="custom"` では任意のプレフィックスが使用可能
 - `temperature: float` - 応答のランダム性（0.0-1.0、デフォルト: 0.2）
 - `max_tokens: int` - 最大トークン数（1-8192、デフォルト: 2048）
 - `instructions: AgentInstructions` - エージェントへの指示（必須）

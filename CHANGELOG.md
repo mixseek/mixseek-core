@@ -11,10 +11,6 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 - skip model prefix validation for custom agents
 
-### Fix
-
-- separate empty model and missing colon error messages
-
 ## v0.1.0a4 (2025-12-23)
 
 ### Feat

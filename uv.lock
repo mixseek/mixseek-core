@@ -2003,7 +2003,7 @@ wheels = [
 
 [[package]]
 name = "mixseek-core"
-version = "0.1.0a4"
+version = "0.1.0a5"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },

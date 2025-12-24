@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from pydantic_ai.messages import ModelMessage
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -324,8 +324,28 @@ class MemberAgentConfig(BaseModel):
 
     @field_validator("model")
     @classmethod
-    def validate_model(cls, v: str) -> str:
-        """Validate model identifier format."""
+    def validate_model(cls, v: str, info: ValidationInfo) -> str:
+        """Validate model identifier format.
+
+        Note: Custom agents (type="custom") skip prefix validation and can use
+        any model prefix. Builtin agents require standard prefixes.
+
+        IMPORTANT: This validator depends on field definition order.
+        The 'type' field MUST be defined before 'model' field (Pydantic v2
+        validates fields in definition order). If field order changes,
+        info.data.get("type") may return None.
+        """
+        # Skip prefix validation for custom agents - they can use any model prefix
+        # but still require basic format: non-empty string with colon separator
+        if info.data.get("type") == AgentType.CUSTOM.value:
+            if not v or ":" not in v:
+                raise ValueError(
+                    f"Invalid model format '{v}'. Custom agents require "
+                    f"'prefix:model' format (e.g., 'my-provider:my-model')."
+                )
+            return v
+
+        # Existing validation logic for builtin agents
         # Support Google AI, Vertex AI, OpenAI, Anthropic, and Grok models
         if v.startswith("google-gla:"):
             return v

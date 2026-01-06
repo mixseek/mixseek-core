@@ -23,7 +23,7 @@ class TestTeamDependencies:
     def test_create_team_dependencies(self) -> None:
         """TeamDependencies初期化"""
         # Act
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Assert
         assert deps.team_id == "team-001"
@@ -34,7 +34,7 @@ class TestTeamDependencies:
     def test_submissions_list_is_mutable(self) -> None:
         """submissionsリストがmutable（Agent Delegation時に追加可能）"""
         # Arrange
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Act: MemberSubmission追加
         submission = MemberSubmission(
@@ -53,7 +53,7 @@ class TestTeamDependencies:
     def test_multiple_submissions(self) -> None:
         """複数のMemberSubmission追加（Agent Delegationで複数Member Agent実行）"""
         # Arrange
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Act: 複数追加
         deps.submissions.append(
@@ -83,7 +83,7 @@ class TestTeamDependencies:
     def test_submissions_initially_empty(self) -> None:
         """submissionsは初期状態で空リスト"""
         # Act
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Assert
         assert isinstance(deps.submissions, list)

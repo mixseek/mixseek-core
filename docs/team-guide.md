@@ -86,15 +86,30 @@ Member AgentはTOML設定から動的にToolとして登録されます：
 @leader_agent.tool
 async def delegate_to_analyst(ctx: RunContext[TeamDependencies], task: str) -> str:
     """論理的な分析を実行します"""
-    result = await analyst_agent.run(
-        task,
-        deps=ctx.deps,
-        usage=ctx.usage  # 重要: Leader AgentのUsageに統合
-    )
-    return str(result.output)
+    # Context injection: execution_id, team_id, round_numberを渡す
+    context = {
+        "execution_id": ctx.deps.execution_id,
+        "team_id": ctx.deps.team_id,
+        "round_number": ctx.deps.round_number,
+    }
+    result = await analyst_agent.execute(task, context=context)
+    return result.content
 ```
 
 Tool関数の `__name__` と `__doc__` が、LLMのTool選択時の判断材料になります。
+
+### Member Agent へのコンテキスト注入
+
+Leader Agent は Agent Delegation 時に、各 Member Agent に実行コンテキストを自動注入します。
+
+**注入される情報**:
+- `execution_id`: オーケストレーション実行識別子（UUID）
+- `team_id`: チームID
+- `round_number`: ラウンド番号
+
+これにより、Member Agent は自身が属する実行セッション、チーム、ラウンドを識別できます。
+
+**実装詳細**: `src/mixseek/agents/leader/tools.py:82-87`
 
 ## アーキテクチャ
 
@@ -928,8 +943,13 @@ member_agents = {...}
 # Leader Agent作成（Agent Delegation対応）
 leader_agent = create_leader_agent(team_config, member_agents)
 
+# execution_id を生成
+from uuid import uuid4
+execution_id = str(uuid4())
+
 # 依存関係初期化
 deps = TeamDependencies(
+    execution_id=execution_id,
     team_id=team_config.team.team_id,
     team_name=team_config.team.name,
     round_number=1

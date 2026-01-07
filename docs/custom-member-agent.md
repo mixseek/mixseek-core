@@ -36,12 +36,23 @@ class DataAnalystAgent(BaseMemberAgent):
 
         Args:
             task: タスク説明
-            context: 実行コンテキスト
+            context: 実行コンテキスト（Leader Agent経由の呼び出し時に自動注入）
+                - execution_id (str): オーケストレーション実行識別子（UUID）
+                - team_id (str): チームID
+                - round_number (int): ラウンド番号
             **kwargs: 追加パラメータ
 
         Returns:
             MemberAgentResult: 実行結果
         """
+        # contextから情報を取得（Leader Agent経由の場合）
+        if context:
+            execution_id = context.get("execution_id")
+            team_id = context.get("team_id")
+            round_number = context.get("round_number")
+            # カスタムロジックでcontextを活用可能
+            # 例: ロギング、トレーシング、デバッグ情報の記録
+
         # カスタムロジックの実装
         # self._agent（Pydantic AI Agent）を使用して推論実行
         result = await self._agent.run(task)

@@ -212,7 +212,11 @@ async def _execute_team_command(
     team_config = team_settings_to_team_config(team_settings)
     leader_agent = create_leader_agent(team_config, member_agents)
 
+    # Generate execution_id for this run (Phase 4: execution_id integration)
+    execution_id = str(uuid4())
+
     deps = TeamDependencies(
+        execution_id=execution_id,
         team_id=team_config.team_id,
         team_name=team_config.team_name,
         round_number=1,
@@ -222,9 +226,6 @@ async def _execute_team_command(
         typer.echo("\n=== Executing Leader Agent (Agent Delegation) ===", err=True)
 
     result = await leader_agent.run(prompt, deps=deps)
-
-    # Generate execution_id for this run (Phase 4: execution_id integration)
-    execution_id = str(uuid4())
 
     record = MemberSubmissionsRecord(
         execution_id=execution_id,

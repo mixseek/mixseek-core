@@ -20,12 +20,14 @@ class TeamDependencies:
     Agent Delegationで各Member Agentに共有される依存関係オブジェクト。
 
     Attributes:
+        execution_id: 実行セッション全体の一意識別子
         team_id: チームID
         team_name: チーム名
         round_number: ラウンド番号
         submissions: Member Agent応答を記録するリスト（mutable、初期空リスト）
     """
 
+    execution_id: str
     team_id: str
     team_name: str
     round_number: int

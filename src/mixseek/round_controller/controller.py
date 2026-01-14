@@ -300,6 +300,7 @@ class RoundController:
 
         leader_agent = create_leader_agent(self.team_config, member_agents)
         deps = TeamDependencies(
+            execution_id=self.task.execution_id,
             team_id=self.team_config.team_id,
             team_name=self.team_config.team_name,
             round_number=round_number,

@@ -89,17 +89,22 @@ max_tokens = 100
         # Leader Agent作成
         leader_agent = create_leader_agent(team_config, member_agents)
 
+        # Generate execution_id for this test run
+        execution_id = str(uuid4())
+
         # TeamDependencies初期化
-        deps = TeamDependencies(team_id=team_config.team_id, team_name=team_config.team_name, round_number=1)
+        deps = TeamDependencies(
+            team_id=team_config.team_id,
+            team_name=team_config.team_name,
+            round_number=1,
+            execution_id=execution_id,
+        )
 
         # Act 1: Leader Agent実行
         result = await leader_agent.run("Test task", deps=deps)
 
         # Assert 1: 実行成功
         assert result.output is not None
-
-        # Generate execution_id for this test run
-        execution_id = str(uuid4())
 
         # Act 2: MemberSubmissionsRecord作成
         record = MemberSubmissionsRecord(
@@ -183,7 +188,9 @@ max_tokens = 100
         leader_agent = create_leader_agent(team_config, member_agents)
 
         # TeamDependencies初期化
-        deps = TeamDependencies(team_id="delegation-test", team_name="Test", round_number=1)
+        deps = TeamDependencies(
+            team_id="delegation-test", team_name="Test", round_number=1, execution_id="exec-e2e-test"
+        )
 
         # Act: Leader Agent実行
         await leader_agent.run("Simple task", deps=deps)
@@ -235,6 +242,7 @@ max_tokens = 100
             team_id="solo-test-001",
             team_name="Solo Test Team",
             round_number=1,
+            execution_id="exec-solo-test",
         )
 
         # And: Leader Agent実行

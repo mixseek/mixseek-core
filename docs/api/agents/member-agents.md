@@ -196,7 +196,10 @@ from mixseek.models.member_agent import MemberAgentConfig, MemberAgentResult
   - タスクを実行
   - **引数**:
     - `task: str` - 実行するタスクまたはプロンプト
-    - `context: dict[str, Any] | None` - オプションのコンテキスト情報
+    - `context: dict[str, Any] | None` - 実行コンテキスト情報（Leader Agent経由で呼び出される場合は自動的に注入されます）
+      - `execution_id` (str): オーケストレーション実行識別子（UUID）
+      - `team_id` (str): チームID
+      - `round_number` (int): ラウンド番号
     - `**kwargs` - 追加の実行パラメータ
   - **戻り値**: `MemberAgentResult`
   - **例外**: サブクラスで実装されていない場合 `NotImplementedError`

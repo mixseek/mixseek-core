@@ -155,7 +155,7 @@ class TestToolFuncStatusPropagation:
         tool_func = registered_tools[0]
 
         # Mock RunContext with TeamDependencies
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
         mock_ctx: Any = Mock()
         mock_ctx.deps = deps
 
@@ -218,7 +218,7 @@ class TestToolFuncStatusPropagation:
 
         tool_func = registered_tools[0]
 
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
         mock_ctx: Any = Mock()
         mock_ctx.deps = deps
 
@@ -281,7 +281,7 @@ class TestToolFuncStatusPropagation:
         register_member_tools(leader_agent, team_config, member_agents)
         tool_func = registered_tools[0]
 
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
         mock_ctx: Any = Mock()
         mock_ctx.deps = deps
 

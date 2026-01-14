@@ -79,7 +79,13 @@ def register_member_tools(
                 # Member Agent実行（BaseMemberAgentまたはPydantic AI Agent）
                 if isinstance(ma, BaseMemberAgent):
                     # BaseMemberAgent（WebSearchTool等が初期化済み）
-                    result_obj = await ma.execute(task)
+                    # Context injection: execution_id, team_id, round_numberを渡す
+                    context = {
+                        "execution_id": ctx.deps.execution_id,
+                        "team_id": ctx.deps.team_id,
+                        "round_number": ctx.deps.round_number,
+                    }
+                    result_obj = await ma.execute(task, context=context)
                     content = result_obj.content
                     all_messages = result_obj.all_messages  # FR-034: Member Agent message history
                     # Issue #59: MemberAgentResult.status を MemberSubmission に伝播

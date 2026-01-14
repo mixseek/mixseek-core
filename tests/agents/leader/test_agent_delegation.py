@@ -80,7 +80,7 @@ class TestAgentDelegation:
         Tool実行時、ctx.deps.submissionsにMemberSubmissionが追加される。
         """
         # Arrange
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Tool関数を直接テスト（register_member_toolsで生成される関数と同等）
         from pydantic_ai import RunUsage
@@ -110,7 +110,7 @@ class TestAgentDelegation:
         Leader Agentに統合されることを確認。
         """
         # Arrange
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # Mock Member Agent
         mock_member_agent = AsyncMock()
@@ -137,7 +137,7 @@ class TestAgentDelegation:
         successful_submissionsに成功応答のみ含まれる。
         """
         # Arrange
-        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1)
+        deps = TeamDependencies(team_id="team-001", team_name="Test Team", round_number=1, execution_id="exec-test")
 
         # 3つのMember Agent応答をシミュレーション
         deps.submissions.append(

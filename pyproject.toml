@@ -155,7 +155,8 @@ filterwarnings = [
 name = "cz_conventional_commits"
 version = "0.1.0a5"
 version_files = [
-    "pyproject.toml:version"
+    "pyproject.toml:version",
+    "uv.lock:version"
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true

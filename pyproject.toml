@@ -9,7 +9,7 @@ description = "Pydantic AI-based multi-agent framework with hierarchical task de
 readme = "README.md"
 requires-python = ">=3.13.7"
 authors = [
-    { name = "AlpacaTech Co. Ltd." },
+    { name = "AlpacaTech Co. Ltd.", email = "ask@alpaca-tech.ai" },
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -49,6 +49,7 @@ adk = [
 mixseek = "mixseek.cli.main:app"
 
 [project.urls]
+Homepage = "https://github.com/mixseek/mixseek-core"
 Repository = "https://github.com/mixseek/mixseek-core"
 Documentation = "https://mixseek.github.io/mixseek-core/"
 Issues = "https://github.com/mixseek/mixseek-core/issues"

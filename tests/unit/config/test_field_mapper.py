@@ -57,8 +57,8 @@ class TestNormalizeMemberAgentFieldsToolSettings:
 
         assert "tool_settings" not in result
 
-    def test_tool_settings_empty_direct_falls_back_to_metadata(self) -> None:
-        """直接指定が空dict/Noneの場合、metadata側が使用されること。"""
+    def test_tool_settings_direct_none_is_removed(self) -> None:
+        """直接指定がNoneの場合、キーが除去されること（metadata側を参照しない）。"""
         agent_data = {
             "name": "test-agent",
             "type": "gemini",
@@ -68,14 +68,10 @@ class TestNormalizeMemberAgentFieldsToolSettings:
 
         result = normalize_member_agent_fields(agent_data)
 
-        assert result["tool_settings"] == {"fallback": True}
+        assert "tool_settings" not in result
 
-    def test_tool_settings_empty_dict_direct_is_truthy(self) -> None:
-        """直接指定が空dictの場合、空dictが返される（falsy判定されないこと）。
-
-        NOTE: 空のdict {} はPythonではfalsyなので、現在の実装では
-        metadata側にフォールバックする。これは期待動作かどうか検討の余地あり。
-        """
+    def test_tool_settings_empty_dict_direct_is_preserved(self) -> None:
+        """直接指定が空dictの場合、空dictが返されること（falsy判定しない）。"""
         agent_data = {
             "name": "test-agent",
             "type": "gemini",
@@ -85,6 +81,5 @@ class TestNormalizeMemberAgentFieldsToolSettings:
 
         result = normalize_member_agent_fields(agent_data)
 
-        # 現在の実装: 空dictはfalsyなのでmetadataにフォールバック
-        # 空dictでも直接指定を優先したい場合は実装変更が必要
-        assert result["tool_settings"] == {"nested": True}
+        # 空dictが直接指定された場合は、その値が維持される
+        assert result["tool_settings"] == {}

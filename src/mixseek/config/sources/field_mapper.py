@@ -64,7 +64,10 @@ def normalize_member_agent_fields(agent_data: dict[str, Any]) -> dict[str, Any]:
         "seed": agent_data.get("seed"),
         # カスタムAgent設定 (Issue #146)
         "plugin": agent_data.get("plugin"),
-        "tool_settings": (agent_data.get("metadata") or {}).get("tool_settings"),
+        # 直接指定を優先、未指定時はmetadata内のネスト指定を参照（後方互換性）
+        "tool_settings": agent_data["tool_settings"]
+        if "tool_settings" in agent_data
+        else (agent_data.get("metadata") or {}).get("tool_settings"),
     }
 
     # tool_description がNoneまたは空の場合、デフォルト値を生成

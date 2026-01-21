@@ -64,6 +64,7 @@ dev = [
     "logfire>=4.15.1",  # Observability for development/debugging
     "aiohttp>=3.13.0",  # Required for WebhookIntegrationHook tests
     "commitizen>=4.0.0",  # PEP 440-native version management
+    "skills-ref>=0.1.1",
 ]
 docs = [
     "sphinx>=8.2.3,<9",

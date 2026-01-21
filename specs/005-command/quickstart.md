@@ -101,7 +101,7 @@ mixseek exec \
 
 - **Coverage (30%)**: 情報の網羅性
 - **Relevance (25%)**: クエリへの関連性
-- **Novelty (25%)**: 新規性・意外性（外れ値の評価）
+- **Novelty (25%)**: 新規性・意外性（LLMPlainベースのカスタム評価指標）
 - **ClarityCoherence (20%)**: 明瞭性と一貫性
 
 ## よくある使用例

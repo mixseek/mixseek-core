@@ -71,7 +71,7 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 - DuckDB integration for execution result storage and analysis
 - Support for multiple AI models (Gemini, Grok)
 - Multi-perspective search capability with 3 specialized teams (General, SNS, Academic)
-- Evaluation system with customizable metrics (Coverage, Relevance, Novelty, Clarity)
+- Evaluation system with customizable metrics (Coverage, Relevance, Novelty (LLMPlain-based), Clarity)
 - Judgment system for multi-round refinement
 - Comprehensive documentation (Getting Started, Advanced Guide, Configuration Reference)
 - Docker support for development environments

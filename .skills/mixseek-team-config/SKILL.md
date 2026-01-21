@@ -46,15 +46,22 @@ max_concurrent_members = 15
 [team.leader]
 system_instruction = """
 あなたはチームのリーダーです。
-[詳細な指示をここに記述]
+
+## ツール呼び出しルール
+| ツール名 | 用途 |
+|---------|------|
+| do_task | [役割]を実行 |
+
+do_taskツールを使用してタスクを実行してください。
 """
 model = "google-gla:gemini-2.5-pro"
 temperature = 0.7
 timeout_seconds = 300
 
 [[team.members]]
-agent_name = "member-name"
+agent_name = "member-name"      # 内部識別子（DB記録用）
 agent_type = "plain"
+tool_name = "do_task"           # ★ Leaderが呼び出す名前（system_instructionで使用）
 tool_description = "このエージェントは[役割]を担当します"
 model = "google-gla:gemini-2.5-flash"
 system_instruction = """
@@ -63,6 +70,13 @@ system_instruction = """
 """
 temperature = 0.2
 ```
+
+#### agent_name vs tool_name（重要）
+
+- **agent_name**: 内部識別子（ログ、DB記録用）
+- **tool_name**: **Leaderが呼び出すツール名**（system_instructionで使用）
+
+**Leaderのsystem_instructionでは必ず`tool_name`を使用してください。**
 
 ### Step 4: ファイルの保存
 
@@ -148,19 +162,26 @@ system_instruction = """
 あなたはWeb調査チームのリーダーです。
 
 ユーザーからの質問に対して、以下の手順で調査を進めてください:
-1. web_researcherエージェントに関連情報のWeb検索を依頼
-2. 取得した情報をanalystエージェントに分析を依頼
+1. search_webツールで関連情報のWeb検索を実行
+2. 取得した情報をanalyze_dataツールで分析
 3. 分析結果を統合して、ユーザーに回答を提供
 
-各メンバーの専門性を活かし、質の高い回答を目指してください。
+## ツール呼び出しルール
+| ツール名 | 用途 |
+|---------|------|
+| search_web | Web検索を実行 |
+| analyze_data | 情報を分析 |
+
+各ツールを適切に使い分けてください。
 """
 model = "google-gla:gemini-2.5-pro"
 temperature = 0.7
 timeout_seconds = 300
 
 [[team.members]]
-agent_name = "web_researcher"
+agent_name = "web_researcher"   # 内部識別子
 agent_type = "web_search"
+tool_name = "search_web"        # ★ Leaderが呼び出す名前
 tool_description = "Web検索を実行し、最新の情報を取得します"
 model = "google-gla:gemini-2.5-flash"
 system_instruction = """
@@ -171,8 +192,9 @@ system_instruction = """
 temperature = 0.2
 
 [[team.members]]
-agent_name = "analyst"
+agent_name = "analyst"          # 内部識別子
 agent_type = "plain"
+tool_name = "analyze_data"      # ★ Leaderが呼び出す名前
 tool_description = "収集した情報を分析し、洞察を提供します"
 model = "google-gla:gemini-2.5-flash"
 system_instruction = """

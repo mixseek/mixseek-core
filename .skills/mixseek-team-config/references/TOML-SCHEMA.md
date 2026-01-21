@@ -29,11 +29,41 @@
 
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
-| `agent_name` | string | エージェント名（チーム内で一意） |
+| `agent_name` | string | エージェント名（チーム内で一意、内部識別用） |
 | `agent_type` | enum | エージェントタイプ |
+| `tool_name` | string | **Leaderが呼び出すツール名**（重要：後述） |
 | `tool_description` | string | LLMに表示するツール説明 |
 | `model` | string | 使用モデル |
 | `system_instruction` | string | エージェントへのシステム指示 |
+
+#### agent_name vs tool_name（重要）
+
+| 項目 | agent_name | tool_name |
+|-----|-----------|-----------|
+| **用途** | 内部識別子（ログ、DB記録用） | **Leaderが呼び出すツール名** |
+| **使用場所** | MemberSubmission記録、デバッグ | LLMのTool呼び出し |
+| **必須** | Yes | No（省略時は`delegate_to_{agent_name}`） |
+
+**重要**: Leaderの`system_instruction`でメンバーを参照する際は、**必ず`tool_name`を使用**してください。
+
+```toml
+# 例
+[[team.members]]
+agent_name = "web_searcher"     # 内部識別子（DB記録用）
+tool_name = "search_web"        # Leaderが呼び出す名前 ← これを使う
+```
+
+```toml
+# Leaderのsystem_instruction
+[team.leader]
+system_instruction = """
+# ❌ 間違い（agent_nameを使用）
+web_searcherエージェントに検索を依頼してください。
+
+# ✅ 正しい（tool_nameを使用）
+search_webツールで検索を実行してください。
+"""
+```
 
 ## オプションフィールド
 

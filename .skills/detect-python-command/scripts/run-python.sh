@@ -21,31 +21,15 @@ if [[ ! -f "$SCRIPT" ]]; then
     exit 1
 fi
 
-# Detection logic (same as detect-python.sh)
-run_with_python() {
-    # Priority 1: pyproject.toml exists and uv is installed
-    if [[ -f "pyproject.toml" ]] && command -v uv &>/dev/null; then
-        exec uv run python "$SCRIPT" "$@"
-    fi
+# Get the directory of the current script to reliably call detect-python.sh
+SCRIPT_DIR=$(dirname "$0")
 
-    # Priority 2: .venv/bin/python exists
-    if [[ -x ".venv/bin/python" ]]; then
-        exec .venv/bin/python "$SCRIPT" "$@"
-    fi
+# Detect the python command by calling the detection script.
+# The error from detect-python.sh will be propagated to stderr.
+PYTHON_CMD=$("$SCRIPT_DIR/detect-python.sh") || exit 1
 
-    # Priority 3: python command exists
-    if command -v python &>/dev/null; then
-        exec python "$SCRIPT" "$@"
-    fi
-
-    # Priority 4: python3 command exists
-    if command -v python3 &>/dev/null; then
-        exec python3 "$SCRIPT" "$@"
-    fi
-
-    # No Python found
-    echo "Error: No Python interpreter found" >&2
-    exit 1
-}
-
-run_with_python "$@"
+# Execute the script with the detected python command.
+# The command might contain spaces (e.g., "uv run python").
+# Using an array is a safe way to handle this.
+read -ra cmd_array <<< "$PYTHON_CMD"
+exec "${cmd_array[@]}" "$SCRIPT" "$@"

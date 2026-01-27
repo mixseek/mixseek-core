@@ -152,6 +152,7 @@ mixseek exec \
 1. 汎用調査チームがWeb検索を実行
 2. 検索結果をまとめて回答を生成
 3. 評価システムが回答を評価（Coverage, Relevance, Novelty, Clarity）
+   - `Novelty` は `LLMPlain` メトリクスを使ったカスタム評価指標です
 4. 結果をコンソールに出力
 
 **実行時間**: 約1分

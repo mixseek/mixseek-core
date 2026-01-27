@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a7 (2026-01-27)
+
+### Fix
+
+- use key existence check instead of or operator for tool_settings
+- tool_settings should be recognized at member level, not only under metadata
+
 ## v0.1.0a6 (2026-01-14)
 
 ### Feat
@@ -71,7 +78,7 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 - DuckDB integration for execution result storage and analysis
 - Support for multiple AI models (Gemini, Grok)
 - Multi-perspective search capability with 3 specialized teams (General, SNS, Academic)
-- Evaluation system with customizable metrics (Coverage, Relevance, Novelty, Clarity)
+- Evaluation system with customizable metrics (Coverage, Relevance, Novelty (LLMPlain-based), Clarity)
 - Judgment system for multi-round refinement
 - Comprehensive documentation (Getting Started, Advanced Guide, Configuration Reference)
 - Docker support for development environments

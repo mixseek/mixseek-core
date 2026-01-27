@@ -95,8 +95,10 @@ mixseek exec \
 |-----------|------|------|
 | Coverage | 30% | 情報の網羅性（トピックのカバー範囲） |
 | Relevance | 25% | クエリへの関連性（ユーザーの質問に直接回答） |
-| Novelty | 25% | 新規性・意外性（外れ値や独自情報の評価） |
+| Novelty (LLMPlain) | 25% | 新規性・意外性（外れ値や独自情報の評価） |
 | ClarityCoherence | 20% | 明瞭性と一貫性（構造と可読性） |
+
+> **補足**: `Coverage`、`Relevance`、`ClarityCoherence` は組み込みメトリクスですが、`Novelty` は `LLMPlain` メトリクスを使用したカスタム評価指標です。`evaluator_search_news.toml` で評価プロンプトをカスタマイズすることで、新規性・意外性に特化した評価を実現しています。
 
 **評価の流れ**:
 1. 各チームが成果物を提出

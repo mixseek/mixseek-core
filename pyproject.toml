@@ -4,12 +4,12 @@ build-backend = "uv_build"
 
 [project]
 name = "mixseek-core"
-version = "0.1.0a6"
+version = "0.1.0a7"
 description = "Pydantic AI-based multi-agent framework with hierarchical task delegation, round-based evaluation, and workspace CLI"
 readme = "README.md"
 requires-python = ">=3.13.7"
 authors = [
-    { name = "AlpacaTech Co. Ltd." },
+    { name = "AlpacaTech Co. Ltd.", email = "ask@alpaca-tech.ai" },
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -49,6 +49,7 @@ adk = [
 mixseek = "mixseek.cli.main:app"
 
 [project.urls]
+Homepage = "https://github.com/mixseek/mixseek-core"
 Repository = "https://github.com/mixseek/mixseek-core"
 Documentation = "https://mixseek.github.io/mixseek-core/"
 Issues = "https://github.com/mixseek/mixseek-core/issues"
@@ -153,7 +154,7 @@ filterwarnings = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0a6"
+version = "0.1.0a7"
 version_files = [
     "pyproject.toml:version",
     "uv.lock:version"

@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="docs/assets/mixseek700x144_Navy.svg" alt="MixSeek" width="350">
+  <img src="https://raw.githubusercontent.com/mixseek/mixseek-core/main/docs/assets/mixseek700x144_Navy.svg" alt="MixSeek" width="350">
 </p>
 
 <p align="center">
   <a href="https://github.com/mixseek/mixseek-core/actions/workflows/ci.yml"><img src="https://github.com/mixseek/mixseek-core/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://mixseek.github.io/mixseek-core/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" alt="Documentation"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/mixseek/mixseek-core/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python"></a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | 日本語
+  <a href="https://github.com/mixseek/mixseek-core/blob/main/README.md">English</a> | 日本語
 </p>
 
 LLMを活用したマルチエージェントオーケストレーションフレームワークです。Leader/Member階層によるタスク委譲、ラウンド制評価、並列チーム実行を提供します。
@@ -32,9 +32,9 @@ LLMを活用したマルチエージェントオーケストレーションフ�
 
 ```bash
 # CLIツールとしてインストール（uvが必要）
-uv tool install git+https://github.com/mixseek/mixseek-core.git
+uv tool install mixseek-core
 
-# またはクローンしたリポジトリからインストール
+# またはソースからインストール
 git clone https://github.com/mixseek/mixseek-core.git
 cd mixseek-core
 uv tool install .
@@ -52,16 +52,16 @@ mixseek --version
 
 ```bash
 # pip を使用
-pip install git+https://github.com/mixseek/mixseek-core.git
+pip install mixseek-core
 
 # uv を使用
-uv pip install git+https://github.com/mixseek/mixseek-core.git
+uv pip install mixseek-core
 
 # プロジェクト依存関係に追加（uv）
-uv add git+https://github.com/mixseek/mixseek-core.git
+uv add mixseek-core
 ```
 
-開発環境のセットアップは[開発者ガイド](docs/developer-guide.md)を参照してください。
+開発環境のセットアップは[開発者ガイド](https://mixseek.github.io/mixseek-core/developer-guide.html)を参照してください。
 
 ## クイックスタート
 
@@ -126,14 +126,14 @@ mixseek ui
 
 ドキュメントサイト: https://mixseek.github.io/mixseek-core/
 
-- [はじめに（基本編）](docs/getting-started.md) - 5分で完了するクイックスタート
-- [はじめに（発展編）](docs/getting-started-advanced.md) - 多視点検索とカスタマイズ
-- [クイックスタートガイド](docs/quickstart.md) - 詳細なセットアップ手順
-- [Member Agentガイド](docs/member-agents.md) - エージェントの種類と設定
-- [Teamガイド](docs/team-guide.md) - チーム実行と委譲
-- [Orchestratorガイド](docs/orchestrator-guide.md) - マルチチーム並列実行
-- [設定リファレンス](docs/configuration-reference.md) - 全設定オプション
-- [Docker環境セットアップ](docs/docker-setup.md) - コンテナベースの開発
+- [はじめに（基本編）](https://mixseek.github.io/mixseek-core/getting-started.html) - 5分で完了するクイックスタート
+- [はじめに（発展編）](https://mixseek.github.io/mixseek-core/getting-started-advanced.html) - 多視点検索とカスタマイズ
+- [クイックスタートガイド](https://mixseek.github.io/mixseek-core/quickstart.html) - 詳細なセットアップ手順
+- [Member Agentガイド](https://mixseek.github.io/mixseek-core/member-agents.html) - エージェントの種類と設定
+- [Teamガイド](https://mixseek.github.io/mixseek-core/team-guide.html) - チーム実行と委譲
+- [Orchestratorガイド](https://mixseek.github.io/mixseek-core/orchestrator-guide.html) - マルチチーム並列実行
+- [設定リファレンス](https://mixseek.github.io/mixseek-core/configuration-reference.html) - 全設定オプション
+- [Docker環境セットアップ](https://mixseek.github.io/mixseek-core/docker-setup.html) - コンテナベースの開発
 
 ## コントリビューション
 
@@ -141,4 +141,4 @@ mixseek ui
 
 ## ライセンス
 
-Apache License 2.0 - 詳細は[LICENSE](LICENSE)を参照してください。
+Apache License 2.0 - 詳細は[LICENSE](https://github.com/mixseek/mixseek-core/blob/main/LICENSE)を参照してください。

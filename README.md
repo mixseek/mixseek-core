@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="docs/assets/mixseek700x144_Navy.svg" alt="MixSeek" width="350">
+  <img src="https://raw.githubusercontent.com/mixseek/mixseek-core/main/docs/assets/mixseek700x144_Navy.svg" alt="MixSeek" width="350">
 </p>
 
 <p align="center">
   <a href="https://github.com/mixseek/mixseek-core/actions/workflows/ci.yml"><img src="https://github.com/mixseek/mixseek-core/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://mixseek.github.io/mixseek-core/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" alt="Documentation"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/mixseek/mixseek-core/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python"></a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a>
+  <a href="https://github.com/mixseek/mixseek-core/blob/main/README.md">English</a> | <a href="https://github.com/mixseek/mixseek-core/blob/main/README.ja.md">日本語</a>
 </p>
 
 A multi-agent orchestration framework for LLM-powered workflows. MixSeek enables hierarchical task delegation with Leader and Member agents, round-based evaluation, and parallel team execution.
@@ -32,9 +32,9 @@ Install globally as a command-line tool using `uv`:
 
 ```bash
 # Install as a CLI tool (requires uv)
-uv tool install git+https://github.com/mixseek/mixseek-core.git
+uv tool install mixseek-core
 
-# Or install from a cloned repository
+# Or install from source
 git clone https://github.com/mixseek/mixseek-core.git
 cd mixseek-core
 uv tool install .
@@ -52,16 +52,16 @@ Install as a library for programmatic use:
 
 ```bash
 # Using pip
-pip install git+https://github.com/mixseek/mixseek-core.git
+pip install mixseek-core
 
 # Using uv
-uv pip install git+https://github.com/mixseek/mixseek-core.git
+uv pip install mixseek-core
 
 # Add to project dependencies (uv)
-uv add git+https://github.com/mixseek/mixseek-core.git
+uv add mixseek-core
 ```
 
-For development setup, see [Development Guide](docs/developer-guide.md).
+For development setup, see [Development Guide](https://mixseek.github.io/mixseek-core/developer-guide.html).
 
 ## Quick Start
 
@@ -126,14 +126,14 @@ mixseek ui
 
 Full documentation: https://mixseek.github.io/mixseek-core/
 
-- [Getting Started (Basic)](docs/getting-started.md) - 5-minute quick start guide
-- [Getting Started (Advanced)](docs/getting-started-advanced.md) - Multi-perspective search and customization
-- [Quick Start Guide](docs/quickstart.md) - Detailed setup instructions
-- [Member Agents Guide](docs/member-agents.md) - Agent types and configuration
-- [Team Guide](docs/team-guide.md) - Team execution and delegation
-- [Orchestrator Guide](docs/orchestrator-guide.md) - Multi-team parallel execution
-- [Configuration Reference](docs/configuration-reference.md) - All configuration options
-- [Docker Setup](docs/docker-setup.md) - Container-based development
+- [Getting Started (Basic)](https://mixseek.github.io/mixseek-core/getting-started.html) - 5-minute quick start guide
+- [Getting Started (Advanced)](https://mixseek.github.io/mixseek-core/getting-started-advanced.html) - Multi-perspective search and customization
+- [Quick Start Guide](https://mixseek.github.io/mixseek-core/quickstart.html) - Detailed setup instructions
+- [Member Agents Guide](https://mixseek.github.io/mixseek-core/member-agents.html) - Agent types and configuration
+- [Team Guide](https://mixseek.github.io/mixseek-core/team-guide.html) - Team execution and delegation
+- [Orchestrator Guide](https://mixseek.github.io/mixseek-core/orchestrator-guide.html) - Multi-team parallel execution
+- [Configuration Reference](https://mixseek.github.io/mixseek-core/configuration-reference.html) - All configuration options
+- [Docker Setup](https://mixseek.github.io/mixseek-core/docker-setup.html) - Container-based development
 
 ## Contributing
 
@@ -141,4 +141,4 @@ Contributions are welcome! Please read our contributing guidelines before submit
 
 ## License
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details.
+Apache License 2.0 - see [LICENSE](https://github.com/mixseek/mixseek-core/blob/main/LICENSE) for details.

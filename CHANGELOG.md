@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a8 (2026-01-28)
+
+### Feat
+
+- add Publish PyPI workflow to release.yml
+
 ## v0.1.0a7 (2026-01-27)
 
 ### Fix

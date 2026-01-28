@@ -62,6 +62,21 @@ jobs:
           # Save to file for multiline content
           echo "$CHANGELOG_CONTENT" > changelog_section.md
 
+      - name: Build package
+        run: uv build
+
+      # - name: Publish to TestPyPI (prerelease only)
+      #   if: steps.prerelease.outputs.is_prerelease == 'true'
+      #   run: uv publish --publish-url https://test.pypi.org/legacy/
+      #   env:
+      #     UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      #   continue-on-error: true
+
+      - name: Publish to PyPI
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

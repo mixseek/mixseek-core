@@ -116,9 +116,8 @@ mixseek-workspace/
 
 ## ステップ2: API認証の設定
 
-Google Gemini APIの認証情報を設定します。
-
-### Gemini Developer API
+このガイドのデモを実行するには、Google Gemini APIの認証情報が必要です。
+以下のコマンドでAPIキーを設定してください。
 
 ```bash
 export GOOGLE_API_KEY=your-api-key

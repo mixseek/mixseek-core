@@ -116,24 +116,14 @@ mixseek-workspace/
 
 ## ステップ2: API認証の設定
 
-Google Gemini APIまたはVertex AIの認証情報を設定します。
-
-### オプションA: Gemini Developer API（個人・プロトタイピング向け）
+このガイドのデモを実行するには、Google Gemini APIの認証情報が必要です。
+以下のコマンドでAPIキーを設定してください。
 
 ```bash
 export GOOGLE_API_KEY=your-api-key
 ```
 
 APIキーの取得方法については [Gemini API 公式ドキュメント](https://ai.google.dev/gemini-api/docs/api-key) を参照してください。
-
-### オプションB: Vertex AI（エンタープライズ向け）
-
-```bash
-export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/gcp_credentials.json
-```
-
-GCPサービスアカウントのクレデンシャルファイルを指定してください。
 
 ## ステップ3: 最初のニュース検索を実行
 
@@ -219,9 +209,6 @@ model = "google-gla:gemini-2.5-flash"
 **解決策**:
 ```bash
 export GOOGLE_API_KEY=your-api-key
-# または
-export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
 ```
 
 ### エラー: "Workspace not found"
@@ -268,8 +255,3 @@ mixseek exec \
 ### リファレンス
 - [設定リファレンス](./configuration-reference.md) - 全設定項目の詳細
 - [設定ガイド](./configuration-guide.md) - 設定ファイルの書き方
-
----
-
-**Version**: 1.1.0
-**Last Updated**: 2025-12-04

@@ -256,8 +256,3 @@ mixseek exec \
 ### リファレンス
 - [設定リファレンス](./configuration-reference.md) - 全設定項目の詳細
 - [設定ガイド](./configuration-guide.md) - 設定ファイルの書き方
-
----
-
-**Version**: 1.1.0
-**Last Updated**: 2025-12-04

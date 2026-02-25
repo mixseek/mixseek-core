@@ -103,12 +103,14 @@ async def evaluate_content(
         # Evaluator の初期化（共通ヘルパー関数を使用）
         evaluator = _create_evaluator(workspace, evaluate_config, verbose)
 
-        # 評価リクエストを作成
+        # 評価リクエストを作成（Article 9準拠: 明示的にNoneを指定）
         # team_id が None の場合はデフォルト値を使用
         request = EvaluationRequest(
             user_query=user_query,
             submission=submission,
+            execution_id=None,
             team_id=team_id if team_id else "standalone-evaluation",
+            round_number=None,
             config=None,  # カスタム設定は Evaluator 側で既に適用済み
         )
 

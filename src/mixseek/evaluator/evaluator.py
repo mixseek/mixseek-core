@@ -195,13 +195,19 @@ class Evaluator:
                         top_p=top_p,
                         seed=seed,
                         prompt_builder_settings=self.prompt_builder_settings,
+                        execution_id=request.execution_id,
+                        team_id=request.team_id,
+                        round_number=request.round_number,
                     )
                 else:
-                    # LLM以外のメトリクス（統計ベース等）の場合はuser_query, submissionのみを渡す
+                    # LLM以外のメトリクス（統計ベース等）の場合
                     # BaseMetric.evaluate()は非同期なのでawaitで呼び出す
                     score = await metric.evaluate(
                         user_query=request.user_query,
                         submission=request.submission,
+                        execution_id=request.execution_id,
+                        team_id=request.team_id,
+                        round_number=request.round_number,
                     )
 
                 metric_scores.append(score)
@@ -462,7 +468,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate AI agent submission")
     parser.add_argument("user_query", help="User query string")
     parser.add_argument("submission", help="AI agent submission text")
+    parser.add_argument("--execution-id", default=None, help="Execution ID (optional, default: None)")
     parser.add_argument("--team-id", default=None, help="Team ID (optional, default: None)")
+    parser.add_argument("--round-number", type=int, default=None, help="Round number (optional, default: None)")
     parser.add_argument(
         "--workspace",
         type=Path,
@@ -494,7 +502,9 @@ if __name__ == "__main__":
     request = EvaluationRequest(
         user_query=args.user_query,
         submission=args.submission,
+        execution_id=args.execution_id,
         team_id=args.team_id,
+        round_number=args.round_number,
         config=None,
     )
 

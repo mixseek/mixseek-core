@@ -29,6 +29,9 @@ class TechnicalAccuracyMetric(BaseMetric):
         self,
         user_query: str,
         submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
     ) -> MetricScore:
         """Evaluate technical accuracy (mocked for testing)."""
@@ -46,6 +49,9 @@ class LengthBasedMetric(BaseMetric):
         self,
         user_query: str,
         submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
     ) -> MetricScore:
         """Evaluate based on response length (deterministic, no LLM)."""
@@ -83,14 +89,17 @@ class InvalidMetricNoEvaluate(BaseMetric):
     """Invalid metric that doesn't implement evaluate()."""
 
     # Provide a minimal implementation to allow instantiation
-    def evaluate(
+    async def evaluate(
         self,
-        user_query: Any,
-        submission: Any,
+        user_query: str,
+        submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
-    ) -> Any:
+    ) -> MetricScore:
         """Dummy implementation."""
-        pass
+        return MetricScore(metric_name="invalid", score=0.0, evaluator_comment="dummy")
 
 
 class TestCustomMetricRegistration:
@@ -392,10 +401,13 @@ weight = 1.0
         class CustomClarityMetric(BaseMetric):
             async def evaluate(
                 self,
-                user_query: Any,
-                submission: Any,
+                user_query: str,
+                submission: str,
+                execution_id: str | None = None,
+                team_id: str | None = None,
+                round_number: int | None = None,
                 **kwargs: object,
-            ) -> Any:
+            ) -> MetricScore:
                 return MetricScore(
                     metric_name="ClarityCoherence",
                     score=99.0,  # Different score to verify it's the custom one

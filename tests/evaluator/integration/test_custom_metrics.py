@@ -86,7 +86,7 @@ class InvalidMetricNoInheritance:
 
 
 class InvalidMetricNoEvaluate(BaseMetric):
-    """Invalid metric that doesn't implement evaluate()."""
+    """Invalid metric that returns None instead of MetricScore."""
 
     # Provide a minimal implementation to allow instantiation
     async def evaluate(
@@ -98,8 +98,8 @@ class InvalidMetricNoEvaluate(BaseMetric):
         round_number: int | None = None,
         **kwargs: object,
     ) -> MetricScore:
-        """Dummy implementation."""
-        return MetricScore(metric_name="invalid", score=0.0, evaluator_comment="dummy")
+        """Returns None to simulate invalid implementation."""
+        return None  # type: ignore[return-value]
 
 
 class TestCustomMetricRegistration:

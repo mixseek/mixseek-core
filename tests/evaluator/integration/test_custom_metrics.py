@@ -29,6 +29,9 @@ class TechnicalAccuracyMetric(BaseMetric):
         self,
         user_query: str,
         submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
     ) -> MetricScore:
         """Evaluate technical accuracy (mocked for testing)."""
@@ -46,6 +49,9 @@ class LengthBasedMetric(BaseMetric):
         self,
         user_query: str,
         submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
     ) -> MetricScore:
         """Evaluate based on response length (deterministic, no LLM)."""
@@ -80,17 +86,20 @@ class InvalidMetricNoInheritance:
 
 
 class InvalidMetricNoEvaluate(BaseMetric):
-    """Invalid metric that doesn't implement evaluate()."""
+    """Invalid metric that returns None instead of MetricScore."""
 
     # Provide a minimal implementation to allow instantiation
-    def evaluate(
+    async def evaluate(
         self,
-        user_query: Any,
-        submission: Any,
+        user_query: str,
+        submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **kwargs: object,
-    ) -> Any:
-        """Dummy implementation."""
-        pass
+    ) -> MetricScore:
+        """Returns None to simulate invalid implementation."""
+        return None  # type: ignore[return-value]
 
 
 class TestCustomMetricRegistration:
@@ -392,10 +401,13 @@ weight = 1.0
         class CustomClarityMetric(BaseMetric):
             async def evaluate(
                 self,
-                user_query: Any,
-                submission: Any,
+                user_query: str,
+                submission: str,
+                execution_id: str | None = None,
+                team_id: str | None = None,
+                round_number: int | None = None,
                 **kwargs: object,
-            ) -> Any:
+            ) -> MetricScore:
                 return MetricScore(
                     metric_name="ClarityCoherence",
                     score=99.0,  # Different score to verify it's the custom one

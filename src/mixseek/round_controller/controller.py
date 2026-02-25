@@ -337,7 +337,9 @@ class RoundController:
         request = EvaluationRequest(
             user_query=original_user_prompt,
             submission=submission_content,
+            execution_id=self.task.execution_id,
             team_id=self.team_config.team_id,
+            round_number=round_number,
         )
 
         evaluation_result = await evaluator.evaluate(request)

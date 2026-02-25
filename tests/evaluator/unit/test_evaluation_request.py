@@ -175,6 +175,109 @@ class TestEvaluationRequestValidation:
         assert request.config is None
 
 
+class TestEvaluationRequestExecutionContext:
+    """Test EvaluationRequest execution context fields (execution_id, round_number)."""
+
+    def test_valid_request_with_execution_context(
+        self,
+        sample_user_query: str,
+        sample_submission: str,
+        sample_team_id: str,
+        sample_execution_id: str,
+        sample_round_number: int,
+    ) -> None:
+        """Test creating a valid EvaluationRequest with all execution context fields."""
+        request = EvaluationRequest(
+            user_query=sample_user_query,
+            submission=sample_submission,
+            execution_id=sample_execution_id,
+            team_id=sample_team_id,
+            round_number=sample_round_number,
+            config=None,
+        )
+
+        assert request.execution_id == sample_execution_id
+        assert request.team_id == sample_team_id
+        assert request.round_number == sample_round_number
+
+    def test_execution_id_none_allowed(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that execution_id=None passes validation."""
+        request = EvaluationRequest(
+            user_query=sample_user_query,
+            submission=sample_submission,
+            execution_id=None,
+        )
+        assert request.execution_id is None
+
+    def test_execution_id_empty_rejected(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that empty execution_id is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            EvaluationRequest(
+                user_query=sample_user_query,
+                submission=sample_submission,
+                execution_id="",
+            )
+        assert "execution_id" in str(exc_info.value)
+
+    def test_execution_id_whitespace_rejected(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that whitespace-only execution_id is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            EvaluationRequest(
+                user_query=sample_user_query,
+                submission=sample_submission,
+                execution_id="   \t  ",
+            )
+        assert "execution_id" in str(exc_info.value)
+
+    def test_round_number_valid(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that valid positive round_number passes."""
+        for rn in [1, 3, 100]:
+            request = EvaluationRequest(
+                user_query=sample_user_query,
+                submission=sample_submission,
+                round_number=rn,
+            )
+            assert request.round_number == rn
+
+    def test_round_number_none_allowed(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that round_number=None passes validation."""
+        request = EvaluationRequest(
+            user_query=sample_user_query,
+            submission=sample_submission,
+            round_number=None,
+        )
+        assert request.round_number is None
+
+    def test_round_number_zero_rejected(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that round_number=0 is rejected (ge=1)."""
+        with pytest.raises(ValidationError) as exc_info:
+            EvaluationRequest(
+                user_query=sample_user_query,
+                submission=sample_submission,
+                round_number=0,
+            )
+        assert "round_number" in str(exc_info.value)
+
+    def test_round_number_negative_rejected(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that negative round_number is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            EvaluationRequest(
+                user_query=sample_user_query,
+                submission=sample_submission,
+                round_number=-1,
+            )
+        assert "round_number" in str(exc_info.value)
+
+    def test_defaults_none_for_backward_compatibility(self, sample_user_query: str, sample_submission: str) -> None:
+        """Test that execution_id and round_number default to None for backward compatibility."""
+        request = EvaluationRequest(
+            user_query=sample_user_query,
+            submission=sample_submission,
+        )
+        assert request.execution_id is None
+        assert request.round_number is None
+
+
 class TestEvaluationRequestSerialization:
     """Test EvaluationRequest serialization/deserialization."""
 
@@ -215,3 +318,27 @@ class TestEvaluationRequestSerialization:
         assert request.user_query == sample_evaluation_request_data["user_query"]
         assert request.submission == sample_evaluation_request_data["submission"]
         assert request.team_id == sample_evaluation_request_data["team_id"]
+
+    def test_model_dump_with_execution_context(
+        self,
+        sample_user_query: str,
+        sample_submission: str,
+        sample_team_id: str,
+        sample_execution_id: str,
+        sample_round_number: int,
+    ) -> None:
+        """Test that model_dump includes execution context fields."""
+        request = EvaluationRequest(
+            user_query=sample_user_query,
+            submission=sample_submission,
+            execution_id=sample_execution_id,
+            team_id=sample_team_id,
+            round_number=sample_round_number,
+            config=None,
+        )
+
+        data = request.model_dump()
+
+        assert data["execution_id"] == sample_execution_id
+        assert data["round_number"] == sample_round_number
+        assert data["team_id"] == sample_team_id

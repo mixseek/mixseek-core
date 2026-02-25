@@ -352,6 +352,74 @@ class TestLLMJudgeMetric:
         assert result2.metric_name == "Metric2"
 
 
+class TestBaseMetricContextFields:
+    """Test that evaluate() accepts execution_id, team_id, round_number."""
+
+    @pytest.mark.asyncio
+    async def test_evaluate_receives_context_fields(self) -> None:
+        """Test that a custom BaseMetric receives execution_id, team_id, round_number."""
+        received: dict[str, object] = {}
+
+        class ContextAwareMetric(BaseMetric):
+            async def evaluate(
+                self,
+                user_query: str,
+                submission: str,
+                execution_id: str | None = None,
+                team_id: str | None = None,
+                round_number: int | None = None,
+                **kwargs: object,
+            ) -> MetricScore:
+                received["execution_id"] = execution_id
+                received["team_id"] = team_id
+                received["round_number"] = round_number
+                return MetricScore(
+                    metric_name="ContextAwareMetric",
+                    score=75.0,
+                    evaluator_comment="ok",
+                )
+
+        metric = ContextAwareMetric()
+        await metric.evaluate(
+            user_query="test",
+            submission="test",
+            execution_id="exec-001",
+            team_id="team-alpha",
+            round_number=2,
+        )
+
+        assert received["execution_id"] == "exec-001"
+        assert received["team_id"] == "team-alpha"
+        assert received["round_number"] == 2
+
+    @patch("mixseek.evaluator.metrics.base.evaluate_with_llm")
+    @pytest.mark.asyncio
+    async def test_llm_judge_metric_accepts_context_fields(self, mock_evaluate: Any) -> None:
+        """Test that LLMJudgeMetric.evaluate() accepts context fields without error."""
+
+        class TestLLMMetric(LLMJudgeMetric):
+            def get_instruction(self) -> str:
+                return "Test instruction"
+
+        mock_llm_result = BaseLLMEvaluation(score=80.0, evaluator_comment="Good")
+        mock_evaluate.return_value = mock_llm_result
+
+        settings = PromptBuilderSettings()
+        metric = TestLLMMetric()
+        result = await metric.evaluate(
+            user_query="test",
+            submission="test",
+            execution_id="exec-002",
+            team_id="team-beta",
+            round_number=3,
+            model="test:model",
+            prompt_builder_settings=settings,
+        )
+
+        assert isinstance(result, MetricScore)
+        assert result.score == 80.0
+
+
 class TestLLMJudgeMetricUserPromptBuilderIntegration:
     """Test suite for LLMJudgeMetric integration with UserPromptBuilder.
 

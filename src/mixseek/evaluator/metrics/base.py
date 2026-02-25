@@ -64,7 +64,15 @@ class BaseMetric(ABC):
     """
 
     @abstractmethod
-    async def evaluate(self, user_query: str, submission: str, **kwargs: object) -> MetricScore:
+    async def evaluate(
+        self,
+        user_query: str,
+        submission: str,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
+        **kwargs: object,
+    ) -> MetricScore:
         """このメトリクスを使用してSubmissionを評価します（非同期）。
 
         このメソッドはすべてのメトリクスクラスで実装する必要があります。
@@ -78,6 +86,9 @@ class BaseMetric(ABC):
         Args:
             user_query: ユーザーからの元のクエリ
             submission: AIエージェントによって生成されたSubmission
+            execution_id: この評価に関連する実行ID（オプション）
+            team_id: Submissionを生成したチームの識別子（オプション）
+            round_number: この評価に関連するラウンド番号（オプション）
             **kwargs: サブクラスで必要な追加パラメータ（例：model、temperature等）
 
         Returns:
@@ -92,11 +103,18 @@ class BaseMetric(ABC):
         Example:
             ```python
             class CustomMetric(BaseMetric):
-                async def evaluate(self, user_query: str, submission: str, **kwargs: object) -> MetricScore:
+                async def evaluate(
+                    self,
+                    user_query: str,
+                    submission: str,
+                    execution_id: str | None = None,
+                    team_id: str | None = None,
+                    round_number: int | None = None,
+                    **kwargs: object,
+                ) -> MetricScore:
                     # カスタム評価ロジック（例：統計ベースの評価）
-                    # 同期処理も async 関数内で実行可能
                     word_count = len(submission.split())
-                    score = min(100.0, word_count * 2)  # 単純な例
+                    score = min(100.0, word_count * 2)
                     return MetricScore(
                         metric_name="CustomMetric",
                         score=score,
@@ -107,6 +125,9 @@ class BaseMetric(ABC):
             score = await metric.evaluate(
                 user_query="What is Python?",
                 submission="Python is a programming language...",
+                execution_id="exec-001",
+                team_id="team-alpha",
+                round_number=1,
             )
             print(f"Score: {score.score}")
             print(f"Comment: {score.evaluator_comment}")
@@ -188,6 +209,9 @@ class LLMJudgeMetric(BaseMetric):
         stop_sequences: list[str] | None = None,
         top_p: float | None = None,
         seed: int | None = None,
+        execution_id: str | None = None,
+        team_id: str | None = None,
+        round_number: int | None = None,
         **_kwargs: object,
     ) -> MetricScore:
         """LLM-as-a-Judgeを使用してSubmissionを評価します。
@@ -211,6 +235,9 @@ class LLMJudgeMetric(BaseMetric):
             stop_sequences: 生成を停止するシーケンスのリスト。Noneの場合は使用しない
             top_p: Top-pサンプリングパラメータ（0.0-1.0）。Noneの場合はモデルデフォルト
             seed: ランダムシード。Noneの場合はランダム（OpenAI/Geminiでサポート）
+            execution_id: この評価に関連する実行ID（オプション）
+            team_id: Submissionを生成したチームの識別子（オプション）
+            round_number: この評価に関連するラウンド番号（オプション）
 
         Returns:
             評価スコア（0-100）と詳細なコメントを含むMetricScore

@@ -215,6 +215,18 @@ def temp_workspace(tmp_path: Path, valid_config_toml_content: str) -> Path:
 
 
 @pytest.fixture
+def sample_execution_id() -> str:
+    """Sample execution ID for testing."""
+    return "exec-20260220-001"
+
+
+@pytest.fixture
+def sample_round_number() -> int:
+    """Sample round number for testing."""
+    return 3
+
+
+@pytest.fixture
 def mock_anthropic_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock ANTHROPIC_API_KEY environment variable."""
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key-12345")

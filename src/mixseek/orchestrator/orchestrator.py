@@ -358,6 +358,37 @@ class Orchestrator:
 
         return summary
 
+    async def _try_recover_partial_failure(
+        self,
+        controller: RoundController,
+        original_error: Exception,
+        exit_reason: str,
+        error_msg: str,
+    ) -> PartialTeamFailureError | None:
+        """部分成功リカバリを試行する.
+
+        完了ラウンドがあれば最善結果を取得し、PartialTeamFailureErrorを返す。
+        リカバリに失敗した場合はNoneを返す。
+
+        Args:
+            controller: RoundController instance
+            original_error: 元のエラー
+            exit_reason: 終了理由
+            error_msg: エラーメッセージ
+        """
+        team_id = controller.get_team_id()
+        if not controller.round_history:
+            return None
+        try:
+            entry = await controller._finalize_and_return_best(exit_reason, None)
+            self._write_error_to_progress_file(controller, error_msg)
+            return PartialTeamFailureError(entry=entry, original_error=original_error)
+        except PartialTeamFailureError as pfe:
+            return pfe
+        except Exception as recovery_err:
+            logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
+            return None
+
     async def _run_team(
         self,
         controller: RoundController,
@@ -393,16 +424,11 @@ class Orchestrator:
                 logger.error(f"Team {team_id} ({team_name}) timed out: {error_msg}")
 
                 # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
-                if controller.round_history:
-                    try:
-                        entry = await controller._finalize_and_return_best("partial_failure_timeout", None)
-                        # _finalize_and_return_best がprogressを"completed"にするので"failed"に上書き
-                        self._write_error_to_progress_file(controller, error_msg)
-                        raise PartialTeamFailureError(entry=entry, original_error=TimeoutError(error_msg))
-                    except PartialTeamFailureError:
-                        raise
-                    except Exception as recovery_err:
-                        logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
+                partial_err = await self._try_recover_partial_failure(
+                    controller, TimeoutError(error_msg), "partial_failure_timeout", error_msg
+                )
+                if partial_err is not None:
+                    raise partial_err
 
                 self._write_error_to_progress_file(controller, error_msg)
                 raise
@@ -433,15 +459,11 @@ class Orchestrator:
                     )
 
                     # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
-                    if controller.round_history:
-                        try:
-                            entry = await controller._finalize_and_return_best("partial_failure", None)
-                            self._write_error_to_progress_file(controller, error_msg)
-                            raise PartialTeamFailureError(entry=entry, original_error=e)
-                        except PartialTeamFailureError:
-                            raise
-                        except Exception as recovery_err:
-                            logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
+                    partial_err = await self._try_recover_partial_failure(
+                        controller, e, "partial_failure", error_msg
+                    )
+                    if partial_err is not None:
+                        raise partial_err
 
                     self._write_error_to_progress_file(controller, error_msg)
                     raise

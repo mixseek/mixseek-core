@@ -149,8 +149,14 @@ class ExecutionSummary(BaseModel):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def partial_teams(self) -> int:
-        """部分成功チーム数（成功ラウンドあり かつ 失敗あり）"""
+    def partial_team_ids(self) -> set[str]:
+        """部分成功チームのIDセット"""
         success_ids = {r.team_id for r in self.team_results}
         failed_ids = {f.team_id for f in self.failed_teams_info}
-        return len(success_ids & failed_ids)
+        return success_ids & failed_ids
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def partial_teams(self) -> int:
+        """部分成功チーム数（成功ラウンドあり かつ 失敗あり）"""
+        return len(self.partial_team_ids)

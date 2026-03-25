@@ -224,17 +224,13 @@ def exec_command(
             _output_results(summary, output_format)
 
             # 9. 終了コード判定
-            if not summary.failed_teams_info:
-                # 全チーム成功
-                exit_code = 0
-            elif summary.team_results:
-                # 部分成功（成功チームあり + 失敗チームあり）
-                exit_code = 1
-            else:
-                # 全チーム失敗
-                exit_code = 2
-            if exit_code != 0:
-                raise typer.Exit(code=exit_code)
+            if summary.failed_teams_info:
+                if summary.team_results:
+                    # 部分成功（成功チームあり + 失敗チームあり）
+                    raise typer.Exit(code=1)
+                else:
+                    # 全チーム失敗
+                    raise typer.Exit(code=2)
         except typer.Exit:
             raise
         except Exception as e:

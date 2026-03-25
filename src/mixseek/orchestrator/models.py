@@ -91,6 +91,21 @@ class FailedTeamInfo(BaseModel):
     error_message: str = Field(description="エラーメッセージ")
 
 
+class PartialTeamFailureError(Exception):
+    """1ラウンド以上成功した後に失敗したチームを表す例外.
+
+    asyncio.gather(return_exceptions=True) の結果リストに入り、
+    _execute_impl() で team_results への追加に使われる。
+    """
+
+    def __init__(self, entry: LeaderBoardEntry, original_error: Exception) -> None:
+        self.entry = entry
+        self.original_error = original_error
+        super().__init__(
+            f"Team {entry.team_id} partially failed after {entry.round_number} round(s): {original_error}"
+        )
+
+
 class ExecutionSummary(BaseModel):
     """全チームの完了後に生成される最終集約情報
 
@@ -116,13 +131,14 @@ class ExecutionSummary(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def total_teams(self) -> int:
-        """総チーム数"""
-        return len(self.team_results) + len(self.failed_teams_info)
+        """総チーム数（部分成功チームの重複を排除）"""
+        all_ids = {r.team_id for r in self.team_results} | {f.team_id for f in self.failed_teams_info}
+        return len(all_ids)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def completed_teams(self) -> int:
-        """完了チーム数"""
+        """完了チーム数（部分成功を含む）"""
         return len(self.team_results)
 
     @computed_field  # type: ignore[prop-decorator]
@@ -130,3 +146,11 @@ class ExecutionSummary(BaseModel):
     def failed_teams(self) -> int:
         """失敗チーム数"""
         return len(self.failed_teams_info)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def partial_teams(self) -> int:
+        """部分成功チーム数（成功ラウンドあり かつ 失敗あり）"""
+        success_ids = {r.team_id for r in self.team_results}
+        failed_ids = {f.team_id for f in self.failed_teams_info}
+        return len(success_ids & failed_ids)

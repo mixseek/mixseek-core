@@ -23,7 +23,9 @@ except ImportError:
 from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator.models import (
     ExecutionSummary,
+    FailedTeamInfo,
     OrchestratorTask,
+    PartialTeamFailureError,
     TeamStatus,
 )
 
@@ -253,8 +255,6 @@ class Orchestrator:
         execution_time = time.time() - start_time
 
         # 結果収集 (Feature 037: receive LeaderBoardEntry instead of RoundResult)
-        from mixseek.orchestrator.models import FailedTeamInfo
-
         team_results: list[LeaderBoardEntry] = []
         failed_teams_info: list[FailedTeamInfo] = []
 
@@ -264,6 +264,14 @@ class Orchestrator:
                 # TeamStatus更新
                 self.team_statuses[result.team_id].status = "completed"
                 self.team_statuses[result.team_id].completed_at = result.created_at
+            elif isinstance(result, PartialTeamFailureError):
+                # 部分成功: team_results に追加（ステータスは "failed"/"timeout" のまま）
+                team_results.append(result.entry)
+                logger.info(
+                    f"Team {result.entry.team_id} partially succeeded "
+                    f"(best round: {result.entry.round_number}, score: {result.entry.score:.2f}), "
+                    f"original error: {result.original_error}"
+                )
             elif isinstance(result, Exception):
                 # Exception発生時はログのみ記録（failed_teams_infoは後で一度だけ収集）
                 logger.debug(f"Exception occurred during parallel execution: {result}")
@@ -384,9 +392,19 @@ class Orchestrator:
                 self.team_statuses[team_id].error_message = error_msg
                 logger.error(f"Team {team_id} ({team_name}) timed out: {error_msg}")
 
-                # 進捗ファイルにエラー情報を書き込む
-                self._write_error_to_progress_file(controller, error_msg)
+                # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
+                if controller.round_history:
+                    try:
+                        entry = await controller._finalize_and_return_best("partial_failure_timeout", None)
+                        # _finalize_and_return_best がprogressを"completed"にするので"failed"に上書き
+                        self._write_error_to_progress_file(controller, error_msg)
+                        raise PartialTeamFailureError(entry=entry, original_error=TimeoutError(error_msg))
+                    except PartialTeamFailureError:
+                        raise
+                    except Exception as recovery_err:
+                        logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
 
+                self._write_error_to_progress_file(controller, error_msg)
                 raise
             except Exception as e:
                 error_type = type(e).__name__
@@ -414,9 +432,18 @@ class Orchestrator:
                         exc_info=True,
                     )
 
-                    # 進捗ファイルにエラー情報を書き込む
-                    self._write_error_to_progress_file(controller, error_msg)
+                    # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
+                    if controller.round_history:
+                        try:
+                            entry = await controller._finalize_and_return_best("partial_failure", None)
+                            self._write_error_to_progress_file(controller, error_msg)
+                            raise PartialTeamFailureError(entry=entry, original_error=e)
+                        except PartialTeamFailureError:
+                            raise
+                        except Exception as recovery_err:
+                            logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
 
+                    self._write_error_to_progress_file(controller, error_msg)
                     raise
 
         # このコードに到達してはいけません（すべてのコードパスでreturnまたはraise）

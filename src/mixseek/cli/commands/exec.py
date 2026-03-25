@@ -259,7 +259,7 @@ def _print_leaderboard_table(summary: ExecutionSummary) -> None:
     table.add_column("Status", width=12)
 
     # 部分成功チームIDの特定
-    partial_team_ids = {r.team_id for r in summary.team_results} & {f.team_id for f in summary.failed_teams_info}
+    partial_team_ids = summary.partial_team_ids
 
     # 成功チーム（部分成功含む）をスコア降順でソート
     sorted_results = sorted(summary.team_results, key=lambda r: r.score, reverse=True)
@@ -300,7 +300,7 @@ def _print_text_summary(summary: ExecutionSummary) -> None:
         summary: 実行サマリー
     """
     # 部分成功チームIDの特定
-    partial_team_ids = {r.team_id for r in summary.team_results} & {f.team_id for f in summary.failed_teams_info}
+    partial_team_ids = summary.partial_team_ids
 
     # 成功チーム結果表示
     for result in summary.team_results:

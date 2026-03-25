@@ -459,9 +459,7 @@ class Orchestrator:
                     )
 
                     # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
-                    partial_err = await self._try_recover_partial_failure(
-                        controller, e, "partial_failure", error_msg
-                    )
+                    partial_err = await self._try_recover_partial_failure(controller, e, "partial_failure", error_msg)
                     if partial_err is not None:
                         raise partial_err
 

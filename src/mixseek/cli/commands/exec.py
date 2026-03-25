@@ -223,9 +223,23 @@ def exec_command(
             # Note: exec コマンドでは常に DB に保存
             _output_results(summary, output_format)
 
+            # 9. 終了コード判定
+            if not summary.failed_teams_info:
+                # 全チーム成功
+                exit_code = 0
+            elif summary.team_results:
+                # 部分成功（成功チームあり + 失敗チームあり）
+                exit_code = 1
+            else:
+                # 全チーム失敗
+                exit_code = 2
+            if exit_code != 0:
+                raise typer.Exit(code=exit_code)
+        except typer.Exit:
+            raise
         except Exception as e:
             typer.echo(f"Error: {e}", err=True)
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=2) from e
         finally:
             # Cleanup: Close all HTTP clients
             await close_all_auth_clients()

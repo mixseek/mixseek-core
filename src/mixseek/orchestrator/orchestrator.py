@@ -368,7 +368,12 @@ class Orchestrator:
         """部分成功リカバリを試行する.
 
         完了ラウンドがあれば最善結果を取得し、PartialTeamFailureErrorを返す。
-        リカバリに失敗した場合はNoneを返す。
+
+        Returns:
+            PartialTeamFailureError: 完了ラウンドがあり、リカバリに成功した場合
+            None: 以下のいずれかの場合
+                - 完了ラウンドが存在しない（round_historyが空 = 全ラウンド失敗）
+                - リカバリ処理自体が例外を投げた場合（例: DB書き込み失敗）
 
         Args:
             controller: RoundController instance

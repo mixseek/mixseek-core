@@ -465,3 +465,54 @@ For detailed information, see:
 **Documentation**:
 - [Mixseek UIガイド](docs/ui-guide.md) - UI操作方法と機能詳細
 - [Docker + Streamlit UI統合](docs/ui-docker.md) - Docker環境での実行とデプロイ
+
+## Active Technologies
+- **Agent Skills**: `.skills/` ディレクトリ配下のMarkdownベースのスキル定義（Agent Skills仕様 agentskills.io 準拠）
+- **スクリプト**: Bash/Python 3.13（バンドルスクリプト用）
+
+## Agent Skills
+
+MixSeek-Coreは`.skills/`ディレクトリにAgent Skills（agentskills.io仕様準拠）を提供しています。
+
+### 使用方法（重要）
+
+**ユーザーのリクエストが以下のキーワードに該当する場合、対応するSKILL.mdを読み込み、その手順に従って実行してください。**
+
+| トリガーキーワード | 実行するスキル | 読み込むファイル |
+|-------------------|---------------|-----------------|
+| 「ワークスペースを初期化」「mixseekのセットアップ」「ワークスペースを作成」 | workspace-init | `.skills/mixseek-workspace-init/SKILL.md` |
+| 「チームを作成」「エージェント設定を生成」「チーム設定」 | team-config | `.skills/mixseek-team-config/SKILL.md` |
+| 「オーケストレーターを設定」「チーム競合設定」「複数チームで競わせる」 | orchestrator-config | `.skills/mixseek-orchestrator-config/SKILL.md` |
+| 「評価設定を作成」「スコアリング設定」「メトリクスを設定」 | evaluator-config | `.skills/mixseek-evaluator-config/SKILL.md` |
+| 「設定を検証」「TOMLをチェック」「バリデーション」「ワークスペースの検証」 | config-validate | `.skills/mixseek-config-validate/SKILL.md` |
+| 「使えるモデル」「モデル一覧」「どのモデルがある」「モデルを取得」「APIからモデル」 | model-list | `.skills/mixseek-model-list/SKILL.md` |
+
+### 実行手順
+
+1. ユーザーのリクエストからトリガーキーワードを検出
+2. 対応する`SKILL.md`ファイルを**必ず読み込む**
+3. SKILL.md内の「使用方法」セクションに従ってステップバイステップで実行
+4. 必要に応じて`scripts/`や`references/`ディレクトリ内のファイルも参照
+
+### スキル一覧
+
+| スキル名 | 説明 |
+|---------|------|
+| `mixseek-workspace-init` | ワークスペース初期化（ディレクトリ構造作成） |
+| `mixseek-team-config` | チーム設定TOML生成（Leader/Member Agent） |
+| `mixseek-orchestrator-config` | オーケストレーター設定生成（複数チーム競合） |
+| `mixseek-evaluator-config` | 評価・判定設定生成（メトリクス、重み付け） |
+| `mixseek-config-validate` | TOML設定ファイルの検証 |
+| `mixseek-model-list` | API経由でLLMモデル一覧を動的取得（フォールバック対応） |
+
+### 検証コマンド
+```bash
+# skills-ref CLIのインストール
+pip install skills-ref
+
+# スキル検証
+agentskills validate .skills/mixseek-workspace-init
+```
+
+## Recent Changes
+- 023-agent-skills-mixseek: Added Agent Skills（Markdownベースのスキル定義、Bash/Python 3.13バンドルスクリプト）、Agent Skills仕様（agentskills.io）準拠、MixSeek-Core TOML設定スキーマ

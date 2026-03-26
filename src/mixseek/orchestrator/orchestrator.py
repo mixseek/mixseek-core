@@ -388,8 +388,6 @@ class Orchestrator:
             entry = await controller._finalize_and_return_best(exit_reason, None)
             self._write_error_to_progress_file(controller, error_msg)
             return PartialTeamFailureError(entry=entry, original_error=original_error)
-        except PartialTeamFailureError as pfe:
-            return pfe
         except Exception as recovery_err:
             logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
             return None

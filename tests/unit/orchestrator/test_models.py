@@ -5,12 +5,10 @@ from pathlib import Path
 import pytest
 from pydantic_ai import RunUsage
 
-from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator.models import (
     ExecutionSummary,
     FailedTeamInfo,
     OrchestratorTask,
-    PartialTeamFailureError,
     RoundResult,
     TeamStatus,
 )
@@ -202,83 +200,3 @@ def test_execution_summary_with_failed_teams() -> None:
     assert summary.total_teams == 3  # 成功1 + 失敗2
     assert summary.completed_teams == 1  # 成功1
     assert summary.failed_teams == 2  # 失敗2
-    assert summary.partial_teams == 0  # 重複なし
-
-
-# =============================================================================
-# PartialTeamFailureError and partial success computed fields tests
-# =============================================================================
-
-
-def _make_leaderboard_entry(team_id: str = "team-001", team_name: str = "Test Team") -> LeaderBoardEntry:
-    """テスト用LeaderBoardEntry生成ヘルパー"""
-    return LeaderBoardEntry(
-        execution_id="test-exec-id",
-        team_id=team_id,
-        team_name=team_name,
-        round_number=1,
-        submission_content="test submission",
-        score=75.0,
-        score_details={"overall_score": 75.0},
-    )
-
-
-def test_total_teams_deduplicates_with_partial_success() -> None:
-    """同一チームが team_results と failed_teams_info の両方に入っても total_teams が重複排除される"""
-    summary = ExecutionSummary(
-        execution_id="test-exec-id",
-        user_prompt="test prompt",
-        team_results=[_make_leaderboard_entry("team-1", "Team 1")],
-        failed_teams_info=[FailedTeamInfo(team_id="team-1", team_name="Team 1", error_message="round 2 failed")],
-        total_execution_time_seconds=1.0,
-    )
-    assert summary.total_teams == 1  # 重複排除
-    assert summary.completed_teams == 1
-    assert summary.failed_teams == 1
-    assert summary.partial_teams == 1
-
-
-def test_partial_teams_count_mixed() -> None:
-    """部分成功・完全成功・完全失敗が混在する場合の partial_teams"""
-    summary = ExecutionSummary(
-        execution_id="test-exec-id",
-        user_prompt="test prompt",
-        team_results=[
-            _make_leaderboard_entry("team-a", "Team A"),  # 完全成功
-            _make_leaderboard_entry("team-b", "Team B"),  # 部分成功
-        ],
-        failed_teams_info=[
-            FailedTeamInfo(team_id="team-b", team_name="Team B", error_message="round 3 failed"),  # 部分成功
-            FailedTeamInfo(team_id="team-c", team_name="Team C", error_message="round 1 failed"),  # 完全失敗
-        ],
-        total_execution_time_seconds=1.0,
-    )
-    assert summary.total_teams == 3  # A, B, C
-    assert summary.completed_teams == 2  # A, B
-    assert summary.failed_teams == 2  # B, C
-    assert summary.partial_teams == 1  # B のみ
-
-
-def test_total_teams_no_overlap() -> None:
-    """重複がない場合の従来動作確認"""
-    summary = ExecutionSummary(
-        execution_id="test-exec-id",
-        user_prompt="test prompt",
-        team_results=[_make_leaderboard_entry("team-1", "Team 1")],
-        failed_teams_info=[FailedTeamInfo(team_id="team-2", team_name="Team 2", error_message="failed")],
-        total_execution_time_seconds=1.0,
-    )
-    assert summary.total_teams == 2
-    assert summary.partial_teams == 0
-
-
-def test_partial_team_failure_exception() -> None:
-    """PartialTeamFailureError 例外が正しいプロパティを保持する"""
-    entry = _make_leaderboard_entry("team-1", "Team 1")
-    original = RuntimeError("round 2 evaluation failed")
-    exc = PartialTeamFailureError(entry=entry, original_error=original)
-
-    assert exc.entry is entry
-    assert exc.original_error is original
-    assert "team-1" in str(exc)
-    assert "round 2 evaluation failed" in str(exc)

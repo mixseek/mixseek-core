@@ -23,9 +23,7 @@ except ImportError:
 from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator.models import (
     ExecutionSummary,
-    FailedTeamInfo,
     OrchestratorTask,
-    PartialTeamFailureError,
     TeamStatus,
 )
 
@@ -255,6 +253,8 @@ class Orchestrator:
         execution_time = time.time() - start_time
 
         # 結果収集 (Feature 037: receive LeaderBoardEntry instead of RoundResult)
+        from mixseek.orchestrator.models import FailedTeamInfo
+
         team_results: list[LeaderBoardEntry] = []
         failed_teams_info: list[FailedTeamInfo] = []
 
@@ -264,14 +264,6 @@ class Orchestrator:
                 # TeamStatus更新
                 self.team_statuses[result.team_id].status = "completed"
                 self.team_statuses[result.team_id].completed_at = result.created_at
-            elif isinstance(result, PartialTeamFailureError):
-                # 部分成功: team_results に追加（ステータスは "failed"/"timeout" のまま）
-                team_results.append(result.entry)
-                logger.info(
-                    f"Team {result.entry.team_id} partially succeeded "
-                    f"(best round: {result.entry.round_number}, score: {result.entry.score:.2f}), "
-                    f"original error: {result.original_error}"
-                )
             elif isinstance(result, Exception):
                 # Exception発生時はログのみ記録（failed_teams_infoは後で一度だけ収集）
                 logger.debug(f"Exception occurred during parallel execution: {result}")
@@ -358,43 +350,6 @@ class Orchestrator:
 
         return summary
 
-    async def _try_recover_partial_failure(
-        self,
-        controller: RoundController,
-        original_error: Exception,
-        exit_reason: str,
-        error_msg: str,
-    ) -> PartialTeamFailureError | None:
-        """部分成功リカバリを試行する.
-
-        完了ラウンドがあれば最善結果を取得し、PartialTeamFailureErrorを返す。
-
-        Returns:
-            PartialTeamFailureError: 完了ラウンドがあり、リカバリに成功した場合
-            None: 以下のいずれかの場合
-                - 完了ラウンドが存在しない（round_historyが空 = 全ラウンド失敗）
-                - リカバリ処理自体が例外を投げた場合（例: DB書き込み失敗）
-
-        Args:
-            controller: RoundController instance
-            original_error: 元のエラー
-            exit_reason: 終了理由
-            error_msg: エラーメッセージ
-        """
-        team_id = controller.get_team_id()
-        # 完了ラウンドが存在しない場合はリカバリ不可（全ラウンド失敗）
-        if not controller.round_history:
-            return None
-        try:
-            entry = await controller._finalize_and_return_best(exit_reason, None)
-            self._write_error_to_progress_file(controller, error_msg)
-            return PartialTeamFailureError(entry=entry, original_error=original_error)
-        except Exception as recovery_err:
-            # リカバリはベストエフォート: DB書き込み失敗等が起きても、
-            # 呼び出し元で元のエラーが伝播するため、ここでは警告のみで抑制する
-            logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
-            return None
-
     async def _run_team(
         self,
         controller: RoundController,
@@ -429,14 +384,9 @@ class Orchestrator:
                 self.team_statuses[team_id].error_message = error_msg
                 logger.error(f"Team {team_id} ({team_name}) timed out: {error_msg}")
 
-                # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
-                partial_err = await self._try_recover_partial_failure(
-                    controller, TimeoutError(error_msg), "partial_failure_timeout", error_msg
-                )
-                if partial_err is not None:
-                    raise partial_err
-
+                # 進捗ファイルにエラー情報を書き込む
                 self._write_error_to_progress_file(controller, error_msg)
+
                 raise
             except Exception as e:
                 error_type = type(e).__name__
@@ -464,12 +414,9 @@ class Orchestrator:
                         exc_info=True,
                     )
 
-                    # 部分成功リカバリ: 完了ラウンドがあれば最善結果を取得
-                    partial_err = await self._try_recover_partial_failure(controller, e, "partial_failure", error_msg)
-                    if partial_err is not None:
-                        raise partial_err
-
+                    # 進捗ファイルにエラー情報を書き込む
                     self._write_error_to_progress_file(controller, error_msg)
+
                     raise
 
         # このコードに到達してはいけません（すべてのコードパスでreturnまたはraise）

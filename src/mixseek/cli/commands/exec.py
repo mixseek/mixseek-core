@@ -223,19 +223,9 @@ def exec_command(
             # Note: exec コマンドでは常に DB に保存
             _output_results(summary, output_format)
 
-            # 9. 終了コード判定
-            if summary.failed_teams_info:
-                if summary.team_results:
-                    # 部分成功（成功チームあり + 失敗チームあり）
-                    raise typer.Exit(code=1)
-                else:
-                    # 全チーム失敗
-                    raise typer.Exit(code=2)
-        except typer.Exit:
-            raise
         except Exception as e:
             typer.echo(f"Error: {e}", err=True)
-            raise typer.Exit(code=2) from e
+            raise typer.Exit(code=1) from e
         finally:
             # Cleanup: Close all HTTP clients
             await close_all_auth_clients()
@@ -258,32 +248,27 @@ def _print_leaderboard_table(summary: ExecutionSummary) -> None:
     table.add_column("Score", justify="right", width=8)
     table.add_column("Status", width=12)
 
-    # 部分成功チームIDの特定
-    partial_team_ids = summary.partial_team_ids
-
-    # 成功チーム（部分成功含む）をスコア降順でソート
+    # 成功チームをスコア降順でソート
     sorted_results = sorted(summary.team_results, key=lambda r: r.score, reverse=True)
 
     # 成功チームを追加
     for rank, result in enumerate(sorted_results, 1):
         # スコアは既に0-100スケール
-        status = "⚠️ Partial" if result.team_id in partial_team_ids else "✅ Completed"
         table.add_row(
             str(rank),
             result.team_name,
             f"{result.score:.2f}",
-            status,
+            "✅ Completed",
         )
 
-    # 完全失敗チームのみ追加（部分成功チームはリーダーボードに表示済み）
+    # 失敗チームを追加
     for failed in summary.failed_teams_info:
-        if failed.team_id not in partial_team_ids:
-            table.add_row(
-                "—",
-                failed.team_name,
-                "—",
-                "❌ Failed",
-            )
+        table.add_row(
+            "—",
+            failed.team_name,
+            "—",
+            "❌ Failed",
+        )
 
     # テーブル表示
     console.print()
@@ -299,15 +284,9 @@ def _print_text_summary(summary: ExecutionSummary) -> None:
     Args:
         summary: 実行サマリー
     """
-    # 部分成功チームIDの特定
-    partial_team_ids = summary.partial_team_ids
-
     # 成功チーム結果表示
     for result in summary.team_results:
-        if result.team_id in partial_team_ids:
-            typer.echo(f"⚠️  Team {result.team_id}: {result.team_name} (Round {result.round_number}) [Partial]")
-        else:
-            typer.echo(f"✅ Team {result.team_id}: {result.team_name} (Round {result.round_number})")
+        typer.echo(f"✅ Team {result.team_id}: {result.team_name} (Round {result.round_number})")
         # スコアは既に0-100スケール
         typer.echo(f"   Score: {result.score:.2f}")
         typer.echo(f"   Exit Reason: {result.exit_reason or 'N/A'}\n")
@@ -316,10 +295,7 @@ def _print_text_summary(summary: ExecutionSummary) -> None:
     if summary.failed_teams_info:
         typer.echo("❌ Failed Teams:")
         for failed in summary.failed_teams_info:
-            if failed.team_id in partial_team_ids:
-                typer.echo(f"   • {failed.team_id}: {failed.team_name} [Partial - see leaderboard]")
-            else:
-                typer.echo(f"   • {failed.team_id}: {failed.team_name}")
+            typer.echo(f"   • {failed.team_id}: {failed.team_name}")
             typer.echo(f"     Error: {failed.error_message}\n")
 
     # 最高スコアチーム表示
@@ -341,8 +317,6 @@ def _print_text_summary(summary: ExecutionSummary) -> None:
     typer.echo(f"\nTotal Teams:      {summary.total_teams}")
     typer.echo(f"Completed Teams:  {summary.completed_teams}")
     typer.echo(f"Failed Teams:     {summary.failed_teams}")
-    if summary.partial_teams > 0:
-        typer.echo(f"Partial Teams:    {summary.partial_teams}")
     typer.echo(f"Execution Time:   {summary.total_execution_time_seconds:.1f}s")
     # exec コマンドでは常に DB に保存
     typer.echo("\n💾 Results saved to DuckDB")

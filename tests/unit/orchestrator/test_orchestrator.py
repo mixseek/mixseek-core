@@ -1,16 +1,13 @@
 """Unit tests for Orchestrator"""
 
-from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from mixseek.agents.leader.models import MemberSubmission
 from mixseek.config.schema import OrchestratorSettings
-from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator import Orchestrator
-from mixseek.orchestrator.models import PartialTeamFailureError
 from mixseek.round_controller import RoundState
 
 
@@ -260,155 +257,3 @@ async def test_orchestrator_passes_on_round_complete_to_round_controller(tmp_pat
         call_kwargs = mock_rc_class.call_args.kwargs
         assert "on_round_complete" in call_kwargs
         assert call_kwargs["on_round_complete"] is dummy_callback
-
-
-# =============================================================================
-# Partial team failure recovery tests
-# =============================================================================
-
-
-def _make_mock_round_state(round_number: int = 1, score: float = 75.0) -> RoundState:
-    """テスト用RoundState生成ヘルパー"""
-    now = datetime.now(UTC)
-    return RoundState(
-        round_number=round_number,
-        submission_content="test submission",
-        evaluation_score=score,
-        score_details={"overall_score": score},
-        improvement_judgment=None,
-        round_started_at=now,
-        round_ended_at=now,
-        message_history=[],
-    )
-
-
-def _make_mock_entry(team_id: str = "test-team-001", team_name: str = "Test Team 1") -> LeaderBoardEntry:
-    """テスト用LeaderBoardEntry生成ヘルパー"""
-    now = datetime.now(UTC)
-    return LeaderBoardEntry(
-        execution_id="test-execution-id",
-        team_id=team_id,
-        team_name=team_name,
-        round_number=1,
-        submission_content="best submission",
-        score=80.0,
-        score_details={"metric1": 80.0},
-        final_submission=True,
-        exit_reason="partial_failure",
-        created_at=now,
-        updated_at=now,
-    )
-
-
-@pytest.mark.asyncio
-async def test_run_team_partial_failure_with_round_history(tmp_path: Path) -> None:
-    """_run_team: round_history が非空の時に PartialTeamFailureError が送出される"""
-    team1_path = str(Path("tests/fixtures/team1.toml").resolve())
-
-    settings = OrchestratorSettings(
-        workspace_path=tmp_path,
-        timeout_per_team_seconds=600,
-        teams=[{"config": team1_path}],
-    )
-    orchestrator = Orchestrator(settings=settings, save_db=False)
-
-    # TeamStatus を手動登録（_execute_impl が行う初期化を模擬）
-    from mixseek.orchestrator.models import TeamStatus
-
-    orchestrator.team_statuses["test-team-001"] = TeamStatus(
-        team_id="test-team-001",
-        team_name="Test Team 1",
-    )
-
-    # Mock controller
-    mock_controller = MagicMock()
-    mock_controller.get_team_id.return_value = "test-team-001"
-    mock_controller.get_team_name.return_value = "Test Team 1"
-    mock_controller.round_history = [_make_mock_round_state()]
-
-    # run_round が例外を送出
-    mock_controller.run_round = AsyncMock(side_effect=RuntimeError("evaluator API error"))
-
-    # _finalize_and_return_best が最善結果を返す
-    mock_entry = _make_mock_entry()
-    mock_controller._finalize_and_return_best = AsyncMock(return_value=mock_entry)
-
-    # _write_progress_file のモック
-    mock_controller._write_progress_file = MagicMock()
-
-    # When
-    with pytest.raises(PartialTeamFailureError) as exc_info:
-        await orchestrator._run_team(mock_controller, "test prompt", 600)
-
-    # Then
-    assert exc_info.value.entry is mock_entry
-    assert isinstance(exc_info.value.original_error, RuntimeError)
-    assert orchestrator.team_statuses["test-team-001"].status == "failed"
-    mock_controller._finalize_and_return_best.assert_awaited_once_with("partial_failure", None)
-
-
-@pytest.mark.asyncio
-async def test_run_team_no_round_history_raises_original(tmp_path: Path) -> None:
-    """_run_team: round_history が空の場合は元の例外がそのまま送出される"""
-    team1_path = str(Path("tests/fixtures/team1.toml").resolve())
-
-    settings = OrchestratorSettings(
-        workspace_path=tmp_path,
-        timeout_per_team_seconds=600,
-        teams=[{"config": team1_path}],
-    )
-    orchestrator = Orchestrator(settings=settings, save_db=False)
-
-    from mixseek.orchestrator.models import TeamStatus
-
-    orchestrator.team_statuses["test-team-001"] = TeamStatus(
-        team_id="test-team-001",
-        team_name="Test Team 1",
-    )
-
-    mock_controller = MagicMock()
-    mock_controller.get_team_id.return_value = "test-team-001"
-    mock_controller.get_team_name.return_value = "Test Team 1"
-    mock_controller.round_history = []  # 空: ラウンド0で失敗
-    mock_controller.run_round = AsyncMock(side_effect=RuntimeError("immediate failure"))
-    mock_controller._write_progress_file = MagicMock()
-
-    with pytest.raises(RuntimeError, match="immediate failure"):
-        await orchestrator._run_team(mock_controller, "test prompt", 600)
-
-    assert orchestrator.team_statuses["test-team-001"].status == "failed"
-
-
-@pytest.mark.asyncio
-async def test_execute_impl_handles_partial_team_failure(tmp_path: Path) -> None:
-    """_execute_impl: PartialTeamFailureError が team_results と failed_teams_info の両方に入る"""
-    team1_path = str(Path("tests/fixtures/team1.toml").resolve())
-
-    settings = OrchestratorSettings(
-        workspace_path=tmp_path,
-        timeout_per_team_seconds=600,
-        teams=[{"config": team1_path}],
-    )
-    orchestrator = Orchestrator(settings=settings, save_db=False)
-
-    mock_entry = _make_mock_entry()
-
-    with patch("mixseek.round_controller.RoundController") as mock_rc_class:
-        mock_rc = MagicMock()
-        mock_rc.get_team_id.return_value = "test-team-001"
-        mock_rc.get_team_name.return_value = "Test Team 1"
-        mock_rc.round_history = [_make_mock_round_state()]
-        mock_rc.run_round = AsyncMock(side_effect=RuntimeError("round 2 failed"))
-        mock_rc._finalize_and_return_best = AsyncMock(return_value=mock_entry)
-        mock_rc._write_progress_file = MagicMock()
-        mock_rc_class.return_value = mock_rc
-
-        summary = await orchestrator.execute(user_prompt="Test prompt", timeout_seconds=300)
-
-    # team_results と failed_teams_info の両方に同一チームが入る
-    assert len(summary.team_results) == 1
-    assert summary.team_results[0].team_id == "test-team-001"
-    assert len(summary.failed_teams_info) == 1
-    assert summary.failed_teams_info[0].team_id == "test-team-001"
-    assert summary.total_teams == 1  # 重複排除
-    assert summary.partial_teams == 1

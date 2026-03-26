@@ -382,6 +382,7 @@ class Orchestrator:
             error_msg: エラーメッセージ
         """
         team_id = controller.get_team_id()
+        # 完了ラウンドが存在しない場合はリカバリ不可（全ラウンド失敗）
         if not controller.round_history:
             return None
         try:
@@ -389,6 +390,8 @@ class Orchestrator:
             self._write_error_to_progress_file(controller, error_msg)
             return PartialTeamFailureError(entry=entry, original_error=original_error)
         except Exception as recovery_err:
+            # リカバリはベストエフォート: DB書き込み失敗等が起きても、
+            # 呼び出し元で元のエラーが伝播するため、ここでは警告のみで抑制する
             logger.warning(f"Failed to recover partial results for {team_id}: {recovery_err}")
             return None
 

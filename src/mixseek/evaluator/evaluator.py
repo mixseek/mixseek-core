@@ -419,7 +419,7 @@ class Evaluator:
 
         # PascalCaseをsnake_caseに変換（ファイル名の推測用）
         # 例: ClarityCoherence → clarity_coherence
-        snake_case_name = re.sub(r"(?<!^)(?=[A-Z])", "_", class_name).lower()
+        snake_case_name = re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", r"_\1", class_name).lower()
 
         # メトリクスモジュールのパス
         module_path = f"mixseek.evaluator.metrics.{snake_case_name}"

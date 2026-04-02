@@ -534,7 +534,7 @@ def _validate_metric_names(evaluator_settings: EvaluatorSettings | Any) -> Categ
 
         # 3. メトリクスディレクトリからの動的ロード
         try:
-            snake_case_name = re.sub(r"(?<!^)(?=[A-Z])", "_", metric_name).lower()
+            snake_case_name = re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", r"_\1", metric_name).lower()
             module_path = f"mixseek.evaluator.metrics.{snake_case_name}"
             module = importlib.import_module(module_path)
             metric_class = getattr(module, metric_name)

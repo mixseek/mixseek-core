@@ -24,6 +24,7 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.schema import (
     EvaluatorSettings,
     JudgmentSettings,
+    LeaderAgentSettings,
     MemberAgentSettings,
     TeamSettings,
 )
@@ -317,7 +318,10 @@ def _collect_model_ids(
     # チーム設定からモデルIDを収集
     for team in team_settings_list:
         # リーダーのモデル（未指定時はデフォルト値を使用）
-        leader_model = team.leader.get("model", "google-gla:gemini-2.5-flash-lite")
+        if "model" in team.leader:
+            leader_model = team.leader["model"]
+        else:
+            leader_model = LeaderAgentSettings.model_fields["model"].default
         if leader_model:
             model_ids.add(leader_model)
 

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a12 (2026-04-02)
+
+### Fix
+
+- apply ruff format to orchestrator.py
+- **cli**: display partial success teams in leaderboard and summary
+- **orchestrator**: recover partial results when team fails mid-round
+- **cli**: return proper exit codes from exec command based on team results
+
+### Refactor
+
+- **orchestrator**: remove unreachable except PartialTeamFailureError
+- extract partial_team_ids property and recovery helper to reduce duplication
+- **cli**: simplify exit code logic by removing intermediate variable
+
 ## v0.1.0a11 (2026-03-26)
 
 ## v0.1.0a10 (2026-03-26)

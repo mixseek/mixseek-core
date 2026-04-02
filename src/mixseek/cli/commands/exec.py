@@ -22,6 +22,7 @@ from mixseek.cli.common_options import (
 from mixseek.cli.utils import setup_logfire_from_cli, setup_logging_from_cli
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
+from mixseek.config.preflight import PreflightResult, run_preflight_check
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
 from mixseek.orchestrator.models import ExecutionSummary
@@ -45,6 +46,11 @@ OUTPUT_FORMAT_OPTION = typer.Option(
     "--output-format",
     "-f",
     help="出力フォーマット(text/json)",
+)
+DRY_RUN_OPTION = typer.Option(
+    False,
+    "--dry-run",
+    help="設定検証のみ実行し、オーケストレーションは実行しない",
 )
 
 
@@ -86,7 +92,7 @@ def _load_and_validate_config(config: Path | None, workspace: Path | None) -> Or
     if config is None:
         typer.echo("Error: --config オプションは必須です", err=True)
         typer.echo('Usage: mixseek exec "prompt" --config /path/to/orchestrator.toml', err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=2)
 
     logger.debug(f"Config path: {config}")
     logger.debug(f"Config path type: {type(config)}")
@@ -147,6 +153,7 @@ def exec_command(
     timeout: int | None = TIMEOUT_OPTION,
     workspace: Path | None = WORKSPACE_OPTION,
     output_format: str = OUTPUT_FORMAT_OPTION,
+    dry_run: bool = DRY_RUN_OPTION,
     verbose: bool = VERBOSE_OPTION,
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
@@ -165,6 +172,7 @@ def exec_command(
         timeout: タイムアウト(秒)
         workspace: ワークスペースパス
         output_format: 出力フォーマット
+        dry_run: プリフライトチェックのみ実行
         verbose: 詳細ログ表示
         logfire: Logfire完全モード
         logfire_metadata: Logfireメタデータモード
@@ -202,6 +210,19 @@ def exec_command(
 
             # 4. Logfire初期化
             setup_logfire_from_cli(logfire, logfire_metadata, logfire_http, workspace_path, verbose)
+
+            # 4.5. config必須チェック（dry-run/通常の両方で必要）
+            if config is None:
+                typer.echo("Error: --config オプションは必須です", err=True)
+                raise typer.Exit(code=2)
+
+            # 4.6. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
+            preflight_result = run_preflight_check(config, workspace)
+
+            # dry-runの場合は常に結果を出力して終了、通常モードはエラー時のみ出力して終了
+            if dry_run or not preflight_result.is_valid:
+                _output_preflight_result(preflight_result, output_format)
+                raise typer.Exit(code=0 if preflight_result.is_valid else 2)
 
             # 5. 設定読み込み（Article 9準拠: workspace明示的に渡す, FR-011: OrchestratorSettings直接返却）
             orchestrator_settings = _load_and_validate_config(config, workspace)
@@ -241,6 +262,36 @@ def exec_command(
             await close_all_auth_clients()
 
     asyncio.run(_execute())
+
+
+def _output_preflight_result(result: PreflightResult, output_format: str) -> None:
+    """プリフライトチェック結果を出力する。
+
+    Args:
+        result: プリフライトチェック結果
+        output_format: 出力フォーマット(text/json)
+    """
+    if output_format == "json":
+        print(result.model_dump_json(indent=2))
+    else:
+        status_icons = {"ok": "✅", "warn": "⚠️", "error": "❌", "skipped": "⏭️"}
+
+        typer.echo("🔍 Preflight Check Results")
+        typer.echo("━" * 60)
+
+        for cat in result.categories:
+            typer.echo(f"\n📋 {cat.category}")
+            for check in cat.checks:
+                icon = status_icons.get(check.status.value, "?")
+                typer.echo(f"  {icon} {check.name}: {check.message}")
+                if check.source_file:
+                    typer.echo(f"     📄 {check.source_file}")
+
+        typer.echo("\n" + "━" * 60)
+        if result.is_valid:
+            typer.echo(f"✅ All checks passed (errors: 0, warnings: {result.warn_count})")
+        else:
+            typer.echo(f"❌ Preflight failed (errors: {result.error_count}, warnings: {result.warn_count})")
 
 
 def _print_leaderboard_table(summary: ExecutionSummary) -> None:

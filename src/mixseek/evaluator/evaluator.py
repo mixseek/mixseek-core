@@ -300,6 +300,8 @@ class Evaluator:
             return self._builtin_metrics[metric_name]
 
         # メトリクスディレクトリから動的にロード（FR-020）
+        # NOTE: metricsディレクトリにファイルを直接配置したカスタムメトリクス用。
+        # ビルトインはステップ2で、TOML [custom_metrics] 経由はステップ1で解決される。
         try:
             metric = self._load_metric_from_directory(metric_name)
             # ロードに成功したら、カスタムメトリクスレジストリに追加
@@ -418,7 +420,8 @@ class Evaluator:
         """
 
         # PascalCaseをsnake_caseに変換（ファイル名の推測用）
-        # 例: ClarityCoherence → clarity_coherence
+        # 例: ClarityCoherence → clarity_coherence, LLMPlain → llm_plain
+        # アクロニム（連続大文字）を1語として扱う正規表現を使用
         snake_case_name = re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", r"_\1", class_name).lower()
 
         # メトリクスモジュールのパス

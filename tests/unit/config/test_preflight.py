@@ -559,6 +559,37 @@ class TestValidateMetricNames:
         cat = _validate_metric_names(eval_settings)
         assert cat.has_errors
 
+    def test_dynamic_load_standard_pascal_case(self) -> None:
+        """ビルトイン名一覧に含まれないが、metricsディレクトリに存在する場合 → 動的ロードで OK"""
+        from unittest.mock import patch
+
+        from mixseek.config.preflight import _validate_metric_names
+
+        eval_settings = MagicMock()
+        eval_settings.metrics = [{"name": "ClarityCoherence", "weight": 1.0}]
+        eval_settings.custom_metrics = {}
+
+        # ビルトイン名一覧から除外し、ステップ3（動的ロード）に到達させる
+        with patch("mixseek.config.preflight.validators.evaluator._BUILTIN_METRIC_NAMES", set()):
+            cat = _validate_metric_names(eval_settings)
+        assert not cat.has_errors
+        assert "動的にロード" in cat.checks[0].message
+
+    def test_dynamic_load_acronym_name(self) -> None:
+        """アクロニム含みの名前（LLMPlain）がステップ3で正しく解決される"""
+        from unittest.mock import patch
+
+        from mixseek.config.preflight import _validate_metric_names
+
+        eval_settings = MagicMock()
+        eval_settings.metrics = [{"name": "LLMPlain", "weight": 1.0}]
+        eval_settings.custom_metrics = {}
+
+        with patch("mixseek.config.preflight.validators.evaluator._BUILTIN_METRIC_NAMES", set()):
+            cat = _validate_metric_names(eval_settings)
+        assert not cat.has_errors
+        assert "動的にロード" in cat.checks[0].message
+
 
 # ---------------------------------------------------------------------------
 # _validate_workspace_writable テスト

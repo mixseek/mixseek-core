@@ -159,7 +159,8 @@ def _validate_metric_names(evaluator_settings: EvaluatorSettings | Any) -> Categ
             )
             continue
 
-        # 3. メトリクスディレクトリからの動的ロード
+        # 3. metricsディレクトリに直接配置されたカスタムメトリクスの動的ロード
+        # ビルトインはステップ2で、TOML [custom_metrics] 経由はステップ1で解決される
         try:
             snake_case_name = re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", r"_\1", metric_name).lower()
             module_path = f"mixseek.evaluator.metrics.{snake_case_name}"

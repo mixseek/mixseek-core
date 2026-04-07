@@ -12,7 +12,6 @@ class CheckStatus(str, Enum):
     """チェック結果ステータス"""
 
     OK = "ok"
-    WARN = "warn"
     ERROR = "error"
     SKIPPED = "skipped"
 
@@ -52,8 +51,3 @@ class PreflightResult(BaseModel):
     def error_count(self) -> int:
         """ERROR ステータスの総数"""
         return sum(1 for cat in self.categories for c in cat.checks if c.status == CheckStatus.ERROR)
-
-    @property
-    def warn_count(self) -> int:
-        """WARN ステータスの総数"""
-        return sum(1 for cat in self.categories for c in cat.checks if c.status == CheckStatus.WARN)

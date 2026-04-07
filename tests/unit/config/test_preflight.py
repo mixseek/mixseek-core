@@ -36,9 +36,9 @@ class TestCheckResultModel:
         assert r.message == "fail reason"
 
     def test_json_serialization(self) -> None:
-        r = CheckResult(name="test", status=CheckStatus.WARN, source_file="/tmp/x.toml")
+        r = CheckResult(name="test", status=CheckStatus.OK, source_file="/tmp/x.toml")
         data = r.model_dump()
-        assert data["status"] == "warn"
+        assert data["status"] == "ok"
         assert data["source_file"] == "/tmp/x.toml"
 
 
@@ -55,12 +55,12 @@ class TestCategoryResult:
         )
         assert cat.has_errors is True
 
-    def test_has_errors_false_when_ok_and_warn_only(self) -> None:
+    def test_has_errors_false_when_ok_only(self) -> None:
         cat = CategoryResult(
             category="test",
             checks=[
                 CheckResult(name="a", status=CheckStatus.OK),
-                CheckResult(name="b", status=CheckStatus.WARN, message="note"),
+                CheckResult(name="b", status=CheckStatus.SKIPPED, message="note"),
             ],
         )
         assert cat.has_errors is False
@@ -78,7 +78,7 @@ class TestPreflightResult:
                 ),
                 CategoryResult(
                     category="c2",
-                    checks=[CheckResult(name="b", status=CheckStatus.WARN)],
+                    checks=[CheckResult(name="b", status=CheckStatus.SKIPPED)],
                 ),
             ]
         )
@@ -95,14 +95,14 @@ class TestPreflightResult:
         )
         assert result.is_valid is False
 
-    def test_error_and_warn_counts(self) -> None:
+    def test_error_count(self) -> None:
         result = PreflightResult(
             categories=[
                 CategoryResult(
                     category="c1",
                     checks=[
                         CheckResult(name="a", status=CheckStatus.ERROR),
-                        CheckResult(name="b", status=CheckStatus.WARN),
+                        CheckResult(name="b", status=CheckStatus.OK),
                     ],
                 ),
                 CategoryResult(
@@ -115,7 +115,6 @@ class TestPreflightResult:
             ]
         )
         assert result.error_count == 2
-        assert result.warn_count == 1
 
 
 # ---------------------------------------------------------------------------

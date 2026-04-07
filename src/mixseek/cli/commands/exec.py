@@ -274,7 +274,7 @@ def _output_preflight_result(result: PreflightResult, output_format: str) -> Non
     if output_format == "json":
         print(result.model_dump_json(indent=2))
     else:
-        status_icons = {"ok": "✅", "warn": "⚠️", "error": "❌", "skipped": "⏭️"}
+        status_icons = {"ok": "✅", "error": "❌", "skipped": "⏭️"}
 
         typer.echo("🔍 Preflight Check Results")
         typer.echo("━" * 60)
@@ -289,9 +289,9 @@ def _output_preflight_result(result: PreflightResult, output_format: str) -> Non
 
         typer.echo("\n" + "━" * 60)
         if result.is_valid:
-            typer.echo(f"✅ All checks passed (errors: 0, warnings: {result.warn_count})")
+            typer.echo("✅ All checks passed")
         else:
-            typer.echo(f"❌ Preflight failed (errors: {result.error_count}, warnings: {result.warn_count})")
+            typer.echo(f"❌ Preflight failed (errors: {result.error_count})")
 
 
 def _print_leaderboard_table(summary: ExecutionSummary) -> None:

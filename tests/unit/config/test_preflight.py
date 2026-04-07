@@ -229,8 +229,8 @@ class TestValidateTeams:
         assert cat.has_errors
         assert len(team_list) == 1  # 成功チームのみ
 
-    def test_empty_teams_warn(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """チームリスト空 → WARN"""
+    def test_empty_teams_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """チームリスト空 → ERROR（実行時にOrchestratorTaskが失敗するため）"""
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
         mock_settings = MagicMock()
@@ -239,8 +239,8 @@ class TestValidateTeams:
         from mixseek.config.preflight import _validate_teams
 
         cat, team_list = _validate_teams(mock_settings, tmp_path)
-        assert not cat.has_errors
-        assert any(c.status == CheckStatus.WARN for c in cat.checks)
+        assert cat.has_errors
+        assert any(c.status == CheckStatus.ERROR for c in cat.checks)
 
 
 # ---------------------------------------------------------------------------
@@ -649,6 +649,17 @@ class TestRunPreflightCheck:
         assert not result.is_valid
         # orchestratorカテゴリのみ存在
         assert len(result.categories) == 1
+
+    def test_empty_teams_preflight_fails(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """チーム空のオーケストレータ設定 → is_valid=False"""
+        monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
+
+        config = tmp_path / "orchestrator.toml"
+        config.write_text("[orchestrator]\n")
+
+        result = run_preflight_check(config, tmp_path)
+        assert not result.is_valid
+        assert result.error_count >= 1
 
     def test_partial_errors_aggregated(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """チーム1件エラー+evaluatorエラー → 両方のエラーが収集される"""

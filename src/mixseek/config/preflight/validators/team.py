@@ -23,8 +23,8 @@ def _validate_teams(
         checks.append(
             CheckResult(
                 name="teams",
-                status=CheckStatus.WARN,
-                message="チーム設定が定義されていません",
+                status=CheckStatus.ERROR,
+                message="チーム設定が定義されていません（1つ以上のチームが必要です）",
             )
         )
         return CategoryResult(category="チーム", checks=checks), team_settings_list

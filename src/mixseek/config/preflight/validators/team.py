@@ -34,6 +34,9 @@ def _validate_teams(
     for i, team_entry in enumerate(teams):
         team_config_path = team_entry.get("config", "")
         try:
+            # load_team_settings は TeamSettings の Pydantic バリデータを通じて
+            # メンバー設定も検証する（メンバー数上限、agent_name 重複、tool_name 重複、
+            # 各 MemberAgentSettings の model 形式・tool_description 必須チェック）
             team_settings = config_manager.load_team_settings(Path(team_config_path))
             team_settings_list.append(team_settings)
             checks.append(

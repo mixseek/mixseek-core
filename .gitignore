@@ -248,3 +248,6 @@ __marimo__/
 
 # MacOS files
 .DS_Store
+
+# mixseek default workspace
+.mixseek

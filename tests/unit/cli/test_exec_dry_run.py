@@ -91,7 +91,6 @@ class TestExecDryRunFlag:
         assert "dry-run" in normalized or "dry_run" in normalized
 
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
     @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
@@ -102,7 +101,6 @@ class TestExecDryRunFlag:
         mock_setup_logging: MagicMock,
         mock_setup_logfire: MagicMock,
         mock_preflight: MagicMock,
-        mock_load_config: MagicMock,
         mock_execute_orch: MagicMock,
         runner: CliRunner,
         orchestrator_toml: Path,
@@ -119,7 +117,6 @@ class TestExecDryRunFlag:
         assert result.exit_code == 0
         mock_preflight.assert_called_once()
         # dry-runでは実行系に進まないことを保証
-        mock_load_config.assert_not_called()
         mock_execute_orch.assert_not_called()
 
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
@@ -206,7 +203,6 @@ class TestExecPreflightIntegration:
 
     @patch(f"{_EXEC_MODULE}.close_all_auth_clients", new_callable=AsyncMock)
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
     @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
@@ -217,7 +213,6 @@ class TestExecPreflightIntegration:
         mock_setup_logging: MagicMock,
         mock_setup_logfire: MagicMock,
         mock_preflight: MagicMock,
-        mock_load_config: MagicMock,
         mock_execute_orch: MagicMock,
         mock_close_auth: AsyncMock,
         runner: CliRunner,
@@ -235,13 +230,11 @@ class TestExecPreflightIntegration:
         # プリフライト失敗で exit code 2
         assert result.exit_code == 2
         # 実行系に進まないことを保証
-        mock_load_config.assert_not_called()
         mock_execute_orch.assert_not_called()
 
     @patch(f"{_EXEC_MODULE}.close_all_auth_clients", new_callable=AsyncMock)
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
     @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
@@ -252,7 +245,6 @@ class TestExecPreflightIntegration:
         mock_setup_logging: MagicMock,
         mock_setup_logfire: MagicMock,
         mock_preflight: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_execute_orch: MagicMock,
         mock_close_auth: AsyncMock,
@@ -265,10 +257,11 @@ class TestExecPreflightIntegration:
         from mixseek.orchestrator.models import ExecutionSummary
 
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
-        mock_preflight.return_value = _make_valid_preflight()
         mock_settings = MagicMock()
         mock_settings.teams = [MagicMock()]
-        mock_load_config.return_value = mock_settings
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
         mock_execute_orch.return_value = ExecutionSummary(
             execution_id="test",
             user_prompt="test",

@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from mixseek.cli.common_options import (
+    LOG_FORMAT_OPTION,
     LOG_LEVEL_OPTION,
     LOGFIRE_HTTP_OPTION,
     LOGFIRE_METADATA_OPTION,
@@ -135,6 +136,7 @@ def exec_command(
     log_level: str = LOG_LEVEL_OPTION,
     no_log_console: bool = NO_LOG_CONSOLE_OPTION,
     no_log_file: bool = NO_LOG_FILE_OPTION,
+    log_format: str | None = LOG_FORMAT_OPTION,
 ) -> None:
     """ユーザプロンプトを複数チームで並列実行
 
@@ -178,10 +180,27 @@ def exec_command(
 
             # 3. 標準logging初期化（Logfireより先に実行）
             logfire_enabled = logfire or logfire_metadata or logfire_http
-            setup_logging_from_cli(log_level, no_log_console, no_log_file, logfire_enabled, workspace_path, verbose)
+            effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
+            setup_logging_from_cli(
+                log_level,
+                no_log_console,
+                no_log_file,
+                logfire_enabled,
+                workspace_path,
+                verbose,
+                effective_log_format,
+            )
 
             # 4. Logfire初期化
-            setup_logfire_from_cli(logfire, logfire_metadata, logfire_http, workspace_path, verbose)
+            setup_logfire_from_cli(
+                logfire,
+                logfire_metadata,
+                logfire_http,
+                verbose,
+                log_format=effective_log_format,
+                workspace=workspace_path,
+                file_enabled=not no_log_file,
+            )
 
             # 4.5. config必須チェック（dry-run/通常の両方で必要）
             if config is None:

@@ -14,6 +14,10 @@ from google.adk.agents import BaseAgent
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
+# NOTE: このロガーは "mixseek" 統一ロガーの名前空間外のため、
+# mixseek のハンドラ（stderr/mixseek.log）には伝搬しません。
+# 統一ロガーへの伝搬が必要な場合は以下を使用してください:
+#   logger = logging.getLogger("mixseek.custom_agents.adk_research")
 logger = logging.getLogger(__name__)
 
 

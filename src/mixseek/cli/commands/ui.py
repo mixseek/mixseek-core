@@ -7,6 +7,7 @@ import typer
 from streamlit.web import cli as stcli
 
 from mixseek.cli.common_options import (
+    LOG_FORMAT_OPTION,
     LOG_LEVEL_OPTION,
     LOGFIRE_HTTP_OPTION,
     LOGFIRE_METADATA_OPTION,
@@ -29,6 +30,7 @@ def ui(
     log_level: str = LOG_LEVEL_OPTION,
     no_log_console: bool = NO_LOG_CONSOLE_OPTION,
     no_log_file: bool = NO_LOG_FILE_OPTION,
+    log_format: str | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Launch Mixseek UI (Streamlit application).
 
@@ -81,18 +83,17 @@ def ui(
         typer.echo(f"Error: Failed to load configuration: {e}", err=True)
         raise typer.Exit(1)
 
+    # log_format 解決
+    effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
+
     # Logfire設定（CLIフラグが指定された場合のみ）
     if logfire or logfire_metadata or logfire_http:
-        workspace_resolved = workspace or ui_settings.workspace_path
-
-        # 1. 環境変数/TOMLから基本設定を読み取る
+        # 環境変数から基本設定を読み取る（project_name/send_to_logfire の継承用）
         base_config = None
         if os.getenv("LOGFIRE_PROJECT") or os.getenv("LOGFIRE_SEND_TO_LOGFIRE"):
             base_config = LogfireConfig.from_env()
-        elif workspace_resolved:
-            base_config = LogfireConfig.from_toml(workspace_resolved)
 
-        # 2. CLIフラグでプライバシーモードとHTTPキャプチャを決定
+        # CLIフラグでプライバシーモードとHTTPキャプチャを決定
         if logfire:
             privacy_mode = LogfirePrivacyMode.FULL
             capture_http_flag = False
@@ -125,6 +126,7 @@ def ui(
     os.environ["MIXSEEK_LOG_LEVEL"] = log_level
     os.environ["MIXSEEK_LOG_CONSOLE"] = "0" if no_log_console else "1"
     os.environ["MIXSEEK_LOG_FILE"] = "0" if no_log_file else "1"
+    os.environ["MIXSEEK_LOG_FORMAT"] = effective_log_format
 
     app_path = Path(__file__).parent.parent.parent / "ui" / "app.py"
 

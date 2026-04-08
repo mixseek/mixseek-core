@@ -5,6 +5,7 @@ of Member Agents. This command is for development purposes only.
 """
 
 import asyncio
+import os
 import time
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import typer
 
 from mixseek.agents.member.factory import MemberAgentFactory
 from mixseek.cli.common_options import (
+    LOG_FORMAT_OPTION,
     LOG_LEVEL_OPTION,
     LOGFIRE_HTTP_OPTION,
     LOGFIRE_METADATA_OPTION,
@@ -131,6 +133,7 @@ def member(
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
     logfire_http: bool = LOGFIRE_HTTP_OPTION,
+    log_format: str | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Execute Member Agent (development/testing only).
 
@@ -167,10 +170,27 @@ def member(
 
     # 標準logging初期化（Logfireより先に実行）
     logfire_enabled = logfire or logfire_metadata or logfire_http
-    setup_logging_from_cli(log_level, no_log_console, no_log_file, logfire_enabled, workspace_resolved, verbose)
+    effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    setup_logging_from_cli(
+        log_level,
+        no_log_console,
+        no_log_file,
+        logfire_enabled,
+        workspace_resolved,
+        verbose,
+        effective_log_format,
+    )
 
     # Logfire初期化
-    setup_logfire_from_cli(logfire, logfire_metadata, logfire_http, workspace_resolved, verbose)
+    setup_logfire_from_cli(
+        logfire,
+        logfire_metadata,
+        logfire_http,
+        verbose,
+        log_format=effective_log_format,
+        workspace=workspace_resolved,
+        file_enabled=not no_log_file,
+    )
 
     show_development_warning()
 

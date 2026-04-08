@@ -35,6 +35,10 @@ from examples.custom_agents.adk_research.runner import ADKRunnerWrapper
 from mixseek.agents.member.base import BaseMemberAgent
 from mixseek.models.member_agent import AgentType, MemberAgentConfig, MemberAgentResult, ResultStatus
 
+# NOTE: このロガーは "mixseek" 統一ロガーの名前空間外のため、
+# mixseek のハンドラ（stderr/mixseek.log）には伝搬しません。
+# 統一ロガーへの伝搬が必要な場合は以下を使用してください:
+#   logger = logging.getLogger("mixseek.custom_agents.adk_research")
 logger = logging.getLogger(__name__)
 
 

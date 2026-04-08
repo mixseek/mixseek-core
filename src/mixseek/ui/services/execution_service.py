@@ -273,7 +273,14 @@ def run_orchestration(
                     from mixseek.observability import setup_logfire
 
                     logfire_config = LogfireConfig.from_env()
-                    setup_logfire(logfire_config)
+                    log_format = os.getenv("MIXSEEK_LOG_FORMAT", "text")
+                    file_enabled = os.getenv("MIXSEEK_LOG_FILE", "1") in ("true", "1")
+                    setup_logfire(
+                        logfire_config,
+                        log_format=log_format,
+                        workspace=workspace,
+                        file_enabled=file_enabled,
+                    )
                 except Exception as e:
                     # Logfire初期化失敗は警告のみ（実行は継続）
                     logger.warning(f"Logfire initialization failed in background thread: {e}")
@@ -738,10 +745,27 @@ def get_recent_logs(lines: int = 100, level: str = "INFO") -> list[str]:
         if len(filtered_logs) >= lines:
             break
 
-        for lvl, val in level_map.items():
-            if f"- {lvl} -" in line and val >= min_level:
-                filtered_logs.append(line.rstrip())
-                break
+        stripped = line.rstrip()
+        if not stripped:
+            continue
+
+        # JSON形式（{ で始まる行）とテキスト形式を判定
+        if stripped.startswith("{"):
+            try:
+                import json
+
+                data = json.loads(stripped)
+                log_level = data.get("level", "")
+                if log_level in level_map and level_map[log_level] >= min_level:
+                    filtered_logs.append(stripped)
+            except (json.JSONDecodeError, KeyError):
+                pass
+        else:
+            # テキスト形式: "- LEVEL -" パターンでマッチ
+            for lvl, val in level_map.items():
+                if f"- {lvl} -" in line and val >= min_level:
+                    filtered_logs.append(stripped)
+                    break
 
     # 時系列順（古い→新しい）に戻して返す
     return list(reversed(filtered_logs))

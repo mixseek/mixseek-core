@@ -319,3 +319,50 @@ For detailed guidelines and common pitfalls, see `.claude/sphinx.md`.
 - **Linting**: ruff >=0.8.4
 - **Type checking**: mypy >=1.13.0
 - **Docs**: sphinx >=8.2.3, myst-parser >=4.0.1, sphinx-rtd-theme >=3.0.2
+
+## Agent Skills
+
+MixSeek-Core provides Agent Skills compliant with the `.skills/` directory specification (following the agentskills.io standard).
+
+### Usage Guidelines (Important)
+
+**When a user's request matches any of the following trigger keywords, load the corresponding SKILL.md file and execute the instructions provided.**
+
+| Trigger Keyword | Executed Skill | File to Load |
+|-----------------|----------------|--------------|
+| "Initialize workspace", "Set up MixSeek", "Create a workspace" | workspace-init | `.skills/mixseek-workspace-init/SKILL.md` |
+| "Create a team", "Generate agent configuration", "Team settings" | team-config | `.skills/mixseek-team-config/SKILL.md` |
+| "Configure orchestrator", "Team competition settings", "Compete with multiple teams" | orchestrator-config | `.skills/mixseek-orchestrator-config/SKILL.md` |
+| "Create evaluation settings", "Scoring configuration", "Configure metrics" | evaluator-config | `.skills/mixseek-evaluator-config/SKILL.md` |
+| "Validate configuration", "Check TOML", "Validation", "Workspace validation" | config-validate | `.skills/mixseek-config-validate/SKILL.md` |
+| "Available models", "Model list", "Which models are available", "Fetch models", "Get models from API" | model-list | `.skills/mixseek-model-list/SKILL.md` |
+
+### Execution Process
+
+1. Detect the trigger keyword from the user request
+2. **Always load** the corresponding `SKILL.md` file
+3. Follow the step-by-step instructions in the SKILL.md file
+4. Refer to files in the `scripts/` and `references/` directories as needed
+
+### Skill List
+
+| Skill Name | Description |
+|------------|-------------|
+| `mixseek-workspace-init` | Workspace initialization (creates directory structure) |
+| `mixseek-team-config` | Generates team configuration TOML file (for Leader/Member Agents) |
+| `mixseek-orchestrator-config` | Generates orchestrator configuration (handles multiple team conflicts) |
+| `mixseek-evaluator-config` | Generates evaluation/judgment configuration (includes metrics and weighting) |
+| `mixseek-config-validate` | Validates TOML configuration files |
+| `mixseek-model-list` | Fetches available LLM models dynamically via API (with fallback support) |
+
+### Validation Command
+```bash
+# Install the skills-ref CLI
+pip install skills-ref
+
+# Validate a skill
+agentskills validate .skills/mixseek-workspace-init
+```
+
+## Recent Changes
+- 023-agent-skills-mixseek: Added Agent Skills support (skill definitions in Markdown format, bundled Bash/Python 3.13 scripts), compliant with Agent Skills specification (agentskills.io), and MixSeek-Core TOML configuration schema

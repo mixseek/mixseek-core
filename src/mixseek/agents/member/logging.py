@@ -6,7 +6,6 @@
 
 import logging
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +34,6 @@ class MemberAgentLogger:
                 "agent_type": agent_type,
                 "task_preview": task[:100] + "..." if len(task) > 100 else task,
                 "model_id": model_id,
-                "timestamp": datetime.now(UTC).isoformat(),
                 **kwargs,
             },
         )
@@ -57,7 +55,6 @@ class MemberAgentLogger:
             "agent_type": result.agent_type,
             "execution_time_ms": result.execution_time_ms,
             "retry_count": retry_count,
-            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if usage_info:
@@ -85,7 +82,6 @@ class MemberAgentLogger:
             "parameters": self._sanitize_parameters(parameters),
             "execution_time_ms": execution_time_ms,
             "status": status,
-            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if status == "success":
@@ -105,7 +101,6 @@ class MemberAgentLogger:
                 "agent_name": agent_name,
                 "agent_type": agent_type,
                 "model_id": model_id,
-                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -116,7 +111,6 @@ class MemberAgentLogger:
             "execution_id": execution_id,
             "error_type": type(error).__name__,
             "error_message": str(error),
-            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if context:

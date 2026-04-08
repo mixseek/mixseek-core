@@ -89,6 +89,7 @@ mixseek team "..." --config team.toml --log-level debug
 | フラグ | 説明 | デフォルト |
 |-------|------|-----------|
 | `--log-level LEVEL` | グローバルログレベル | `info` |
+| `--log-format FORMAT` | ログ出力形式（text/json） | `text` |
 | `--no-log-console` | コンソール出力を無効化 | 有効 |
 | `--no-log-file` | ファイル出力を無効化 | 有効 |
 | `--logfire` | Logfireクラウド送信を有効化 | 無効 |
@@ -97,7 +98,8 @@ mixseek team "..." --config team.toml --log-level debug
 
 | 環境変数 | 説明 | デフォルト |
 |---------|------|-----------|
-| `MIXSEEK_LOG_LEVEL` | グローバルログレベル（debug/info/warning/error） | `info` |
+| `MIXSEEK_LOG_LEVEL` | グローバルログレベル（debug/info/warning/error/critical） | `info` |
+| `MIXSEEK_LOG_FORMAT` | ログ出力形式（text/json） | `text` |
 | `MIXSEEK_LOG_CONSOLE` | コンソール出力有効化（true/false） | `true` |
 | `MIXSEEK_LOG_FILE` | ファイル出力有効化（true/false） | `true` |
 
@@ -110,31 +112,32 @@ export MIXSEEK_LOG_FILE=false  # ファイル出力無効
 mixseek team "..." --config team.toml
 ```
 
-### TOML設定
-
-```toml
-[logging]
-log_level = "info"        # グローバルログレベル
-console_output = true     # コンソール出力
-file_output = true        # ファイル出力
-log_file_path = "logs/mixseek.log"  # ログファイルパス（オプション）
-```
-
 ### 優先順位
 
 設定は以下の優先順位で適用されます：
 
-1. CLIフラグ（`--log-level`等）
+1. CLIフラグ（`--log-level`、`--log-format`等）
 2. 環境変数（`MIXSEEK_LOG_*`）
-3. TOML設定ファイル
-4. デフォルト値
+3. デフォルト値
 
 ### ログファイルの場所
 
-ログファイルは`$MIXSEEK_WORKSPACE/logs/`ディレクトリに保存されます：
+ログファイルは`$MIXSEEK_WORKSPACE/logs/mixseek.log`に統一されています。
 
-- **標準ログ**: `$MIXSEEK_WORKSPACE/logs/mixseek.log`
-- **Logfireスパン**: `$MIXSEEK_WORKSPACE/logs/logfire.log`
+### カスタムエージェントのロガー
+
+カスタムエージェントから統一ロガーのハンドラ（stderr/mixseek.log）にログを伝搬するには、
+`"mixseek.*"` 名前空間のロガーを使用してください：
+
+```python
+import logging
+
+# 統一ロガーに伝搬する
+logger = logging.getLogger("mixseek.custom_agents.my_agent")
+
+# __name__ を使う場合は "mixseek" 名前空間外になるため伝搬しない
+# logger = logging.getLogger(__name__)
+```
 
 ## Logfire統合
 
@@ -546,32 +549,11 @@ Logfire UIから取得できます：
 3. "Create token" をクリック
 4. トークンをコピーして `LOGFIRE_TOKEN` に設定
 
-## Logfire TOML設定
-
-`$MIXSEEK_WORKSPACE/logfire.toml`でLogfire設定を管理できます：
-
-```toml
-[logfire]
-enabled = true
-privacy_mode = "metadata_only"
-capture_http = false
-project_name = "mixseek-prod"
-send_to_logfire = true
-# ローカル出力設定（Path 2）
-console_output = true
-file_output = true
-```
-
-```{note}
-標準ロギングのTOML設定については、[標準ロギング設定](#toml設定)セクションを参照してください。
-```
-
 **Logfire設定の優先順位**:
 
 1. CLIフラグ（`--logfire`）
 2. 環境変数（`LOGFIRE_ENABLED`等）
-3. TOML設定ファイル
-4. デフォルト値（無効）
+3. デフォルト値（無効）
 
 ## 既存の出力方式との併用
 

@@ -1,115 +1,162 @@
-"""Standard logging configuration (Article 9 compliant).
+"""統一ロガー "mixseek" の初期化。
 
-This module provides setup_logging() function that configures Python's standard
-logging module with optional Logfire integration, console output, and file output.
-
-Configuration follows Constitution Article 9 (Data Accuracy Mandate):
-- No hardcoded values (log level, paths from config)
-- No implicit fallbacks (explicit enable/disable)
-- Explicit error propagation
-
-Path 1 Architecture:
-    Standard logging → LogfireLoggingHandler → Logfire cloud
-                   → StreamHandler → Console (stderr)
-                   → FileHandler → File ($WORKSPACE/logs/mixseek.log)
+4モード（logfire有無 x text/json）に対応する setup_logging() を提供。
+root logger ではなく "mixseek" named logger を使用し、propagate=False で独立動作する。
 """
 
+import json
 import logging
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any, ClassVar
 
 from mixseek.config.logging import LoggingConfig
 
-# Log level name to logging module constant mapping
+# ログレベルマッピング
 LOG_LEVEL_MAP: dict[str, int] = {
     "debug": logging.DEBUG,
     "info": logging.INFO,
     "warning": logging.WARNING,
     "error": logging.ERROR,
+    "critical": logging.CRITICAL,
 }
 
-# Standard log format
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# テキストフォーマット文字列
+TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
-def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> None:
-    """Configure Python's standard logging with optional Logfire integration.
+class TextFormatter(logging.Formatter):
+    """extra fields を別行 key: value 形式で表示するフォーマッタ。
 
-    This function sets up the root logger with handlers for:
-    - Console output (stderr) if config.console_enabled
-    - File output ($WORKSPACE/logs/mixseek.log) if config.file_enabled and workspace provided
-    - Logfire cloud forwarding if config.logfire_enabled
+    extra fields がない場合はメッセージ行のみ出力。
+    extra fields がある場合は各フィールドをインデント付きで別行出力。
+    """
+
+    # LogRecord 標準属性セット（ダミー LogRecord から動的導出）
+    _STANDARD_FIELDS: ClassVar[frozenset[str]] = frozenset(
+        logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()
+    ) | {"message", "asctime"}
+
+    def format(self, record: logging.LogRecord) -> str:
+        base = super().format(record)
+        extra = {k: v for k, v in record.__dict__.items() if k not in self._STANDARD_FIELDS and not k.startswith("_")}
+        if not extra:
+            return base
+        lines = [base]
+        for k, v in extra.items():
+            lines.append(f"  {k}: {v}")
+        return "\n".join(lines)
+
+
+class JsonFormatter(logging.Formatter):
+    """stdlib のみで実装する JSON フォーマッタ。
+
+    extra fields をトップレベルキーとして出力。type: "log" で標準ログを識別。
+    """
+
+    _STANDARD_FIELDS: ClassVar[frozenset[str]] = frozenset(
+        logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()
+    ) | {"message", "asctime"}
+
+    def format(self, record: logging.LogRecord) -> str:
+        # メッセージをフォーマット（args展開）
+        message = record.getMessage()
+
+        log_entry: dict[str, Any] = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
+            "type": "log",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": message,
+        }
+        # extra fields をトップレベルに追加
+        extra = {k: v for k, v in record.__dict__.items() if k not in self._STANDARD_FIELDS and not k.startswith("_")}
+        log_entry.update(extra)
+        return json.dumps(log_entry, ensure_ascii=False, default=str)
+
+
+class SkipTracesFilter(logging.Filter):
+    """LogfireLoggingHandler でのスパン由来レコード再送を防止するフィルタ。
+
+    "mixseek.traces" ロガー（JsonSpanProcessor の出力先）からのレコードを
+    LogfireLoggingHandler に流さないことで、フィードバックループを回避する。
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return not record.name.startswith("mixseek.traces")
+
+
+def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> logging.Logger:
+    """統一ロガー "mixseek" を初期化。4モードに対応。
+
+    全モードで初期段階は StreamHandler/FileHandler を追加する。
+    Mode 3 (logfire+text) では setup_logfire() 内の finalize_mode3_handlers() で
+    StreamHandler/FileHandler を除去し、ConsoleOptions/TeeWriter に移行する。
 
     Args:
-        config: Logging configuration specifying log level and output destinations
-        workspace: Optional workspace path for file logging
+        config: ロギング設定
+        workspace: ワークスペースパス（ファイル出力先）
 
-    Note:
-        - Log level is applied globally to all handlers (FR-007, FR-008)
-        - Console and file outputs can be independently enabled/disabled (FR-005, FR-006)
-        - Log directory is created automatically if needed (FR-011)
-        - When both console and file are disabled, a NullHandler is added (silent mode)
-
-    Example:
-        >>> from mixseek.config.logging import LoggingConfig
-        >>> config = LoggingConfig(log_level="debug", console_enabled=True)
-        >>> setup_logging(config, workspace=Path("/path/to/workspace"))
+    Returns:
+        設定済みの "mixseek" ロガー
     """
-    # Get root logger
-    root_logger = logging.getLogger()
+    logger = logging.getLogger("mixseek")
 
-    # Clear existing handlers to avoid duplicates
-    root_logger.handlers.clear()
+    # FDリーク防止: 既存ハンドラをクローズしてからクリア
+    for h in logger.handlers:
+        h.close()
+    logger.handlers.clear()
+    logger.propagate = False
 
-    # Set global log level
     level = LOG_LEVEL_MAP.get(config.log_level, logging.INFO)
-    root_logger.setLevel(level)
+    logger.setLevel(level)
 
-    # Create formatter
-    formatter = logging.Formatter(LOG_FORMAT)
+    # フォーマッタ選択
+    formatter: logging.Formatter
+    if config.log_format == "json":
+        formatter = JsonFormatter()
+    else:
+        formatter = TextFormatter(TEXT_FORMAT)
 
-    handlers_added = 0
+    # --- 全モード共通: StreamHandler/FileHandler を追加 ---
+    # Mode 3 (logfire+text) では setup_logfire() 完了後に除去されるが、
+    # setup_logfire() 完了前のログ欠損を防ぐため、初期段階では全モードで追加する。
 
-    # Add console handler (StreamHandler to stderr)
-    # Note: When Logfire is enabled, console output is handled by Logfire's ConsoleOptions
-    # to prevent duplicate log messages
-    if config.console_enabled and not config.logfire_enabled:
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(level)
-        console_handler.setFormatter(formatter)
-        root_logger.addHandler(console_handler)
-        handlers_added += 1
+    # コンソール出力
+    if config.console_enabled:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(level)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
-    # Add file handler if workspace provided and file output enabled
-    if config.file_enabled and workspace is not None:
-        # Create logs directory
+    # ファイル出力
+    if config.file_enabled and workspace:
         log_dir = workspace / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
+        handler = logging.FileHandler(log_dir / "mixseek.log", mode="a", encoding="utf-8")
+        handler.setLevel(level)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
-        # Create file handler
-        log_file = log_dir / "mixseek.log"
-        file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-        file_handler.setLevel(level)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
-        handlers_added += 1
-
-    # Add Logfire handler if enabled (requires logfire package)
+    # Logfire handler（標準ログを Logfire cloud に転送）
     if config.logfire_enabled:
         try:
             import logfire
 
             logfire_handler = logfire.LogfireLoggingHandler()
             logfire_handler.setLevel(level)
-            root_logger.addHandler(logfire_handler)
-            handlers_added += 1
+            # Mode 4 (logfire + json): SkipTracesFilter でスパン由来レコードのループ防止
+            if config.log_format == "json":
+                logfire_handler.addFilter(SkipTracesFilter())
+            logger.addHandler(logfire_handler)
         except ImportError:
-            # Logfire not installed - skip (graceful degradation)
-            root_logger.warning("Logfire package not installed, skipping Logfire logging handler")
+            logger.warning("Logfire package not installed, skipping Logfire logging handler")
         except Exception as e:
-            # Logfire initialization failed - log warning and continue
-            root_logger.warning(f"Failed to add Logfire logging handler: {e}")
+            logger.warning(f"Failed to add Logfire logging handler: {e}")
 
-    # If no handlers were added, add NullHandler to prevent "No handler found" warnings
-    if handlers_added == 0:
-        root_logger.addHandler(logging.NullHandler())
+    # ハンドラなしの場合は NullHandler（サイレントモード）
+    if not logger.handlers:
+        logger.addHandler(logging.NullHandler())
+
+    return logger

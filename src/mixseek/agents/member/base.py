@@ -9,8 +9,8 @@ from typing import Any
 
 from pydantic_ai.settings import ModelSettings
 
+from mixseek.agents.member.logging import MemberAgentLogger
 from mixseek.models.member_agent import MemberAgentConfig, MemberAgentResult
-from mixseek.utils.logging import MemberAgentLogger
 
 
 class BaseMemberAgent(ABC):
@@ -23,8 +23,7 @@ class BaseMemberAgent(ABC):
             config: Validated agent configuration
         """
         self.config = config
-        # デフォルトの log_level は "INFO"（別の issue で対応予定）
-        self.logger = MemberAgentLogger(log_level="INFO", enable_file_logging=True)
+        self.logger = MemberAgentLogger()
 
     @property
     def agent_name(self) -> str:

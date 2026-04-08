@@ -20,6 +20,8 @@ from mixseek.models.evaluation_config import EvaluationConfig, evaluator_setting
 from mixseek.models.evaluation_request import EvaluationRequest
 from mixseek.models.evaluation_result import EvaluationResult, MetricScore
 
+logger = logging.getLogger(__name__)
+
 
 class Evaluator:
     """AIエージェント出力評価のためのメインevaluatorクラス。
@@ -392,7 +394,7 @@ class Evaluator:
 
             except Exception as e:
                 # カスタムメトリクスのロードエラーは警告として扱う（起動は継続）
-                logging.warning(
+                logger.warning(
                     f"Failed to load custom metric '{metric_name}' from config: {e}. "
                     f"This metric will not be available for evaluation. "
                     f"Config: {metric_config}"

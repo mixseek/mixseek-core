@@ -217,14 +217,23 @@ class TestMode3LogfireEnabledText:
     """
 
     def test_initial_handlers_all_present(self, temp_workspace: Path) -> None:
-        """setup_logging() 直後: 全ハンドラが存在"""
+        """setup_logging() 直後: StreamHandler + FileHandler + LogfireLoggingHandler が存在"""
         config = LoggingConfig(logfire_enabled=True, log_format="text")
         logger = setup_logging(config, temp_workspace)
 
-        # StreamHandler と FileHandler が初期段階では存在
         handler_types = [type(h).__name__ for h in logger.handlers]
         assert "StreamHandler" in handler_types
         assert "FileHandler" in handler_types
+        # LogfireLoggingHandler は logfire パッケージがインストールされている場合のみ
+        # CI環境ではインストール済みなので検証する
+        try:
+            import logfire  # noqa: F401
+
+            assert "LogfireLoggingHandler" in handler_types, (
+                "logfire がインストールされているが LogfireLoggingHandler が追加されていない"
+            )
+        except ImportError:
+            pass  # logfire 未インストールの場合はスキップ
 
     def test_finalize_removes_stream_and_file_handlers(self, temp_workspace: Path) -> None:
         """finalize_mode3_handlers() 後: StreamHandler/FileHandler が除去"""
@@ -269,13 +278,17 @@ class TestMode4LogfireEnabledJson:
         config = LoggingConfig(logfire_enabled=True, log_format="json")
         logger = setup_logging(config, temp_workspace)
 
-        # LogfireLoggingHandler を探す（モック環境では存在しない場合がある）
-        # logfire未インストールの場合はスキップ
-        logfire_handlers = [h for h in logger.handlers if type(h).__name__ == "LogfireLoggingHandler"]
-        if logfire_handlers:
+        # logfire インストール済みの場合は必ず検証
+        try:
+            import logfire  # noqa: F401
+
+            logfire_handlers = [h for h in logger.handlers if type(h).__name__ == "LogfireLoggingHandler"]
+            assert len(logfire_handlers) > 0, "LogfireLoggingHandler が追加されていない"
             handler = logfire_handlers[0]
             filter_types = [type(f).__name__ for f in handler.filters]
             assert "SkipTracesFilter" in filter_types
+        except ImportError:
+            pytest.skip("logfire がインストールされていないためスキップ")
 
 
 class TestSetupLoggingDisableOutputs:

@@ -169,7 +169,7 @@ def member(
     workspace_resolved = get_workspace_path(workspace)
 
     # 標準logging初期化（Logfireより先に実行）
-    logfire_enabled = logfire or logfire_metadata or logfire_http
+    logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
     effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
     setup_logging_from_cli(
         log_level,

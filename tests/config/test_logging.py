@@ -98,7 +98,7 @@ class TestLoggingConfigFromEnv:
         assert config.log_level == "debug"
 
     def test_from_env_all_log_levels(self, clean_env: None) -> None:
-        valid_levels: list[LevelName] = ["debug", "info", "warning", "error"]
+        valid_levels: list[LevelName] = ["debug", "info", "warning", "error", "critical"]
         for level in valid_levels:
             os.environ["MIXSEEK_LOG_LEVEL"] = level
             config = LoggingConfig.from_env()
@@ -194,7 +194,7 @@ class TestLogLevelValidation:
     """ログレベルバリデーション"""
 
     def test_valid_levels(self) -> None:
-        valid_levels: list[LevelName] = ["debug", "info", "warning", "error"]
+        valid_levels: list[LevelName] = ["debug", "info", "warning", "error", "critical"]
         for level in valid_levels:
             config = LoggingConfig(log_level=level)
             assert config.log_level == level

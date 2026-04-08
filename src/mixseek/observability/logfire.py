@@ -94,6 +94,9 @@ def setup_logfire(
         logger.debug("Logfire is disabled (config.enabled=False)")
         return
 
+    # 再初期化時のFDリーク防止: 既存ファイルハンドルをクローズ
+    _cleanup_file_handles()
+
     try:
         import logfire
     except ImportError as e:

@@ -102,6 +102,7 @@ def setup_logfire_from_cli(
     log_format: str = "text",
     workspace: Path | None = None,
     file_enabled: bool = True,
+    console_enabled: bool = True,
 ) -> None:
     """Logfire初期化（CLI共通ロジック）
 
@@ -113,6 +114,7 @@ def setup_logfire_from_cli(
         log_format: ログ出力形式（text/json）
         workspace: ワークスペースパス
         file_enabled: ファイル出力有効化フラグ
+        console_enabled: コンソール出力有効化フラグ
     """
     logfire_config = None
 
@@ -143,6 +145,7 @@ def setup_logfire_from_cli(
             capture_http=capture_http_flag,
             project_name=base_config.project_name if base_config else None,
             send_to_logfire=base_config.send_to_logfire if base_config else True,
+            console_output=console_enabled,
         )
     elif os.getenv("LOGFIRE_ENABLED") == "1":
         logfire_config = LogfireConfig.from_env()

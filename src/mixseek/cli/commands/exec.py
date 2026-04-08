@@ -200,6 +200,7 @@ def exec_command(
                 log_format=effective_log_format,
                 workspace=workspace_path,
                 file_enabled=not no_log_file,
+                console_enabled=not no_log_console,
             )
 
             # 4.5. config必須チェック（dry-run/通常の両方で必要）

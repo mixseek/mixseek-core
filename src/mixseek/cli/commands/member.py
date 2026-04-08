@@ -190,6 +190,7 @@ def member(
         log_format=effective_log_format,
         workspace=workspace_resolved,
         file_enabled=not no_log_file,
+        console_enabled=not no_log_console,
     )
 
     show_development_warning()

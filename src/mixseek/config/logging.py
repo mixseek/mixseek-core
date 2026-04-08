@@ -67,7 +67,10 @@ class LoggingConfig(BaseModel):
 
         # ログ出力形式
         log_format_str = os.getenv("MIXSEEK_LOG_FORMAT", "text").lower()
-        log_format: LogFormatType = log_format_str if log_format_str in ("text", "json") else "text"  # type: ignore[assignment]
+        valid_formats = ("text", "json")
+        if log_format_str not in valid_formats:
+            raise ValueError(f"Invalid log format: '{log_format_str}'. Valid values: {list(valid_formats)}")
+        log_format: LogFormatType = log_format_str  # type: ignore[assignment]
 
         return cls(
             logfire_enabled=False,  # CLIフラグでのみ設定

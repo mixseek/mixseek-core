@@ -108,18 +108,27 @@ def setup_logfire(
         console: Any = False
         file_handle: IO[str] | None = None
 
-        if log_format == "text" and config.console_output:
-            # Mode 3: ConsoleOptions + TeeWriter(stderr + mixseek.log)
-            from logfire import ConsoleOptions
-
-            writers: list[TextIO] = [sys.stderr]
+        if log_format == "text":
+            # Mode 3: ConsoleOptions + TeeWriter
+            # console_output と file_enabled に基づいて writers を組み立てる
+            writers: list[TextIO] = []
+            if config.console_output:
+                writers.append(sys.stderr)
             if file_enabled and workspace:
                 log_dir = workspace / "logs"
                 log_dir.mkdir(parents=True, exist_ok=True)
                 file_handle = open(log_dir / "mixseek.log", "a", encoding="utf-8")  # noqa: SIM115
                 _logfire_file_handles.append(file_handle)
                 writers.append(file_handle)
-            console = ConsoleOptions(output=TeeWriter(writers))
+
+            if writers:
+                from logfire import ConsoleOptions
+
+                if len(writers) == 1:
+                    console = ConsoleOptions(output=writers[0])
+                else:
+                    console = ConsoleOptions(output=TeeWriter(writers))
+            # writers が空の場合は console=False のまま
         elif log_format == "json":
             # Mode 4: ConsoleOptions無効 + JsonSpanProcessor
             console = False
@@ -132,7 +141,8 @@ def setup_logfire(
         )
 
         # Mode 3 (logfire + text): ConsoleOptions 確立後に StreamHandler/FileHandler を除去
-        if log_format == "text" and config.console_output:
+        # ConsoleOptions が有効な場合のみ（writers が空でない場合）
+        if log_format == "text" and console is not False:
             finalize_mode3_handlers()
 
         # PydanticAI instrumentation（プライバシーモード対応）

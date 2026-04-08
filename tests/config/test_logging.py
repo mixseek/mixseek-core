@@ -159,6 +159,12 @@ class TestLoggingConfigFromEnv:
         with pytest.raises(ValueError, match="invalid_level"):
             LoggingConfig.from_env()
 
+    def test_from_env_invalid_log_format(self, clean_env: None) -> None:
+        """不正なログ形式でValueErrorが発生する"""
+        os.environ["MIXSEEK_LOG_FORMAT"] = "xml"
+        with pytest.raises(ValueError, match="xml"):
+            LoggingConfig.from_env()
+
     def test_from_env_case_insensitive_boolean(self, clean_env: None) -> None:
         os.environ["MIXSEEK_LOG_CONSOLE"] = "TRUE"
         config = LoggingConfig.from_env()

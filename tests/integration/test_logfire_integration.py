@@ -121,6 +121,25 @@ class TestTextMode:
         for stream in streams:
             assert stream.closed
 
+    def test_file_disabled_no_file_handle(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
+        """file_enabled=False の場合、ファイルハンドルが開かれない"""
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.METADATA_ONLY,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+            console_output=True,
+        )
+
+        setup_logfire(config, log_format="text", workspace=temp_workspace, file_enabled=False)
+
+        mock_logfire.configure.assert_called_once()
+        # ログディレクトリが作られていないことを確認
+        log_dir = temp_workspace / "logs"
+        log_file = log_dir / "mixseek.log"
+        assert not log_file.exists()
+
 
 class TestJsonMode:
     """json モード（Mode 4）テスト"""
@@ -217,6 +236,7 @@ class TestExistingBehavior:
         mock_logfire.instrument_pydantic_ai.assert_called_once()
         call_kwargs = mock_logfire.instrument_pydantic_ai.call_args[1]
         assert call_kwargs["include_content"] is False
+        assert call_kwargs["include_binary_content"] is False
 
     def test_full_mode(self, mock_logfire):
         """fullモードで instrument_pydantic_ai() が引数なし"""
@@ -245,6 +265,22 @@ class TestExistingBehavior:
         setup_logfire(config)
 
         mock_logfire.instrument_httpx.assert_called_once_with(capture_all=True)
+
+    def test_disabled_mode(self, mock_logfire: MagicMock) -> None:
+        """DISABLEDモードではinstrument_pydantic_aiが呼ばれない"""
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.DISABLED,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+        )
+
+        setup_logfire(config)
+
+        # configure は呼ばれるが instrument_pydantic_ai は呼ばれない
+        mock_logfire.configure.assert_called_once()
+        mock_logfire.instrument_pydantic_ai.assert_not_called()
 
     def test_import_error(self):
         """logfire未インストール時のImportError"""

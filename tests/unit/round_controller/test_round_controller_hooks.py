@@ -3,6 +3,7 @@
 Feature: Issue #225 - RoundControllerにラウンド完了時のフック機構を追加
 """
 
+import logging
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -227,16 +228,22 @@ async def test_on_round_complete_exception_does_not_stop_execution(
     )
 
     # Execute - should not raise exception
-    result = await controller.run_round("Test prompt", timeout_seconds=300)
+    # "mixseek" ロガーは propagate=False のため、caplog のハンドラを直接追加してキャプチャ
+    target_logger = logging.getLogger("mixseek.round_controller.controller")
+    target_logger.addHandler(caplog.handler)
+    caplog.handler.setLevel(logging.WARNING)
+    try:
+        result = await controller.run_round("Test prompt", timeout_seconds=300)
+    finally:
+        target_logger.removeHandler(caplog.handler)
 
     # Verify execution completed successfully despite hook failure
     assert result is not None
     assert result.score == 85.0
 
     # Verify warning was logged
-    # "mixseek" ロガーは propagate=False のため、caplog はキャプチャできないが、
-    # stderr に出力されることで動作確認済み（captured stderr に出力あり）
-    # フック失敗でも実行が完了することが主要な検証項目
+    assert "on_round_complete hook failed" in caplog.text
+    assert "Hook error for testing" in caplog.text
 
 
 @pytest.mark.asyncio

@@ -110,3 +110,73 @@ class TestLogfireConfigPriority:
             config = mock_setup.call_args[0][0]
             assert config.privacy_mode.value == "metadata_only"
             assert config.enabled is True
+
+    def test_cli_logfire_metadata_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--logfire-metadata フラグで metadata_only モードが設定される"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(
+                logfire=False,
+                logfire_metadata=True,
+                logfire_http=False,
+                verbose=False,
+            )
+
+            mock_setup.assert_called_once()
+            config = mock_setup.call_args[0][0]
+            assert config.privacy_mode.value == "metadata_only"
+            assert config.capture_http is False
+            assert config.enabled is True
+
+    def test_cli_logfire_http_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--logfire-http フラグで full + capture_http が設定される"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(
+                logfire=False,
+                logfire_metadata=False,
+                logfire_http=True,
+                verbose=False,
+            )
+
+            mock_setup.assert_called_once()
+            config = mock_setup.call_args[0][0]
+            assert config.privacy_mode.value == "full"
+            assert config.capture_http is True
+            assert config.enabled is True
+
+    def test_setup_logfire_from_cli_error_handling(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Logfire初期化失敗時にグレースフルに警告を出力して継続する"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+
+        with (
+            patch("mixseek.cli.utils.setup_logfire", side_effect=RuntimeError("init failed")),
+            patch("mixseek.cli.utils.typer.secho") as mock_secho,
+        ):
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            # 例外が外に漏れないことを検証
+            setup_logfire_from_cli(
+                logfire=True,
+                logfire_metadata=False,
+                logfire_http=False,
+                verbose=False,
+            )
+
+            # 警告メッセージがstderrに出力されることを検証
+            mock_secho.assert_called_once()
+            warning_msg = mock_secho.call_args[0][0]
+            assert "WARNING" in warning_msg
+            assert "init failed" in warning_msg

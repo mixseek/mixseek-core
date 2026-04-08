@@ -94,4 +94,4 @@ def run_preflight_check(config_path: Path, workspace: Path | None = None) -> Pre
     ws_result = _validate_workspace_writable(resolved_workspace)
     categories.append(ws_result)
 
-    return PreflightResult(categories=categories)
+    return PreflightResult(categories=categories, orchestrator_settings=orch_settings)

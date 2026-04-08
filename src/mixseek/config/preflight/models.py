@@ -3,9 +3,13 @@
 チェック結果を表現するデータモデルを定義する。
 """
 
+from __future__ import annotations
+
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from mixseek.config.schema import OrchestratorSettings
 
 
 class CheckStatus(str, Enum):
@@ -41,6 +45,7 @@ class PreflightResult(BaseModel):
     """プリフライトチェック全体の結果"""
 
     categories: list[CategoryResult] = []
+    orchestrator_settings: OrchestratorSettings | None = Field(default=None, exclude=True)
 
     @property
     def is_valid(self) -> bool:

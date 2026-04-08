@@ -24,7 +24,7 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
 from mixseek.core.auth import close_all_auth_clients
-from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
+from mixseek.orchestrator import Orchestrator
 from mixseek.orchestrator.models import ExecutionSummary
 
 logger = logging.getLogger(__name__)
@@ -73,32 +73,6 @@ def _validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http:
             err=True,
         )
         raise typer.Exit(code=1)
-
-
-def _load_and_validate_config(config: Path | None, workspace: Path | None) -> OrchestratorSettings:
-    """設定ファイルの読み込みと検証（FR-011: OrchestratorSettings直接返却）
-
-    Args:
-        config: 設定ファイルパス
-        workspace: ワークスペースパス（Article 9準拠: 明示的指定）
-
-    Returns:
-        OrchestratorSettings: オーケストレータ設定
-
-    Raises:
-        typer.Exit: 設定ファイル未指定時
-        Exception: 設定読み込みエラー時
-    """
-    if config is None:
-        typer.echo("Error: --config オプションは必須です", err=True)
-        typer.echo('Usage: mixseek exec "prompt" --config /path/to/orchestrator.toml', err=True)
-        raise typer.Exit(code=2)
-
-    logger.debug(f"Config path: {config}")
-    logger.debug(f"Config path type: {type(config)}")
-    logger.debug(f"Config path is_absolute: {config.is_absolute()}")
-
-    return load_orchestrator_settings(config, workspace=workspace)
 
 
 async def _execute_orchestration(
@@ -189,7 +163,6 @@ def exec_command(
 
             # 2. ワークスペースパス解決（Phase 12 T085: ConfigurationManager経由）
             # Note: workspace_pathはLogfire初期化にのみ使用（オプショナル機能）
-            # load_orchestrator_settings()は独自にworkspace検証を行う（FR-011）
             workspace_path: Path | None = None
             try:
                 config_manager = ConfigurationManager(workspace=workspace)
@@ -197,7 +170,6 @@ def exec_command(
                 workspace_path = orchestrator_settings.workspace_path
             except Exception:
                 # ConfigurationManager失敗時はCLI引数を使用（Logfire用）
-                # Article 9準拠: load_orchestrator_settings()で明示的検証（FR-011）
                 workspace_path = workspace
 
             # Issue #273 fix: 環境変数に設定して後続コンポーネントに伝搬
@@ -224,8 +196,11 @@ def exec_command(
                 _output_preflight_result(preflight_result, output_format)
                 raise typer.Exit(code=0 if preflight_result.is_valid else 2)
 
-            # 5. 設定読み込み（Article 9準拠: workspace明示的に渡す, FR-011: OrchestratorSettings直接返却）
-            orchestrator_settings = _load_and_validate_config(config, workspace)
+            # 5. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
+            if preflight_result.orchestrator_settings is None:
+                typer.echo("Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです", err=True)
+                raise typer.Exit(code=2)
+            orchestrator_settings = preflight_result.orchestrator_settings
 
             # 6. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
             # Note: exec コマンドではリーダーボード機能のため常に DB 保存

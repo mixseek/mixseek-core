@@ -277,7 +277,7 @@ def run_orchestration(
                     file_enabled = os.getenv("MIXSEEK_LOG_FILE", "1") in ("true", "1")
                     setup_logfire(
                         logfire_config,
-                        log_format=log_format,
+                        log_format=log_format,  # type: ignore[arg-type]
                         workspace=workspace,
                         file_enabled=file_enabled,
                     )
@@ -752,8 +752,6 @@ def get_recent_logs(lines: int = 100, level: str = "INFO") -> list[str]:
         # JSON形式（{ で始まる行）とテキスト形式を判定
         if stripped.startswith("{"):
             try:
-                import json
-
                 data = json.loads(stripped)
                 log_level = data.get("level", "")
                 if log_level in level_map and level_map[log_level] >= min_level:

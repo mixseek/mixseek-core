@@ -134,10 +134,10 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     if config.file_enabled and workspace:
         log_dir = workspace / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
-        handler = logging.FileHandler(log_dir / "mixseek.log", mode="a", encoding="utf-8")
-        handler.setLevel(level)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        file_handler = logging.FileHandler(log_dir / "mixseek.log", mode="a", encoding="utf-8")
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     # Logfire handler（標準ログを Logfire cloud に転送）
     if config.logfire_enabled:

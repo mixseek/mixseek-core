@@ -55,7 +55,7 @@ class TestLogExecutionStart:
         handler = logging.Handler()
         handler.setLevel(logging.DEBUG)
         records: list[logging.LogRecord] = []
-        handler.emit = lambda record: records.append(record)  # type: ignore[assignment]
+        handler.emit = lambda record: records.append(record)  # type: ignore[method-assign]
         mal.logger.addHandler(handler)
         mal.logger.setLevel(logging.DEBUG)
 
@@ -77,7 +77,7 @@ class TestLogExecutionComplete:
         records: list[logging.LogRecord] = []
         handler = logging.Handler()
         handler.setLevel(logging.DEBUG)
-        handler.emit = lambda record: records.append(record)  # type: ignore[assignment]
+        handler.emit = lambda record: records.append(record)  # type: ignore[method-assign]
         mal.logger.addHandler(handler)
         mal.logger.setLevel(logging.DEBUG)
 
@@ -99,7 +99,7 @@ class TestLogExecutionComplete:
         records: list[logging.LogRecord] = []
         handler = logging.Handler()
         handler.setLevel(logging.DEBUG)
-        handler.emit = lambda record: records.append(record)  # type: ignore[assignment]
+        handler.emit = lambda record: records.append(record)  # type: ignore[method-assign]
         mal.logger.addHandler(handler)
         mal.logger.setLevel(logging.DEBUG)
 

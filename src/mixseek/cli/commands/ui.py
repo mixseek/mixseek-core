@@ -84,7 +84,7 @@ def ui(
         raise typer.Exit(1)
 
     # log_format 解決
-    effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
 
     # Logfire設定（CLIフラグが指定された場合のみ）
     if logfire or logfire_metadata or logfire_http:

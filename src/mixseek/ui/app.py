@@ -38,10 +38,10 @@ if "logging_initialized" not in st.session_state:
     try:
         logging_config = LoggingConfig(
             logfire_enabled=os.getenv("LOGFIRE_ENABLED") == "1",
-            log_level=os.getenv("MIXSEEK_LOG_LEVEL", "info"),
+            log_level=os.getenv("MIXSEEK_LOG_LEVEL", "info"),  # type: ignore[arg-type]
             console_enabled=os.getenv("MIXSEEK_LOG_CONSOLE", "1") in ("true", "1"),
             file_enabled=file_enabled,
-            log_format=log_format,
+            log_format=log_format,  # type: ignore[arg-type]
         )
     except ValidationError as e:
         st.error(f"ログ設定エラー: {e}")
@@ -65,7 +65,7 @@ if os.getenv("LOGFIRE_ENABLED") == "1" and not st.session_state.logfire_initiali
         file_enabled = os.getenv("MIXSEEK_LOG_FILE", "1") in ("true", "1")
         setup_logfire(
             logfire_config,
-            log_format=log_format,
+            log_format=log_format,  # type: ignore[arg-type]
             workspace=workspace_path,
             file_enabled=file_enabled,
         )

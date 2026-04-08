@@ -170,7 +170,7 @@ def member(
 
     # 標準logging初期化（Logfireより先に実行）
     logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
-    effective_log_format = log_format or os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
     setup_logging_from_cli(
         log_level,
         no_log_console,

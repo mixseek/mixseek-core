@@ -362,8 +362,8 @@ class TestTextFormatter:
             args=(),
             exc_info=None,
         )
-        record.agent = "researcher"  # type: ignore[attr-defined]
-        record.score = 0.85  # type: ignore[attr-defined]
+        record.agent = "researcher"
+        record.score = 0.85
 
         output = fmt.format(record)
         lines = output.split("\n")
@@ -383,9 +383,9 @@ class TestTextFormatter:
             args=(),
             exc_info=None,
         )
-        record.field1 = "value1"  # type: ignore[attr-defined]
-        record.field2 = "value2"  # type: ignore[attr-defined]
-        record.field3 = "value3"  # type: ignore[attr-defined]
+        record.field1 = "value1"
+        record.field2 = "value2"
+        record.field3 = "value3"
 
         output = fmt.format(record)
         lines = output.split("\n")
@@ -428,8 +428,8 @@ class TestJsonFormatter:
             args=(),
             exc_info=None,
         )
-        record.agent = "researcher"  # type: ignore[attr-defined]
-        record.score = 0.85  # type: ignore[attr-defined]
+        record.agent = "researcher"
+        record.score = 0.85
 
         output = fmt.format(record)
         data = json.loads(output)

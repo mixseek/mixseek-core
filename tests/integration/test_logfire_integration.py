@@ -63,7 +63,7 @@ def test_setup_logfire_disabled():
 class TestTextMode:
     """text モード（Mode 3）テスト"""
 
-    def test_console_options_with_tee_writer(self, mock_logfire, temp_workspace: Path):
+    def test_console_options_with_tee_writer(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
         """ConsoleOptions(output=TeeWriter(...)) が設定される"""
         config = LogfireConfig(
             enabled=True,
@@ -82,7 +82,7 @@ class TestTextMode:
         # console は ConsoleOptions インスタンスであるべき
         assert "console" in call_kwargs
 
-    def test_finalize_removes_handlers(self, temp_workspace: Path):
+    def test_finalize_removes_handlers(self, temp_workspace: Path) -> None:
         """finalize_mode3_handlers() が StreamHandler/FileHandler を除去"""
         # まず setup_logging で全ハンドラを追加
         logging_config = LoggingConfig(logfire_enabled=True, log_format="text")
@@ -103,7 +103,7 @@ class TestTextMode:
         ]
         assert len(remaining) == 0
 
-    def test_finalize_closes_file_handler(self, temp_workspace: Path):
+    def test_finalize_closes_file_handler(self, temp_workspace: Path) -> None:
         """finalize_mode3_handlers() が FileHandler をクローズ（FDリーク防止）"""
         logging_config = LoggingConfig(logfire_enabled=True, log_format="text")
         setup_logging(logging_config, temp_workspace)
@@ -125,7 +125,7 @@ class TestTextMode:
 class TestJsonMode:
     """json モード（Mode 4）テスト"""
 
-    def test_console_false(self, mock_logfire, temp_workspace: Path):
+    def test_console_false(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
         """ConsoleOptions が False に設定される"""
         config = LogfireConfig(
             enabled=True,
@@ -140,7 +140,7 @@ class TestJsonMode:
         call_kwargs = mock_logfire.configure.call_args[1]
         assert call_kwargs["console"] is False
 
-    def test_json_span_processor_added(self, mock_logfire, temp_workspace: Path):
+    def test_json_span_processor_added(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
         """additional_span_processors に JsonSpanProcessor が含まれる"""
         config = LogfireConfig(
             enabled=True,

@@ -130,7 +130,7 @@ def setup_logfire(
                 if len(writers) == 1:
                     console = ConsoleOptions(output=writers[0])
                 else:
-                    console = ConsoleOptions(output=TeeWriter(writers))
+                    console = ConsoleOptions(output=TeeWriter(writers))  # type: ignore[arg-type]
             # writers が空の場合は console=False のまま
         elif log_format == "json":
             # Mode 4: ConsoleOptions無効 + JsonSpanProcessor

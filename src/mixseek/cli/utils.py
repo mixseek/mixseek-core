@@ -155,7 +155,7 @@ def setup_logfire_from_cli(
     # 初期化
     if logfire_config is not None and logfire_config.enabled:
         try:
-            setup_logfire(logfire_config, log_format=log_format, workspace=workspace, file_enabled=file_enabled)
+            setup_logfire(logfire_config, log_format=log_format, workspace=workspace, file_enabled=file_enabled)  # type: ignore[arg-type]
             if verbose:
                 typer.secho("✓ Logfire observability enabled", fg=typer.colors.GREEN, err=True)
         except Exception as e:

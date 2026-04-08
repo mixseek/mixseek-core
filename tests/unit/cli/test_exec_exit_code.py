@@ -15,6 +15,12 @@ import pytest
 from typer.testing import CliRunner
 
 from mixseek.cli.main import app
+from mixseek.config.preflight import (
+    CategoryResult,
+    CheckResult,
+    CheckStatus,
+    PreflightResult,
+)
 from mixseek.models.leaderboard import LeaderBoardEntry
 from mixseek.orchestrator.models import ExecutionSummary, FailedTeamInfo
 
@@ -90,6 +96,18 @@ def _make_summary(
     )
 
 
+def _make_valid_preflight() -> PreflightResult:
+    """正常なプリフライト結果を生成"""
+    return PreflightResult(
+        categories=[
+            CategoryResult(
+                category="オーケストレータ",
+                checks=[CheckResult(name="orchestrator_config", status=CheckStatus.OK)],
+            ),
+        ]
+    )
+
+
 # モック対象パス
 _EXEC_MODULE = "mixseek.cli.commands.exec"
 
@@ -102,12 +120,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_all_teams_success_exit_code_0(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -120,11 +138,13 @@ class TestExecExitCode:
         """全チーム成功 → exit code 0"""
         # Given
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
-        summary = _make_summary(team_results=[_make_entry()])
-        mock_execute_orch.return_value = summary
         mock_settings = MagicMock()
         mock_settings.teams = [MagicMock()]
-        mock_load_config.return_value = mock_settings
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
+        summary = _make_summary(team_results=[_make_entry()])
+        mock_execute_orch.return_value = summary
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])
@@ -137,12 +157,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_partial_success_exit_code_1(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -155,14 +175,16 @@ class TestExecExitCode:
         """部分成功（成功+失敗チームあり）→ exit code 1"""
         # Given
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
+        mock_settings = MagicMock()
+        mock_settings.teams = [MagicMock(), MagicMock()]
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
         summary = _make_summary(
             team_results=[_make_entry()],
             failed_teams_info=[_make_failed()],
         )
         mock_execute_orch.return_value = summary
-        mock_settings = MagicMock()
-        mock_settings.teams = [MagicMock(), MagicMock()]
-        mock_load_config.return_value = mock_settings
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])
@@ -175,12 +197,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_all_teams_failed_exit_code_2(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -193,14 +215,16 @@ class TestExecExitCode:
         """全チーム失敗 → exit code 2"""
         # Given
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
+        mock_settings = MagicMock()
+        mock_settings.teams = [MagicMock(), MagicMock()]
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
         summary = _make_summary(
             team_results=[],
             failed_teams_info=[_make_failed("team-1", "Team 1"), _make_failed("team-2", "Team 2")],
         )
         mock_execute_orch.return_value = summary
-        mock_settings = MagicMock()
-        mock_settings.teams = [MagicMock(), MagicMock()]
-        mock_load_config.return_value = mock_settings
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])
@@ -213,12 +237,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_unhandled_exception_exit_code_2(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -231,10 +255,12 @@ class TestExecExitCode:
         """未処理例外 → exit code 2"""
         # Given
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
-        mock_execute_orch.side_effect = RuntimeError("unexpected error")
         mock_settings = MagicMock()
         mock_settings.teams = [MagicMock()]
-        mock_load_config.return_value = mock_settings
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
+        mock_execute_orch.side_effect = RuntimeError("unexpected error")
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])
@@ -247,12 +273,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_single_team_partial_success_exit_code_1(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -265,14 +291,16 @@ class TestExecExitCode:
         """単一チーム部分成功（R1成功, R2失敗）→ exit code 1"""
         # Given: 同一チームが team_results と failed_teams_info の両方に存在
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
+        mock_settings = MagicMock()
+        mock_settings.teams = [MagicMock()]
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
         summary = _make_summary(
             team_results=[_make_entry("team-1", "Team 1")],
             failed_teams_info=[_make_failed("team-1", "Team 1")],
         )
         mock_execute_orch.return_value = summary
-        mock_settings = MagicMock()
-        mock_settings.teams = [MagicMock()]
-        mock_load_config.return_value = mock_settings
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])
@@ -285,12 +313,12 @@ class TestExecExitCode:
     @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
-    @patch(f"{_EXEC_MODULE}._load_and_validate_config")
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
+    @patch(f"{_EXEC_MODULE}.run_preflight_check")
     def test_mixed_full_partial_failure_exit_code_1(
         self,
+        mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
-        mock_load_config: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_config_mgr: MagicMock,
         mock_setup_logging: MagicMock,
@@ -303,6 +331,11 @@ class TestExecExitCode:
         """Team A全成功 + Team B部分失敗 + Team C完全失敗 → exit code 1"""
         # Given
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(orchestrator_toml.parent))
+        mock_settings = MagicMock()
+        mock_settings.teams = [MagicMock(), MagicMock(), MagicMock()]
+        preflight_result = _make_valid_preflight()
+        preflight_result.orchestrator_settings = mock_settings
+        mock_preflight.return_value = preflight_result
         summary = _make_summary(
             team_results=[
                 _make_entry("team-a", "Team A"),
@@ -314,9 +347,6 @@ class TestExecExitCode:
             ],
         )
         mock_execute_orch.return_value = summary
-        mock_settings = MagicMock()
-        mock_settings.teams = [MagicMock(), MagicMock(), MagicMock()]
-        mock_load_config.return_value = mock_settings
 
         # When
         result = runner.invoke(app, ["exec", "test prompt", "--config", str(orchestrator_toml)])

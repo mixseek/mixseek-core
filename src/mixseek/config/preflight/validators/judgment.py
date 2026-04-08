@@ -1,7 +1,6 @@
 """プリフライトチェック: Judgment設定検証"""
 
 from pathlib import Path
-from typing import Any
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
@@ -9,7 +8,7 @@ from mixseek.config.schema import JudgmentSettings
 
 
 def _validate_judgment(
-    settings: OrchestratorSettings | Any, workspace: Path
+    settings: OrchestratorSettings, workspace: Path
 ) -> tuple[CategoryResult, JudgmentSettings | None]:
     """Judgment設定を検証する。
 

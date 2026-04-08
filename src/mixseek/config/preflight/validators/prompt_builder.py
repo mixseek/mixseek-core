@@ -1,13 +1,12 @@
 """プリフライトチェック: PromptBuilder設定検証"""
 
 from pathlib import Path
-from typing import Any
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
 
 
-def _validate_prompt_builder(settings: OrchestratorSettings | Any, workspace: Path) -> CategoryResult:
+def _validate_prompt_builder(settings: OrchestratorSettings, workspace: Path) -> CategoryResult:
     """PromptBuilder設定を検証する。
 
     ConfigurationManager.get_prompt_builder_settings() と同じパスで検証。

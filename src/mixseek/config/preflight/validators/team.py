@@ -1,16 +1,13 @@
 """プリフライトチェック: チーム設定検証"""
 
 from pathlib import Path
-from typing import Any
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
 from mixseek.config.schema import TeamSettings
 
 
-def _validate_teams(
-    settings: OrchestratorSettings | Any, workspace: Path
-) -> tuple[CategoryResult, list[TeamSettings]]:
+def _validate_teams(settings: OrchestratorSettings, workspace: Path) -> tuple[CategoryResult, list[TeamSettings]]:
     """各チーム設定を個別に検証する。
 
     1チームの失敗が他チームの検証をブロックしない。

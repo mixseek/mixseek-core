@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mixseek.config import OrchestratorSettings
 from mixseek.config.preflight import (
     CategoryResult,
     CheckResult,
@@ -16,6 +17,7 @@ from mixseek.config.preflight import (
     PreflightResult,
     run_preflight_check,
 )
+from mixseek.config.schema import EvaluatorSettings
 
 # ---------------------------------------------------------------------------
 # データモデルテスト
@@ -193,7 +195,7 @@ class TestValidateTeams:
             'system_instruction = "x"\n'
         )
         # OrchestratorSettingsのteamsフィールド形式をシミュレート
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.teams = [{"config": str(team_toml)}]
 
         from mixseek.config.preflight import _validate_teams
@@ -215,7 +217,7 @@ class TestValidateTeams:
             'system_instruction = "x"\n'
         )
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.teams = [
             {"config": str(tmp_path / "missing.toml")},
             {"config": str(good_toml)},
@@ -232,7 +234,7 @@ class TestValidateTeams:
         """チームリスト空 → ERROR（実行時にOrchestratorTaskが失敗するため）"""
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.teams = []
 
         from mixseek.config.preflight import _validate_teams
@@ -263,7 +265,7 @@ class TestValidateEvaluator:
             'name = "ClarityCoherence"\nweight = 1.0\n'
         )
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.evaluator_config = str(evaluator_toml)
 
         from mixseek.config.preflight import _validate_evaluator
@@ -276,7 +278,7 @@ class TestValidateEvaluator:
         """デフォルト使用（ファイル不在）→ OK + メッセージ"""
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.evaluator_config = None
 
         from mixseek.config.preflight import _validate_evaluator
@@ -291,7 +293,7 @@ class TestValidateEvaluator:
         bad_toml = tmp_path / "bad_eval.toml"
         bad_toml.write_text("[invalid\n")  # 構文エラー
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.evaluator_config = str(bad_toml)
 
         from mixseek.config.preflight import _validate_evaluator
@@ -313,7 +315,7 @@ class TestValidateJudgment:
         """デフォルト使用 → OK + メッセージ"""
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.judgment_config = None
 
         from mixseek.config.preflight import _validate_judgment
@@ -335,7 +337,7 @@ class TestValidatePromptBuilder:
         """デフォルト使用 → OK + メッセージ"""
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
-        mock_settings = MagicMock()
+        mock_settings = MagicMock(spec=OrchestratorSettings)
         mock_settings.prompt_builder_config = None
 
         from mixseek.config.preflight import _validate_prompt_builder
@@ -426,7 +428,7 @@ class TestValidateCustomMetrics:
         """カスタムメトリクスなし → SKIPPED"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.custom_metrics = {}
 
         cat = _validate_custom_metrics(eval_settings)
@@ -436,7 +438,7 @@ class TestValidateCustomMetrics:
         """正常メトリクス → OK"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.custom_metrics = {
             "test_metric": {
                 "module": "mixseek.evaluator.metrics.clarity_coherence",
@@ -451,7 +453,7 @@ class TestValidateCustomMetrics:
         """モジュール不在 → ERROR"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.custom_metrics = {
             "bad_metric": {
                 "module": "nonexistent.module.path",
@@ -466,7 +468,7 @@ class TestValidateCustomMetrics:
         """クラス不在 → ERROR"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.custom_metrics = {
             "bad_metric": {
                 "module": "mixseek.evaluator.metrics.clarity_coherence",
@@ -481,7 +483,7 @@ class TestValidateCustomMetrics:
         """BaseMetric非継承 → ERROR"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         # os.path は BaseMetric を継承していないクラスを持つモジュール
         eval_settings.custom_metrics = {
             "bad_metric": {
@@ -505,7 +507,7 @@ class TestValidateCustomMetrics:
         """module/classフィールド不在 → ERROR"""
         from mixseek.config.preflight import _validate_custom_metrics
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.custom_metrics = {
             "bad_metric": {"class": "SomeMetric"}  # module なし
         }
@@ -526,7 +528,7 @@ class TestValidateMetricNames:
         """ビルトインメトリクス名 → OK"""
         from mixseek.config.preflight import _validate_metric_names
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.metrics = [
             {"name": "ClarityCoherence", "weight": 0.5},
             {"name": "Coverage", "weight": 0.5},
@@ -540,7 +542,7 @@ class TestValidateMetricNames:
         """カスタムメトリクスとして登録済みの名前 → OK"""
         from mixseek.config.preflight import _validate_metric_names
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.metrics = [{"name": "my_custom", "weight": 1.0}]
         eval_settings.custom_metrics = {"my_custom": {"module": "some.module", "class": "SomeClass"}}
 
@@ -551,7 +553,7 @@ class TestValidateMetricNames:
         """存在しないメトリクス名 → ERROR"""
         from mixseek.config.preflight import _validate_metric_names
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.metrics = [{"name": "TotallyFakeMetric", "weight": 1.0}]
         eval_settings.custom_metrics = {}
 
@@ -564,7 +566,7 @@ class TestValidateMetricNames:
 
         from mixseek.config.preflight import _validate_metric_names
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.metrics = [{"name": "ClarityCoherence", "weight": 1.0}]
         eval_settings.custom_metrics = {}
 
@@ -580,7 +582,7 @@ class TestValidateMetricNames:
 
         from mixseek.config.preflight import _validate_metric_names
 
-        eval_settings = MagicMock()
+        eval_settings = MagicMock(spec=EvaluatorSettings)
         eval_settings.metrics = [{"name": "LLMPlain", "weight": 1.0}]
         eval_settings.custom_metrics = {}
 

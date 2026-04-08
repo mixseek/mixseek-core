@@ -3,7 +3,6 @@
 import importlib
 import re
 from pathlib import Path
-from typing import Any
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
@@ -15,7 +14,7 @@ _BUILTIN_METRIC_NAMES = {"ClarityCoherence", "Coverage", "LLMPlain", "Relevance"
 
 
 def _validate_evaluator(
-    settings: OrchestratorSettings | Any, workspace: Path
+    settings: OrchestratorSettings, workspace: Path
 ) -> tuple[CategoryResult, EvaluatorSettings | None]:
     """Evaluator設定を検証する。
 
@@ -48,7 +47,7 @@ def _validate_evaluator(
         return CategoryResult(category="Evaluator", checks=checks), None
 
 
-def _validate_custom_metrics(evaluator_settings: EvaluatorSettings | Any) -> CategoryResult:
+def _validate_custom_metrics(evaluator_settings: EvaluatorSettings) -> CategoryResult:
     """カスタムメトリクスを検証する。
 
     evaluator.py の _load_custom_metrics_from_config と同じパターンで検証。
@@ -114,7 +113,7 @@ def _validate_custom_metrics(evaluator_settings: EvaluatorSettings | Any) -> Cat
     return CategoryResult(category="カスタムメトリクス", checks=checks)
 
 
-def _validate_metric_names(evaluator_settings: EvaluatorSettings | Any) -> CategoryResult:
+def _validate_metric_names(evaluator_settings: EvaluatorSettings) -> CategoryResult:
     """メトリクス名が解決可能かを検証する。
 
     Evaluator._get_metric() と同等の3段階解決ロジック:

@@ -159,8 +159,8 @@ class RoundController:
                 progress_data["error_message"] = error_message
 
             # JSON書き出し（上書き）
-            with open(progress_file, "w") as f:
-                json.dump(progress_data, f, indent=2)
+            with open(progress_file, "w", encoding="utf-8") as f:
+                json.dump(progress_data, f, indent=2, ensure_ascii=False)
 
         except Exception:
             # 進捗ファイル書き出し失敗は無視（本体処理に影響させない）

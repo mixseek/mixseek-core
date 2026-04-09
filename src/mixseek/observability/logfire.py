@@ -8,6 +8,7 @@ text/json で ConsoleOptions の使用/不使用を切り替える。
 from __future__ import annotations
 
 import atexit
+import json
 import logging
 import os
 import sys
@@ -32,6 +33,24 @@ class JsonSpanProcessor:
     def __init__(self) -> None:
         self._traces_logger = logging.getLogger("mixseek.traces")
 
+    @staticmethod
+    def _parse_json_values(attrs: dict[str, Any]) -> dict[str, Any]:
+        """JSON文字列の属性値をPythonオブジェクトに復元し、二重シリアライズを防止する。
+
+        pydantic-ai/logfire はスパン属性に複雑なデータをJSON文字列として格納する。
+        そのまま JsonFormatter に渡すと二重エスケープが発生するため、事前にデシリアライズする。
+        """
+        result: dict[str, Any] = {}
+        for k, v in attrs.items():
+            if isinstance(v, str) and len(v) >= 2 and v[0] in ("{", "["):
+                try:
+                    result[k] = json.loads(v)
+                except (json.JSONDecodeError, ValueError):
+                    result[k] = v
+            else:
+                result[k] = v
+        return result
+
     def on_start(self, span: Any, parent_context: Any = None) -> None:
         """スパン開始時に構造化 JSON レコードを出力"""
         record_data: dict[str, Any] = {
@@ -39,7 +58,7 @@ class JsonSpanProcessor:
             "span_name": span.name,
             "span_id": format(span.context.span_id, "016x"),
             "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
-            "attributes": dict(span.attributes) if span.attributes else {},
+            "attributes": self._parse_json_values(dict(span.attributes)) if span.attributes else {},
         }
         self._traces_logger.info(
             f"{span.name} started",
@@ -59,7 +78,7 @@ class JsonSpanProcessor:
             "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
             "duration_ms": duration_ms,
             "status": span.status.status_code.name if span.status else None,
-            "attributes": dict(span.attributes) if span.attributes else {},
+            "attributes": self._parse_json_values(dict(span.attributes)) if span.attributes else {},
         }
         self._traces_logger.info(
             f"{span.name} completed",

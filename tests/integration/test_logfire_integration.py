@@ -217,6 +217,74 @@ class TestJsonSpanProcessor:
             assert call_kwargs["extra"]["type"] == "span_end"
             assert call_kwargs["extra"]["duration_ms"] == 2000.0
 
+    def test_on_start_deserializes_json_string_attributes(self):
+        """on_start がJSON文字列の属性値をPythonオブジェクトに復元する"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.parent = None
+        span.attributes = {
+            "code.filepath": "src/test.py",
+            "pydantic_ai.all_messages": '[{"role": "system", "content": "\\u3053\\u3093\\u306b\\u3061\\u306f"}]',
+            "logfire.json_schema": '{"type": "object"}',
+        }
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_start(span)
+            attrs = mock_info.call_args[1]["extra"]["attributes"]
+            # 通常の文字列はそのまま
+            assert attrs["code.filepath"] == "src/test.py"
+            # JSON文字列はPythonオブジェクトに復元される
+            assert isinstance(attrs["pydantic_ai.all_messages"], list)
+            assert attrs["pydantic_ai.all_messages"][0]["content"] == "こんにちは"
+            assert isinstance(attrs["logfire.json_schema"], dict)
+
+    def test_on_end_deserializes_json_string_attributes(self):
+        """on_end がJSON文字列の属性値をPythonオブジェクトに復元する"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.parent = None
+        span.start_time = 1000000000
+        span.end_time = 2000000000
+        span.status.status_code.name = "OK"
+        span.attributes = {
+            "logfire.metrics": '{"total": 0.5}',
+            "plain_string": "not json",
+        }
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_end(span)
+            attrs = mock_info.call_args[1]["extra"]["attributes"]
+            assert isinstance(attrs["logfire.metrics"], dict)
+            assert attrs["logfire.metrics"]["total"] == 0.5
+            assert attrs["plain_string"] == "not json"
+
+    def test_invalid_json_string_kept_as_is(self):
+        """不正なJSON文字列はそのまま保持される"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.parent = None
+        span.attributes = {
+            "broken_json": "{invalid json}",
+            "just_braces": "{}",
+        }
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_start(span)
+            attrs = mock_info.call_args[1]["extra"]["attributes"]
+            # 不正JSONは元の文字列のまま
+            assert attrs["broken_json"] == "{invalid json}"
+            # 空オブジェクトは有効なJSONとしてパースされる
+            assert attrs["just_braces"] == {}
+
 
 class TestExistingBehavior:
     """既存の動作互換性テスト"""

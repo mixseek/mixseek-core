@@ -60,6 +60,7 @@ class JsonSpanProcessor:
         """スパン開始時に構造化 JSON レコードを出力"""
         record_data: dict[str, Any] = {
             "type": "span_start",
+            "trace_id": format(span.context.trace_id, "032x"),
             "span_name": span.name,
             "span_id": format(span.context.span_id, "016x"),
             "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
@@ -76,13 +77,27 @@ class JsonSpanProcessor:
         if span.end_time and span.start_time:
             duration_ms = (span.end_time - span.start_time) / 1_000_000
 
+        # span.events をシリアライズ可能な形式に変換
+        events = []
+        if span.events:
+            for event in span.events:
+                events.append(
+                    {
+                        "name": event.name,
+                        "timestamp": event.timestamp,
+                        "attributes": dict(event.attributes) if event.attributes else {},
+                    }
+                )
+
         record_data: dict[str, Any] = {
             "type": "span_end",
+            "trace_id": format(span.context.trace_id, "032x"),
             "span_name": span.name,
             "span_id": format(span.context.span_id, "016x"),
             "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
             "duration_ms": duration_ms,
             "status": span.status.status_code.name if span.status else None,
+            "events": events,
             "attributes": self._parse_json_values(dict(span.attributes)) if span.attributes else {},
         }
         self._traces_logger.info(

@@ -187,6 +187,7 @@ class TestJsonSpanProcessor:
         span = MagicMock()
         span.name = "test.span"
         span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
         span.parent = None
         span.attributes = {"key": "value"}
 
@@ -197,6 +198,22 @@ class TestJsonSpanProcessor:
             assert call_kwargs["extra"]["type"] == "span_start"
             assert call_kwargs["extra"]["span_name"] == "test.span"
 
+    def test_on_start_includes_trace_id(self):
+        """on_start が trace_id を出力"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF0123456789
+        span.parent = None
+        span.attributes = {"key": "value"}
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_start(span)
+            call_kwargs = mock_info.call_args[1]
+            assert call_kwargs["extra"]["trace_id"] == format(0xABCDEF0123456789, "032x")
+
     def test_on_end_logs_span_end(self):
         """on_end が "span_end" イベントを出力"""
         processor = JsonSpanProcessor()
@@ -204,11 +221,13 @@ class TestJsonSpanProcessor:
         span = MagicMock()
         span.name = "test.span"
         span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
         span.parent = None
         span.start_time = 1000000000
         span.end_time = 3000000000
         span.status.status_code.name = "OK"
         span.attributes = {}
+        span.events = []
 
         with patch.object(processor._traces_logger, "info") as mock_info:
             processor.on_end(span)
@@ -216,6 +235,56 @@ class TestJsonSpanProcessor:
             call_kwargs = mock_info.call_args[1]
             assert call_kwargs["extra"]["type"] == "span_end"
             assert call_kwargs["extra"]["duration_ms"] == 2000.0
+            assert call_kwargs["extra"]["trace_id"] == format(0xABCDEF, "032x")
+
+    def test_on_end_includes_events(self):
+        """on_end が span.events を出力"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
+        span.parent = None
+        span.start_time = 1000000000
+        span.end_time = 2000000000
+        span.status.status_code.name = "ERROR"
+        span.attributes = {}
+
+        # OpenTelemetry Event オブジェクトをモック
+        event = MagicMock()
+        event.name = "exception"
+        event.timestamp = 1500000000
+        event.attributes = {"exception.type": "ValueError", "exception.message": "test error"}
+        span.events = [event]
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_end(span)
+            call_kwargs = mock_info.call_args[1]
+            events = call_kwargs["extra"]["events"]
+            assert len(events) == 1
+            assert events[0]["name"] == "exception"
+            assert events[0]["attributes"]["exception.type"] == "ValueError"
+
+    def test_on_end_empty_events(self):
+        """on_end で events が空の場合は空リスト"""
+        processor = JsonSpanProcessor()
+
+        span = MagicMock()
+        span.name = "test.span"
+        span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
+        span.parent = None
+        span.start_time = 1000000000
+        span.end_time = 2000000000
+        span.status.status_code.name = "OK"
+        span.attributes = {}
+        span.events = []
+
+        with patch.object(processor._traces_logger, "info") as mock_info:
+            processor.on_end(span)
+            call_kwargs = mock_info.call_args[1]
+            assert call_kwargs["extra"]["events"] == []
 
     def test_on_start_deserializes_json_string_attributes(self):
         """on_start がJSON文字列の属性値をPythonオブジェクトに復元する"""
@@ -224,6 +293,7 @@ class TestJsonSpanProcessor:
         span = MagicMock()
         span.name = "test.span"
         span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
         span.parent = None
         span.attributes = {
             "code.filepath": "src/test.py",
@@ -248,10 +318,12 @@ class TestJsonSpanProcessor:
         span = MagicMock()
         span.name = "test.span"
         span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
         span.parent = None
         span.start_time = 1000000000
         span.end_time = 2000000000
         span.status.status_code.name = "OK"
+        span.events = []
         span.attributes = {
             "logfire.metrics": '{"total": 0.5}',
             "plain_string": "not json",
@@ -271,6 +343,7 @@ class TestJsonSpanProcessor:
         span = MagicMock()
         span.name = "test.span"
         span.context.span_id = 0x123456
+        span.context.trace_id = 0xABCDEF
         span.parent = None
         span.attributes = {
             "broken_json": "{invalid json}",

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a13 (2026-04-08)
+
+### Feat
+
+- **cli**: add --dry-run flag to exec command with preflight integration
+- **config**: add preflight check module for dry-run validation
+
+### Fix
+
+- **test**: update exec tests to use preflight_result.orchestrator_settings
+- **config**: change empty teams preflight status from WARN to ERROR
+- **evaluator**: use acronym-aware regex for CamelCase to snake_case conversion
+- **config**: use LeaderAgentSettings default instead of hardcoded model ID
+
+### Refactor
+
+- **config**: remove | Any union from validator signatures for type safety
+- **config**: reuse preflight-loaded settings to eliminate double config load
+- **config**: remove unused CheckStatus.WARN and warn_count
+- **config**: split preflight.py into package with validators/ subdirectory
+
 ## v0.1.0a12 (2026-04-02)
 
 ### Fix

@@ -13,11 +13,16 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import IO, Any, TextIO
+from typing import IO, TYPE_CHECKING, Any, Literal, TextIO
 
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
 from mixseek.config.logging import LogFormatType
 from mixseek.observability.tee_writer import TeeWriter
+
+if TYPE_CHECKING:
+    from logfire import ConsoleOptions
+    from opentelemetry.context import Context
+    from opentelemetry.sdk.trace import ReadableSpan
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +56,7 @@ class JsonSpanProcessor:
                 result[k] = v
         return result
 
-    def on_start(self, span: Any, parent_context: Any = None) -> None:
+    def on_start(self, span: ReadableSpan, parent_context: Context | None = None) -> None:
         """スパン開始時に構造化 JSON レコードを出力"""
         record_data: dict[str, Any] = {
             "type": "span_start",
@@ -65,7 +70,7 @@ class JsonSpanProcessor:
             extra=record_data,
         )
 
-    def on_end(self, span: Any) -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         """スパン完了時に構造化 JSON レコードを出力"""
         duration_ms = None
         if span.end_time and span.start_time:
@@ -118,6 +123,7 @@ def setup_logfire(
 
     try:
         import logfire
+        from logfire import ConsoleOptions
     except ImportError as e:
         raise ImportError("Logfire not installed. Install with: uv sync --extra logfire") from e
 
@@ -127,7 +133,7 @@ def setup_logfire(
             os.environ["LOGFIRE_PROJECT"] = config.project_name
 
         additional_processors: list[Any] = []
-        console: Any = False
+        console: ConsoleOptions | Literal[False] = False
         file_handle: IO[str] | None = None
 
         if log_format == "text":
@@ -144,8 +150,6 @@ def setup_logfire(
                 writers.append(file_handle)
 
             if writers:
-                from logfire import ConsoleOptions
-
                 if len(writers) == 1:
                     console = ConsoleOptions(output=writers[0])
                 else:

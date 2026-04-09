@@ -1,15 +1,18 @@
-"""MixSeek設定の定数定義。"""
+"""Constants for MixSeek configuration."""
 
-# デフォルトプロジェクト名
+# Default project name placeholder for sample configuration
 DEFAULT_PROJECT_NAME: str = "mixseek-project"
 
-# ワークスペース環境変数名
+# Environment variable name for workspace path
 WORKSPACE_ENV_VAR: str = "MIXSEEK_WORKSPACE"
 
-# 設定ファイル再帰深度制限（Phase 13 T107, FR-043）
+# Maximum recursion depth for config file loading (Phase 13 T107, FR-043)
+# Prevents infinite loops and stack overflow in nested configuration references
 MAX_CONFIG_RECURSION_DEPTH: int = 10
 
-# センシティブフィールドパターン
+# Sensitive field patterns for security masking (Article 9: Data Accuracy Mandate)
+# Field names containing these patterns will be masked in output
+# Article 9 Compliance: Explicit list (no implicit assumptions)
 SENSITIVE_FIELD_PATTERNS: tuple[str, ...] = (
     "api_key",
     "password",
@@ -20,13 +23,18 @@ SENSITIVE_FIELD_PATTERNS: tuple[str, ...] = (
     "access_key",
 )
 
-# 非センシティブフィールド例外（max_tokens はLLMパラメータであり、セキュリティトークンではない）
-NON_SENSITIVE_FIELD_EXCEPTIONS: tuple[str, ...] = ("max_tokens",)
+# Non-sensitive field exceptions (Article 9: Data Accuracy Mandate)
+# Field names that should NOT be masked even if they match sensitive patterns
+# Article 9 Compliance: Explicit list (no implicit assumptions)
+NON_SENSITIVE_FIELD_EXCEPTIONS: tuple[str, ...] = (
+    "max_tokens",  # LLM parameter, not a security token
+)
 
-# O(1) メンバーシップテスト用の事前計算セット
+# Pre-computed lowercase set for efficient O(1) membership testing
+# This avoids repeated list comprehensions in _is_sensitive_field()
 _NON_SENSITIVE_FIELD_EXCEPTIONS_LOWER: frozenset[str] = frozenset(
     exc.lower() for exc in NON_SENSITIVE_FIELD_EXCEPTIONS
 )
 
-# マスク値
+# Masked value displayed for sensitive fields
 MASKED_VALUE: str = "[REDACTED]"

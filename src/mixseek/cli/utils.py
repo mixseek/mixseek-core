@@ -7,13 +7,13 @@ import os
 import sys
 import traceback
 from pathlib import Path
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar, cast
 
 import typer
 from pydantic import ValidationError
 
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
-from mixseek.config.logging import LoggingConfig
+from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
 from mixseek.observability import setup_logfire, setup_logging
 
 # Exit code constants
@@ -73,10 +73,32 @@ def mutually_exclusive_group(group_size: int = 2) -> Any:
 
     Returns:
         Callback function for typer.Option
+
+    Example:
+        >>> exclusivity = mutually_exclusive_group(group_size=1)
+        >>> def command(
+        ...     config: Path | None = typer.Option(None, "--config", callback=exclusivity),
+        ...     agent: str | None = typer.Option(None, "--agent", callback=exclusivity)
+        ... ):
+        ...     pass  # --config and --agent cannot be used together
     """
 
     def callback(ctx: typer.Context, param: typer.CallbackParam, value: T | None) -> T | None:
+        """Callback to track and validate mutually exclusive options.
+
+        Args:
+            ctx: Typer context (used for state storage)
+            param: Parameter being processed
+            value: Parameter value
+
+        Returns:
+            The parameter value (unchanged)
+
+        Raises:
+            typer.BadParameter: If too many options from group are used
+        """
         if value is not None and param.name is not None:
+            # Store group state in context to avoid closure state leakage
             if not hasattr(ctx, "obj") or ctx.obj is None:
                 ctx.obj = {}
             if "_exclusive_group" not in ctx.obj:
@@ -155,7 +177,12 @@ def setup_logfire_from_cli(
     # 初期化
     if logfire_config is not None and logfire_config.enabled:
         try:
-            setup_logfire(logfire_config, log_format=log_format, workspace=workspace, file_enabled=file_enabled)  # type: ignore[arg-type]
+            setup_logfire(
+                logfire_config,
+                log_format=cast(LogFormatType, log_format),
+                workspace=workspace,
+                file_enabled=file_enabled,
+            )
             if verbose:
                 typer.secho("✓ Logfire observability enabled", fg=typer.colors.GREEN, err=True)
         except Exception as e:
@@ -193,8 +220,8 @@ def setup_logging_from_cli(
             logfire_enabled=logfire_enabled,
             console_enabled=not no_log_console,
             file_enabled=not no_log_file,
-            log_level=log_level,  # type: ignore[arg-type]
-            log_format=log_format,  # type: ignore[arg-type]
+            log_level=cast(LevelName, log_level),
+            log_format=cast(LogFormatType, log_format),
         )
     except ValidationError as e:
         typer.echo(f"Error: ログ設定が不正です: {e}", err=True)
@@ -217,3 +244,79 @@ def setup_logging_from_cli(
         )
         if verbose:
             typer.echo(traceback.format_exc(), err=True)
+
+
+def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
+    """Logfireフラグの排他的チェック。
+
+    Args:
+        logfire: --logfireフラグ
+        logfire_metadata: --logfire-metadataフラグ
+        logfire_http: --logfire-httpフラグ
+
+    Raises:
+        typer.Exit: 複数のLogfireフラグが指定された場合
+    """
+    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
+    if logfire_flags_count > 1:
+        typer.secho(
+            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(1)
+
+
+def initialize_observability(
+    *,
+    log_level: str,
+    no_log_console: bool,
+    no_log_file: bool,
+    logfire: bool,
+    logfire_metadata: bool,
+    logfire_http: bool,
+    verbose: bool,
+    log_format: str | None,
+    workspace: Path | None,
+) -> None:
+    """CLI共通のロギング・Logfire初期化。
+
+    標準logging初期化、Logfire初期化を一括で行う。
+    evaluate/exec/member/team 全コマンドで共通のロジックを統一。
+    Logfireフラグの排他チェックは validate_logfire_flags() で事前に行うこと。
+
+    Args:
+        log_level: ログレベル (debug/info/warning/error/critical)
+        no_log_console: コンソール出力無効化フラグ
+        no_log_file: ファイル出力無効化フラグ
+        logfire: --logfireフラグ
+        logfire_metadata: --logfire-metadataフラグ
+        logfire_http: --logfire-httpフラグ
+        verbose: 詳細ログ表示フラグ
+        log_format: ログ出力形式（text/json/None）
+        workspace: 解決済みワークスペースパス
+    """
+    # 標準logging初期化（Logfireより先に実行）
+    logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
+    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    setup_logging_from_cli(
+        log_level,
+        no_log_console,
+        no_log_file,
+        logfire_enabled,
+        workspace,
+        verbose,
+        effective_log_format,
+    )
+
+    # Logfire初期化
+    setup_logfire_from_cli(
+        logfire,
+        logfire_metadata,
+        logfire_http,
+        verbose,
+        log_format=effective_log_format,
+        workspace=workspace,
+        file_enabled=not no_log_file,
+        console_enabled=not no_log_console,
+    )

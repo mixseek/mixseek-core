@@ -20,7 +20,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import setup_logfire_from_cli, setup_logging_from_cli
+from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
@@ -53,27 +53,6 @@ DRY_RUN_OPTION = typer.Option(
     "--dry-run",
     help="設定検証のみ実行し、オーケストレーションは実行しない",
 )
-
-
-def _validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
-    """Logfireフラグの排他的検証
-
-    Args:
-        logfire: --logfireフラグ
-        logfire_metadata: --logfire-metadataフラグ
-        logfire_http: --logfire-httpフラグ
-
-    Raises:
-        typer.Exit: 複数のLogfireフラグが指定された場合
-    """
-    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
-    if logfire_flags_count > 1:
-        typer.secho(
-            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            fg=typer.colors.RED,
-            err=True,
-        )
-        raise typer.Exit(code=1)
 
 
 async def _execute_orchestration(
@@ -160,8 +139,8 @@ def exec_command(
 
     async def _execute() -> None:
         try:
-            # 1. Logfireフラグ検証
-            _validate_logfire_flags(logfire, logfire_metadata, logfire_http)
+            # 1. Logfireフラグの排他的チェック
+            validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
             # 2. ワークスペースパス解決（Phase 12 T085: ConfigurationManager経由）
             # Note: workspace_pathはLogfire初期化にのみ使用（オプショナル機能）
@@ -178,32 +157,20 @@ def exec_command(
             if workspace_path:
                 os.environ[WORKSPACE_ENV_VAR] = str(workspace_path)
 
-            # 3. 標準logging初期化（Logfireより先に実行）
-            logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
-            effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
-            setup_logging_from_cli(
-                log_level,
-                no_log_console,
-                no_log_file,
-                logfire_enabled,
-                workspace_path,
-                verbose,
-                effective_log_format,
-            )
-
-            # 4. Logfire初期化
-            setup_logfire_from_cli(
-                logfire,
-                logfire_metadata,
-                logfire_http,
-                verbose,
-                log_format=effective_log_format,
+            # 3. ロギング・Logfire初期化（CLI共通ヘルパー）
+            initialize_observability(
+                log_level=log_level,
+                no_log_console=no_log_console,
+                no_log_file=no_log_file,
+                logfire=logfire,
+                logfire_metadata=logfire_metadata,
+                logfire_http=logfire_http,
+                verbose=verbose,
+                log_format=log_format,
                 workspace=workspace_path,
-                file_enabled=not no_log_file,
-                console_enabled=not no_log_console,
             )
 
-            # 4.5. config必須チェック（dry-run/通常の両方で必要）
+            # 3. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
                 typer.echo("Error: --config オプションは必須です", err=True)
                 raise typer.Exit(code=2)

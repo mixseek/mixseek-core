@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -20,7 +19,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import setup_logfire_from_cli, setup_logging_from_cli
+from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.utils.env import get_workspace_path
 
 
@@ -66,43 +65,23 @@ def evaluate(
 
         mixseek evaluate "質問" "回答" --log-level debug --verbose
     """
-    # Logfireフラグの排他的チェック
-    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
-    if logfire_flags_count > 1:
-        typer.secho(
-            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            fg=typer.colors.RED,
-            err=True,
-        )
-        raise typer.Exit(1)
+    # Logfireフラグの排他的チェック（workspace解決より先に実行）
+    validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
     # Workspace解決（ログ出力先のため）
-    # Article 9準拠: workspace は必須（ログ出力に必要）
     workspace_resolved = get_workspace_path(workspace)
 
-    # 標準logging初期化（Logfireより先に実行）
-    logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
-    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
-    setup_logging_from_cli(
-        log_level,
-        no_log_console,
-        no_log_file,
-        logfire_enabled,
-        workspace_resolved,
-        verbose,
-        effective_log_format,
-    )
-
-    # Logfire初期化
-    setup_logfire_from_cli(
-        logfire,
-        logfire_metadata,
-        logfire_http,
-        verbose,
-        log_format=effective_log_format,
+    # ロギング・Logfire初期化（CLI共通ヘルパー）
+    initialize_observability(
+        log_level=log_level,
+        no_log_console=no_log_console,
+        no_log_file=no_log_file,
+        logfire=logfire,
+        logfire_metadata=logfire_metadata,
+        logfire_http=logfire_http,
+        verbose=verbose,
+        log_format=log_format,
         workspace=workspace_resolved,
-        file_enabled=not no_log_file,
-        console_enabled=not no_log_console,
     )
 
     try:

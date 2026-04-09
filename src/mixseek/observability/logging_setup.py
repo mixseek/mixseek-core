@@ -9,7 +9,7 @@ import logging
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any
 
 from mixseek.config.logging import LoggingConfig
 
@@ -25,6 +25,12 @@ LOG_LEVEL_MAP: dict[str, int] = {
 # テキストフォーマット文字列
 TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
+# LogRecord 標準属性セット（extra フィールド抽出時に除外する）
+_STANDARD_FIELDS: frozenset[str] = frozenset(logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()) | {
+    "message",
+    "asctime",
+}
+
 
 class TextFormatter(logging.Formatter):
     """extra fields を別行 key: value 形式で表示するフォーマッタ。
@@ -33,14 +39,9 @@ class TextFormatter(logging.Formatter):
     extra fields がある場合は各フィールドをインデント付きで別行出力。
     """
 
-    # LogRecord 標準属性セット（ダミー LogRecord から動的導出）
-    _STANDARD_FIELDS: ClassVar[frozenset[str]] = frozenset(
-        logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()
-    ) | {"message", "asctime"}
-
     def format(self, record: logging.LogRecord) -> str:
         base = super().format(record)
-        extra = {k: v for k, v in record.__dict__.items() if k not in self._STANDARD_FIELDS and not k.startswith("_")}
+        extra = {k: v for k, v in record.__dict__.items() if k not in _STANDARD_FIELDS and not k.startswith("_")}
         if not extra:
             return base
         lines = [base]
@@ -55,10 +56,6 @@ class JsonFormatter(logging.Formatter):
     extra fields をトップレベルキーとして出力。type: "log" で標準ログを識別。
     """
 
-    _STANDARD_FIELDS: ClassVar[frozenset[str]] = frozenset(
-        logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()
-    ) | {"message", "asctime"}
-
     def format(self, record: logging.LogRecord) -> str:
         # メッセージをフォーマット（args展開）
         message = record.getMessage()
@@ -71,7 +68,7 @@ class JsonFormatter(logging.Formatter):
             "message": message,
         }
         # extra fields をトップレベルに追加
-        extra = {k: v for k, v in record.__dict__.items() if k not in self._STANDARD_FIELDS and not k.startswith("_")}
+        extra = {k: v for k, v in record.__dict__.items() if k not in _STANDARD_FIELDS and not k.startswith("_")}
         log_entry.update(extra)
         return json.dumps(log_entry, ensure_ascii=False, default=str)
 

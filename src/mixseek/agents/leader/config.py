@@ -7,7 +7,7 @@ IMPORTANT (T078移行完了): このモジュールのLeaderAgentConfig/TeamConf
 
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -105,6 +105,9 @@ class TeamConfig(BaseModel):
     team_id: str = Field(description="チームID")
     team_name: str = Field(description="チーム名")
     max_concurrent_members: int = Field(default=15, ge=1, le=50, description="最大Member Agent数")
+    member_dispatch: Literal["selective", "broadcast"] = Field(
+        default="selective", description="メンバーエージェント呼び出し方式"
+    )
     leader: LeaderAgentConfig = Field(default_factory=LeaderAgentConfig, description="Leader Agent設定")
     members: list[TeamMemberAgentConfig] = Field(
         default_factory=list, description="Member Agent設定リスト（0件の場合はLeader Agent単独実行）"
@@ -226,6 +229,7 @@ def team_settings_to_team_config(team_settings: TeamSettings) -> TeamConfig:
         team_id=team_settings.team_id,
         team_name=team_settings.team_name,
         max_concurrent_members=team_settings.max_concurrent_members,
+        member_dispatch=team_settings.member_dispatch,
         leader=leader_config,
         members=member_configs,
     )

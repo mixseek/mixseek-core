@@ -1,0 +1,24 @@
+[team]
+team_id = "test-broadcast-team"
+team_name = "Test Broadcast Team"
+max_concurrent_members = 5
+member_dispatch = "broadcast"
+
+[team.leader]
+system_instruction = "全メンバーの結果を統合し、最終的な回答を作成してください。"
+model = "google-gla:gemini-2.5-flash-lite"
+temperature = 0.7
+
+[[team.members]]
+agent_name = "agent-1"
+agent_type = "plain"
+tool_name = "delegate_to_agent_1"
+tool_description = "Test agent 1"
+model = "google-gla:gemini-2.5-flash-lite"
+
+[[team.members]]
+agent_name = "agent-2"
+agent_type = "plain"
+tool_name = "delegate_to_agent_2"
+tool_description = "Test agent 2"
+model = "google-gla:gemini-2.5-flash-lite"

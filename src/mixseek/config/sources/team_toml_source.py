@@ -112,6 +112,7 @@ class TeamTomlSource(PydanticBaseSettingsSource):
             "team_id": team_data.get("team_id"),
             "team_name": team_data.get("team_name"),
             "max_concurrent_members": team_data.get("max_concurrent_members", 15),
+            "member_dispatch": team_data.get("member_dispatch", "selective"),
             "leader": team_data.get("leader", {}),
             "members": resolved_members,
         }

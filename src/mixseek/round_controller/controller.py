@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from pydantic_ai import RunUsage
+
 from mixseek.agents.leader.agent import create_leader_agent
 from mixseek.agents.leader.config import team_settings_to_team_config
 from mixseek.agents.leader.dependencies import TeamDependencies
@@ -412,6 +414,79 @@ class RoundController:
                 logger.warning(f"on_round_complete hook failed: {e}", exc_info=True)
 
         return round_state
+
+    async def _run_single_member(
+        self,
+        agent_name: str,
+        agent_type: str,
+        member_agent: object,
+        user_prompt: str,
+        deps: TeamDependencies,
+    ) -> None:
+        """単一メンバーエージェントを実行し、結果をdeps.submissionsに記録する.
+
+        broadcastモードで使用。成功・失敗いずれもMemberSubmissionとして記録し、
+        例外は送出しない（asyncio.gather内で安全に動作するため）。
+
+        Args:
+            agent_name: エージェント名
+            agent_type: エージェント種別
+            member_agent: BaseMemberAgentインスタンス
+            user_prompt: ユーザープロンプト
+            deps: TeamDependencies（submissions追記先）
+        """
+        from mixseek.agents.leader.models import MemberSubmission
+        from mixseek.agents.member.base import BaseMemberAgent
+
+        start_time = datetime.now(UTC)
+
+        try:
+            if not isinstance(member_agent, BaseMemberAgent):
+                raise TypeError(f"Broadcast mode only supports BaseMemberAgent, got {type(member_agent).__name__}")
+
+            context = {
+                "execution_id": deps.execution_id,
+                "team_id": deps.team_id,
+                "round_number": deps.round_number,
+            }
+            result_obj = await member_agent.execute(user_prompt, context=context)
+
+            end_time = datetime.now(UTC)
+            execution_time_ms = (end_time - start_time).total_seconds() * 1000
+
+            submission = MemberSubmission(
+                agent_name=agent_name,
+                agent_type=agent_type,
+                content=result_obj.content,
+                status=result_obj.status.value.upper(),
+                error_message=result_obj.error_message,
+                usage=RunUsage(
+                    input_tokens=result_obj.usage_info.get("input_tokens", 0) if result_obj.usage_info else 0,
+                    output_tokens=result_obj.usage_info.get("output_tokens", 0) if result_obj.usage_info else 0,
+                    requests=1,
+                ),
+                execution_time_ms=execution_time_ms,
+                timestamp=end_time,
+                all_messages=result_obj.all_messages,
+            )
+        except Exception as e:
+            end_time = datetime.now(UTC)
+            execution_time_ms = (end_time - start_time).total_seconds() * 1000
+            logger.warning(f"Broadcast member agent '{agent_name}' failed: {e}")
+
+            submission = MemberSubmission(
+                agent_name=agent_name,
+                agent_type=agent_type,
+                content="",
+                status="ERROR",
+                error_message=str(e),
+                usage=RunUsage(input_tokens=0, output_tokens=0, requests=0),
+                execution_time_ms=execution_time_ms,
+                timestamp=end_time,
+                all_messages=None,
+            )
+
+        deps.submissions.append(submission)
 
     async def _should_continue_round(self, user_query: str, current_round: int) -> tuple[bool, str]:
         """Determine if should continue to next round (T023: 3-stage judgment)

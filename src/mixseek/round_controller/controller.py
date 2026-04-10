@@ -15,7 +15,7 @@ from pydantic_ai import RunUsage
 from mixseek.agents.leader.agent import create_leader_agent
 from mixseek.agents.leader.config import team_settings_to_team_config
 from mixseek.agents.leader.dependencies import TeamDependencies
-from mixseek.agents.leader.models import MemberSubmissionsRecord
+from mixseek.agents.leader.models import MemberSubmission, MemberSubmissionsRecord
 from mixseek.agents.member.factory import MemberAgentFactory
 from mixseek.config import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
@@ -435,7 +435,6 @@ class RoundController:
             user_prompt: ユーザープロンプト
             deps: TeamDependencies（submissions追記先）
         """
-        from mixseek.agents.leader.models import MemberSubmission
         from mixseek.agents.member.base import BaseMemberAgent
 
         start_time = datetime.now(UTC)
@@ -487,6 +486,64 @@ class RoundController:
             )
 
         deps.submissions.append(submission)
+
+    def _build_aggregation_prompt(
+        self,
+        original_prompt: str,
+        submissions: list[MemberSubmission],
+    ) -> str:
+        """broadcastモードの集約プロンプトを構築する.
+
+        Args:
+            original_prompt: 元のユーザープロンプト
+            submissions: 全メンバーの実行結果
+
+        Returns:
+            集約用プロンプト文字列
+        """
+        sections: list[str] = []
+        for sub in submissions:
+            if sub.status == "ERROR":
+                section = f"### {sub.agent_name} ({sub.status})\nエラー: {sub.error_message}"
+            else:
+                section = f"### {sub.agent_name} ({sub.status})\n{sub.content}"
+            sections.append(section)
+
+        member_results = "\n\n".join(sections)
+
+        return (
+            "以下は各メンバーエージェントの実行結果です。\n"
+            "これらを統合して、最終的な回答を作成してください。\n\n"
+            f"## 元のタスク\n{original_prompt}\n\n"
+            f"## メンバーエージェント結果\n\n{member_results}"
+        )
+
+    async def _aggregate_with_leader(
+        self,
+        user_prompt: str,
+        deps: TeamDependencies,
+    ) -> tuple[str, list[Any]]:
+        """broadcastの結果をLeader Agentで集約する.
+
+        Tool登録なしのLeader Agentを作成し、全メンバーの結果を
+        集約プロンプトとして渡して最終回答を生成する。
+
+        Args:
+            user_prompt: 元のユーザープロンプト
+            deps: TeamDependencies（submissionsを含む）
+
+        Returns:
+            tuple of (集約後の最終回答テキスト, message_history)
+        """
+        leader_agent = create_leader_agent(self.team_config, {})
+
+        aggregation_prompt = self._build_aggregation_prompt(
+            original_prompt=user_prompt,
+            submissions=deps.submissions,
+        )
+
+        result = await leader_agent.run(aggregation_prompt, deps=deps)
+        return result.output, result.all_messages()
 
     async def _should_continue_round(self, user_query: str, current_round: int) -> tuple[bool, str]:
         """Determine if should continue to next round (T023: 3-stage judgment)

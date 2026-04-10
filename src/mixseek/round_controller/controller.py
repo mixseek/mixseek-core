@@ -440,8 +440,9 @@ class RoundController:
     ) -> None:
         """単一メンバーエージェントを実行し、結果をdeps.submissionsに記録する.
 
-        broadcastモードで使用。成功・失敗いずれもMemberSubmissionとして記録し、
-        例外は送出しない（asyncio.gather内で安全に動作するため）。
+        broadcastモードで使用。成功・失敗いずれもMemberSubmissionとして記録する。
+        通常はExceptionを内部で捕捉し例外を送出しないが、CancelledErrorや
+        KeyboardInterrupt等のBaseExceptionは送出される可能性がある。
 
         Args:
             agent_name: エージェント名
@@ -604,33 +605,15 @@ class RoundController:
         tasks = [_throttled_run(name, agent) for name, agent in member_agents.items()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # asyncio.gatherの結果チェック: _run_single_member自体のバグを検出
+        # asyncio.gatherの結果チェック: CancelledError等のBaseExceptionを検出・再送出
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
                 agent_name = member_names[i] if i < len(member_names) else "unknown"
                 logger.error(f"Unexpected error in broadcast member '{agent_name}': {result}")
-                # _run_single_memberは本来例外を送出しないため、ここに到達するのはバグ
-                deps.submissions.append(
-                    MemberSubmission(
-                        agent_name=agent_name,
-                        agent_type=member_type_map[agent_name],
-                        content="",
-                        status="ERROR",
-                        error_message=f"Internal error: {result}",
-                        usage=RunUsage(input_tokens=0, output_tokens=0, requests=0),
-                        execution_time_ms=0,
-                        timestamp=datetime.now(UTC),
-                        all_messages=None,
-                    )
-                )
+                raise result
 
-        # BaseException（CancelledError, KeyboardInterrupt等）は再送出
-        base_exceptions = [r for r in results if isinstance(r, BaseException)]
-        if base_exceptions:
-            raise base_exceptions[0]
-
-        # 全メンバー失敗時は集約せず明示的エラー
-        if all(sub.status == "ERROR" for sub in deps.submissions):
+        # 全メンバー失敗時またはメンバー0件時は集約せず明示的エラー
+        if not deps.submissions or all(sub.status == "ERROR" for sub in deps.submissions):
             failed_names = [sub.agent_name for sub in deps.submissions]
             raise RuntimeError(f"All broadcast member agents failed: {failed_names}. Cannot aggregate.")
 

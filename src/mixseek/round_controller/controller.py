@@ -12,11 +12,13 @@ from pathlib import Path
 from typing import Any
 
 from pydantic_ai import RunUsage
+from pydantic_ai.messages import ModelMessage
 
 from mixseek.agents.leader.agent import create_leader_agent
 from mixseek.agents.leader.config import team_settings_to_team_config
 from mixseek.agents.leader.dependencies import TeamDependencies
 from mixseek.agents.leader.models import MemberSubmission, MemberSubmissionsRecord
+from mixseek.agents.member.base import BaseMemberAgent
 from mixseek.agents.member.factory import MemberAgentFactory
 from mixseek.config import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
@@ -289,7 +291,7 @@ class RoundController:
 
         # 1. Create Member Agents
         # T088 fix: Use member_settings_to_config() for consistent MemberAgentConfig generation
-        member_agents: dict[str, object] = {}
+        member_agents: dict[str, BaseMemberAgent] = {}
         for member_settings in self.team_settings.members:
             # member_settings_to_config()を使用（詳細設定を保持）
             member_config = member_settings_to_config(member_settings, agent_data=None, workspace=self.workspace)
@@ -308,7 +310,7 @@ class RoundController:
         )
 
         submission_content: str
-        message_history: list[Any]
+        message_history: list[ModelMessage]
 
         if self.team_config.member_dispatch == "broadcast":
             # Broadcast: 全メンバー並列実行 → Leader集約
@@ -432,7 +434,7 @@ class RoundController:
         self,
         agent_name: str,
         agent_type: str,
-        member_agent: object,
+        member_agent: BaseMemberAgent,
         user_prompt: str,
         deps: TeamDependencies,
     ) -> None:
@@ -448,14 +450,9 @@ class RoundController:
             user_prompt: ユーザープロンプト
             deps: TeamDependencies（submissions追記先）
         """
-        from mixseek.agents.member.base import BaseMemberAgent
-
         start_time = datetime.now(UTC)
 
         try:
-            if not isinstance(member_agent, BaseMemberAgent):
-                raise TypeError(f"Broadcast mode only supports BaseMemberAgent, got {type(member_agent).__name__}")
-
             context = {
                 "execution_id": deps.execution_id,
                 "team_id": deps.team_id,
@@ -535,7 +532,7 @@ class RoundController:
         self,
         user_prompt: str,
         deps: TeamDependencies,
-    ) -> tuple[str, list[Any]]:
+    ) -> tuple[str, list[ModelMessage]]:
         """broadcastの結果をLeader Agentで集約する.
 
         Tool登録なしのLeader Agentを作成し、全メンバーの結果を
@@ -560,11 +557,11 @@ class RoundController:
 
     async def _execute_broadcast(
         self,
-        member_agents: dict[str, object],
+        member_agents: dict[str, BaseMemberAgent],
         user_prompt: str,
         round_number: int,
         deps: TeamDependencies,
-    ) -> tuple[str, list[Any]]:
+    ) -> tuple[str, list[ModelMessage]]:
         """全メンバーを並列実行し、Leader Agentで集約する.
 
         asyncio.gatherで全メンバーを同時実行した後、
@@ -590,18 +587,21 @@ class RoundController:
         # メンバー設定マップを構築（agent_name -> agent_type）
         member_type_map: dict[str, str] = {m.agent_name: m.agent_type for m in self.team_settings.members}
 
-        # 全メンバーを並列実行
+        # 並列度をmax_concurrent_membersで制限
+        sem = asyncio.Semaphore(self.team_config.max_concurrent_members)
         member_names = list(member_agents.keys())
-        tasks = [
-            self._run_single_member(
-                agent_name=name,
-                agent_type=member_type_map.get(name, "unknown"),
-                member_agent=agent,
-                user_prompt=user_prompt,
-                deps=deps,
-            )
-            for name, agent in member_agents.items()
-        ]
+
+        async def _throttled_run(name: str, agent: BaseMemberAgent) -> None:
+            async with sem:
+                await self._run_single_member(
+                    agent_name=name,
+                    agent_type=member_type_map[name],
+                    member_agent=agent,
+                    user_prompt=user_prompt,
+                    deps=deps,
+                )
+
+        tasks = [_throttled_run(name, agent) for name, agent in member_agents.items()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # asyncio.gatherの結果チェック: _run_single_member自体のバグを検出
@@ -613,7 +613,7 @@ class RoundController:
                 deps.submissions.append(
                     MemberSubmission(
                         agent_name=agent_name,
-                        agent_type=member_type_map.get(agent_name, "unknown"),
+                        agent_type=member_type_map[agent_name],
                         content="",
                         status="ERROR",
                         error_message=f"Internal error: {result}",
@@ -623,6 +623,16 @@ class RoundController:
                         all_messages=None,
                     )
                 )
+
+        # BaseException（CancelledError, KeyboardInterrupt等）は再送出
+        base_exceptions = [r for r in results if isinstance(r, BaseException)]
+        if base_exceptions:
+            raise base_exceptions[0]
+
+        # 全メンバー失敗時は集約せず明示的エラー
+        if all(sub.status == "ERROR" for sub in deps.submissions):
+            failed_names = [sub.agent_name for sub in deps.submissions]
+            raise RuntimeError(f"All broadcast member agents failed: {failed_names}. Cannot aggregate.")
 
         # 進捗ファイル更新: 集約開始
         self._write_progress_file(round_number, status="running", current_agent="leader-aggregation")

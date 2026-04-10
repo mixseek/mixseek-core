@@ -1,7 +1,7 @@
 """Unit tests for broadcast member dispatch mode.
 
 Feature: Broadcast Member Dispatch
-Design: docs/superpowers/specs/2026-04-10-broadcast-member-dispatch-design.md
+Design: Broadcast member dispatch with parallel execution and leader aggregation
 """
 
 from datetime import UTC, datetime
@@ -542,3 +542,46 @@ class TestSelectiveModeUnchanged:
         member_agents_arg = call_args[0][1]
         # For team1.toml (no members), it should be an empty dict but via the normal path
         assert isinstance(member_agents_arg, dict)
+
+
+class TestLeaderAgentToolRegistration:
+    """Tests for conditional tool registration in create_leader_agent."""
+
+    @patch("mixseek.agents.leader.agent.register_member_tools")
+    @patch("mixseek.agents.leader.agent.Agent")
+    @patch("mixseek.agents.leader.agent.create_authenticated_model")
+    def test_empty_member_agents_skips_tool_registration(
+        self,
+        mock_auth_model: MagicMock,
+        mock_agent_class: MagicMock,
+        mock_register: MagicMock,
+    ) -> None:
+        """member_agents={}の場合、register_member_toolsが呼ばれない."""
+        from mixseek.agents.leader.agent import create_leader_agent
+        from mixseek.agents.leader.config import TeamConfig
+
+        mock_auth_model.return_value = MagicMock()
+        mock_agent_class.return_value = MagicMock()
+        config = TeamConfig(team_id="test", team_name="Test")
+        create_leader_agent(config, {})
+        mock_register.assert_not_called()
+
+    @patch("mixseek.agents.leader.agent.register_member_tools")
+    @patch("mixseek.agents.leader.agent.Agent")
+    @patch("mixseek.agents.leader.agent.create_authenticated_model")
+    def test_non_empty_member_agents_registers_tools(
+        self,
+        mock_auth_model: MagicMock,
+        mock_agent_class: MagicMock,
+        mock_register: MagicMock,
+    ) -> None:
+        """member_agentsが非空の場合、register_member_toolsが呼ばれる."""
+        from mixseek.agents.leader.agent import create_leader_agent
+        from mixseek.agents.leader.config import TeamConfig
+
+        mock_auth_model.return_value = MagicMock()
+        mock_agent_class.return_value = MagicMock()
+        config = TeamConfig(team_id="test", team_name="Test")
+        mock_agent = MagicMock()
+        create_leader_agent(config, {"agent-1": mock_agent})
+        mock_register.assert_called_once()

@@ -107,6 +107,8 @@ def create_leader_agent(team_config: TeamConfig, member_agents: Mapping[str, Any
         )
 
     # Member Agent Toolを動的登録（FR-032）
-    register_member_tools(leader_agent, team_config, member_agents)
+    # broadcast集約モードではmember_agentsが空（Toolなしで集約プロンプトのみ使用）
+    if member_agents:
+        register_member_tools(leader_agent, team_config, member_agents)
 
     return leader_agent

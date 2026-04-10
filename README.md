@@ -120,7 +120,7 @@ mixseek ui
 | Google Vertex AI | `google-vertex:gemini-2.5-flash` | `GOOGLE_APPLICATION_CREDENTIALS` |
 | OpenAI | `openai:gpt-4o` | `OPENAI_API_KEY` |
 | Anthropic | `anthropic:claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` |
-| xAI | `xai:grok-3` | `GROK_API_KEY` |
+| xAI | `grok:grok-3` | `GROK_API_KEY` |
 
 ## Documentation
 

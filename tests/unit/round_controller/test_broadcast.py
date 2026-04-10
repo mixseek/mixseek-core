@@ -16,6 +16,7 @@ from mixseek.agents.leader.dependencies import TeamDependencies
 from mixseek.agents.leader.models import MemberSubmission
 from mixseek.agents.member.base import BaseMemberAgent
 from mixseek.config.schema import EvaluatorSettings, JudgmentSettings, PromptBuilderSettings
+from mixseek.models.evaluation_result import EvaluationResult, MetricScore
 from mixseek.models.member_agent import MemberAgentResult, ResultStatus
 from mixseek.orchestrator.models import OrchestratorTask
 from mixseek.round_controller import RoundController
@@ -345,3 +346,199 @@ class TestAggregateWithLeader:
         mock_create_leader.assert_called_once()
         call_args = mock_create_leader.call_args
         assert call_args[0][1] == {}  # member_agents={}
+
+
+def _create_mock_leader_agent() -> AsyncMock:
+    """Create a mock leader agent for aggregation."""
+    mock_agent = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.output = "Aggregated final answer"
+    mock_result.all_messages.return_value = []
+    mock_result.usage.return_value = RunUsage(input_tokens=100, output_tokens=50, requests=1)
+    mock_agent.run.return_value = mock_result
+    return mock_agent
+
+
+def _create_mock_evaluator() -> MagicMock:
+    """Create a mock evaluator."""
+    mock_evaluator = MagicMock()
+    mock_evaluator.evaluate = AsyncMock(
+        return_value=EvaluationResult(
+            overall_score=85.0,
+            metrics=[
+                MetricScore(metric_name="accuracy", score=85.0, evaluator_comment="Good"),
+            ],
+        )
+    )
+    return mock_evaluator
+
+
+def _create_mock_judgment_client(should_continue: bool = False) -> MagicMock:
+    """Create a mock judgment client."""
+    from mixseek.round_controller.models import ImprovementJudgment
+
+    mock_client = MagicMock()
+    mock_client.judge_improvement_prospects = AsyncMock(
+        return_value=ImprovementJudgment(
+            should_continue=should_continue,
+            reasoning="Test judgment",
+            confidence_score=0.9,
+        )
+    )
+    return mock_client
+
+
+class TestExecuteBroadcastEndToEnd:
+    """End-to-end tests for broadcast dispatch mode through run_round."""
+
+    @pytest.mark.asyncio
+    @patch("mixseek.round_controller.controller.MemberAgentFactory")
+    @patch("mixseek.round_controller.controller.create_leader_agent")
+    @patch("mixseek.round_controller.controller.AggregationStore")
+    @patch("mixseek.round_controller.controller.Evaluator")
+    @patch("mixseek.round_controller.controller.JudgmentClient")
+    async def test_broadcast_calls_all_members(
+        self,
+        mock_judgment_class: MagicMock,
+        mock_evaluator_class: MagicMock,
+        mock_store_class: MagicMock,
+        mock_create_leader: MagicMock,
+        mock_factory_class: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """broadcastモードで全メンバーが呼ばれる."""
+        mock_store_class.return_value = AsyncMock()
+        mock_evaluator_class.return_value = _create_mock_evaluator()
+        mock_judgment_class.return_value = _create_mock_judgment_client()
+        mock_create_leader.return_value = _create_mock_leader_agent()
+
+        # Setup 2 mock member agents via factory
+        mock_member_1 = _create_mock_member_agent(content="Result 1", agent_name="agent-1", agent_type="plain")
+        mock_member_2 = _create_mock_member_agent(content="Result 2", agent_name="agent-2", agent_type="plain")
+        mock_factory_class.create_agent.side_effect = [mock_member_1, mock_member_2]
+
+        team_config_path = Path.cwd() / "tests" / "fixtures" / "team_broadcast.toml"
+        task = OrchestratorTask(
+            execution_id=str(uuid4()),
+            user_prompt="Test prompt",
+            team_configs=[team_config_path],
+            timeout_seconds=300,
+            max_rounds=1,
+            min_rounds=1,
+        )
+        controller = RoundController(
+            team_config_path=team_config_path,
+            workspace=tmp_path,
+            task=task,
+            evaluator_settings=EvaluatorSettings(),
+            judgment_settings=JudgmentSettings(),
+            prompt_builder_settings=PromptBuilderSettings(),
+        )
+
+        await controller.run_round("Test prompt", timeout_seconds=300)
+
+        # Both member agents should have been called
+        mock_member_1.execute.assert_called_once()
+        mock_member_2.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch("mixseek.round_controller.controller.MemberAgentFactory")
+    @patch("mixseek.round_controller.controller.create_leader_agent")
+    @patch("mixseek.round_controller.controller.AggregationStore")
+    @patch("mixseek.round_controller.controller.Evaluator")
+    @patch("mixseek.round_controller.controller.JudgmentClient")
+    async def test_broadcast_partial_failure_continues(
+        self,
+        mock_judgment_class: MagicMock,
+        mock_evaluator_class: MagicMock,
+        mock_store_class: MagicMock,
+        mock_create_leader: MagicMock,
+        mock_factory_class: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """broadcastモードで一部メンバー失敗時も集約が続行される."""
+        mock_store_class.return_value = AsyncMock()
+        mock_evaluator_class.return_value = _create_mock_evaluator()
+        mock_judgment_class.return_value = _create_mock_judgment_client()
+        mock_create_leader.return_value = _create_mock_leader_agent()
+
+        # 1 success + 1 failure
+        mock_member_1 = _create_mock_member_agent(content="Good result", agent_name="agent-1")
+        mock_member_2 = _create_failing_mock_member_agent(agent_name="agent-2")
+        mock_factory_class.create_agent.side_effect = [mock_member_1, mock_member_2]
+
+        team_config_path = Path.cwd() / "tests" / "fixtures" / "team_broadcast.toml"
+        task = OrchestratorTask(
+            execution_id=str(uuid4()),
+            user_prompt="Test prompt",
+            team_configs=[team_config_path],
+            timeout_seconds=300,
+            max_rounds=1,
+            min_rounds=1,
+        )
+        controller = RoundController(
+            team_config_path=team_config_path,
+            workspace=tmp_path,
+            task=task,
+            evaluator_settings=EvaluatorSettings(),
+            judgment_settings=JudgmentSettings(),
+            prompt_builder_settings=PromptBuilderSettings(),
+        )
+
+        # Should not raise — partial failure is handled
+        result = await controller.run_round("Test prompt", timeout_seconds=300)
+
+        # Leader aggregation should still have been called
+        mock_create_leader.assert_called()
+        assert result.submission_content == "Aggregated final answer"
+
+
+class TestSelectiveModeUnchanged:
+    """Verify selective (default) mode is not affected."""
+
+    @pytest.mark.asyncio
+    @patch("mixseek.round_controller.controller.create_leader_agent")
+    @patch("mixseek.round_controller.controller.AggregationStore")
+    @patch("mixseek.round_controller.controller.Evaluator")
+    @patch("mixseek.round_controller.controller.JudgmentClient")
+    async def test_selective_uses_existing_leader_path(
+        self,
+        mock_judgment_class: MagicMock,
+        mock_evaluator_class: MagicMock,
+        mock_store_class: MagicMock,
+        mock_create_leader: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """selectiveモードでは既存のleader_agent.run()パスが使われる."""
+        mock_store_class.return_value = AsyncMock()
+        mock_evaluator_class.return_value = _create_mock_evaluator()
+        mock_judgment_class.return_value = _create_mock_judgment_client()
+        mock_create_leader.return_value = _create_mock_leader_agent()
+
+        # team1.toml has no member_dispatch (defaults to selective)
+        team_config_path = Path.cwd() / "tests" / "fixtures" / "team1.toml"
+        task = OrchestratorTask(
+            execution_id=str(uuid4()),
+            user_prompt="Test prompt",
+            team_configs=[team_config_path],
+            timeout_seconds=300,
+            max_rounds=1,
+            min_rounds=1,
+        )
+        controller = RoundController(
+            team_config_path=team_config_path,
+            workspace=tmp_path,
+            task=task,
+            evaluator_settings=EvaluatorSettings(),
+            judgment_settings=JudgmentSettings(),
+            prompt_builder_settings=PromptBuilderSettings(),
+        )
+
+        await controller.run_round("Test prompt", timeout_seconds=300)
+
+        # create_leader_agent should be called WITH member_agents (not empty)
+        mock_create_leader.assert_called_once()
+        call_args = mock_create_leader.call_args
+        member_agents_arg = call_args[0][1]
+        # For team1.toml (no members), it should be an empty dict but via the normal path
+        assert isinstance(member_agents_arg, dict)

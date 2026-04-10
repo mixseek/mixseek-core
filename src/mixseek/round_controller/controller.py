@@ -4,6 +4,7 @@ Feature: 037-mixseek-core-round-controller
 This module manages multi-round execution for a single team.
 """
 
+import asyncio
 import json
 import logging
 from datetime import UTC, datetime
@@ -296,11 +297,9 @@ class RoundController:
             member_agent = MemberAgentFactory.create_agent(member_config)
             member_agents[member_settings.agent_name] = member_agent
 
-        # 2. Execute Leader Agent
-        # 進捗ファイル更新: Leader実行開始
+        # 2. Execute: dispatch by member_dispatch mode
         self._write_progress_file(round_number, status="running", current_agent="leader")
 
-        leader_agent = create_leader_agent(self.team_config, member_agents)
         deps = TeamDependencies(
             execution_id=self.task.execution_id,
             team_id=self.team_config.team_id,
@@ -308,11 +307,25 @@ class RoundController:
             round_number=round_number,
         )
 
-        result = await leader_agent.run(user_prompt, deps=deps)
-        submission_content: str = result.output
-        message_history = result.all_messages()
+        submission_content: str
+        message_history: list[Any]
 
-        # 進捗ファイル更新: Leader実行完了
+        if self.team_config.member_dispatch == "broadcast":
+            # Broadcast: 全メンバー並列実行 → Leader集約
+            submission_content, message_history = await self._execute_broadcast(
+                member_agents=member_agents,
+                user_prompt=user_prompt,
+                round_number=round_number,
+                deps=deps,
+            )
+        else:
+            # Selective (default): LLMがToolとしてメンバーを選択
+            leader_agent = create_leader_agent(self.team_config, member_agents)
+            result = await leader_agent.run(user_prompt, deps=deps)
+            submission_content = result.output
+            message_history = result.all_messages()
+
+        # 進捗ファイル更新: 実行完了
         self._write_progress_file(round_number, status="running", current_agent=None)
 
         # 3. Save round history (existing table)
@@ -544,6 +557,78 @@ class RoundController:
 
         result = await leader_agent.run(aggregation_prompt, deps=deps)
         return result.output, result.all_messages()
+
+    async def _execute_broadcast(
+        self,
+        member_agents: dict[str, object],
+        user_prompt: str,
+        round_number: int,
+        deps: TeamDependencies,
+    ) -> tuple[str, list[Any]]:
+        """全メンバーを並列実行し、Leader Agentで集約する.
+
+        asyncio.gatherで全メンバーを同時実行した後、
+        Tool登録なしのLeader Agentで結果を統合する。
+
+        Note:
+            _run_single_memberとtools.py:61-126は類似ロジック（DRY対象）。
+            tools.pyはRunContext経由のアクセスで引数構造が異なるため、
+            共通ヘルパー抽出は後続タスクで対応する。
+
+        Args:
+            member_agents: メンバーエージェントマップ（agent_name -> Agent）
+            user_prompt: ユーザープロンプト
+            round_number: ラウンド番号（進捗更新用）
+            deps: TeamDependencies
+
+        Returns:
+            tuple of (集約後の最終回答, message_history)
+        """
+        # 進捗ファイル更新: broadcast実行開始
+        self._write_progress_file(round_number, status="running", current_agent="broadcast")
+
+        # メンバー設定マップを構築（agent_name -> agent_type）
+        member_type_map: dict[str, str] = {m.agent_name: m.agent_type for m in self.team_settings.members}
+
+        # 全メンバーを並列実行
+        member_names = list(member_agents.keys())
+        tasks = [
+            self._run_single_member(
+                agent_name=name,
+                agent_type=member_type_map.get(name, "unknown"),
+                member_agent=agent,
+                user_prompt=user_prompt,
+                deps=deps,
+            )
+            for name, agent in member_agents.items()
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # asyncio.gatherの結果チェック: _run_single_member自体のバグを検出
+        for i, result in enumerate(results):
+            if isinstance(result, BaseException):
+                agent_name = member_names[i] if i < len(member_names) else "unknown"
+                logger.error(f"Unexpected error in broadcast member '{agent_name}': {result}")
+                # _run_single_memberは本来例外を送出しないため、ここに到達するのはバグ
+                deps.submissions.append(
+                    MemberSubmission(
+                        agent_name=agent_name,
+                        agent_type=member_type_map.get(agent_name, "unknown"),
+                        content="",
+                        status="ERROR",
+                        error_message=f"Internal error: {result}",
+                        usage=RunUsage(input_tokens=0, output_tokens=0, requests=0),
+                        execution_time_ms=0,
+                        timestamp=datetime.now(UTC),
+                        all_messages=None,
+                    )
+                )
+
+        # 進捗ファイル更新: 集約開始
+        self._write_progress_file(round_number, status="running", current_agent="leader-aggregation")
+
+        # Leader Agentで集約
+        return await self._aggregate_with_leader(user_prompt, deps)
 
     async def _should_continue_round(self, user_query: str, current_round: int) -> tuple[bool, str]:
         """Determine if should continue to next round (T023: 3-stage judgment)

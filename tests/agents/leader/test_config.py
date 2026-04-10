@@ -701,6 +701,7 @@ class TestTeamSettingsToTeamConfig:
         team_settings.team_id = "test-team-001"
         team_settings.team_name = "Test Team"
         team_settings.max_concurrent_members = 10
+        team_settings.member_dispatch = "selective"
         team_settings.leader = {
             "model": "openai:gpt-4o",
             "temperature": 0.7,
@@ -734,6 +735,7 @@ class TestTeamSettingsToTeamConfig:
         team_settings.team_id = "solo-team"
         team_settings.team_name = "Solo Team"
         team_settings.max_concurrent_members = 5
+        team_settings.member_dispatch = "selective"
         team_settings.leader = {
             "model": "google-gla:gemini-2.5-flash-lite",
             "timeout_seconds": 450,

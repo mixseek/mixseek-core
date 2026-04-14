@@ -148,9 +148,17 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
                 logfire_handler.addFilter(SkipTracesFilter())
             logger.addHandler(logfire_handler)
         except ImportError:
-            logger.warning("Logfire package not installed, skipping Logfire logging handler")
+            # 構造化ログ: 欠落パッケージ名を extra で明示し、JsonFormatter でフィールド化する
+            logger.warning(
+                "Logfire package not installed, skipping Logfire logging handler",
+                extra={"missing_package": "logfire"},
+            )
         except Exception as e:
-            logger.warning(f"Failed to add Logfire logging handler: {e}")
+            # 構造化ログ: 例外情報を extra で明示し、JsonFormatter でフィールド化する
+            logger.warning(
+                "Failed to add Logfire logging handler",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
 
     # ハンドラなしの場合は NullHandler（サイレントモード）
     if not logger.handlers:

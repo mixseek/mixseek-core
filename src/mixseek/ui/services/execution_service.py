@@ -9,9 +9,11 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import duckdb
 
+from mixseek.config.logging import LogFormatType
 from mixseek.core.auth import clear_auth_caches
 from mixseek.orchestrator import Orchestrator, load_orchestrator_settings
 from mixseek.ui.models.config import OrchestrationOption
@@ -273,11 +275,12 @@ def run_orchestration(
                     from mixseek.observability import setup_logfire
 
                     logfire_config = LogfireConfig.from_env()
-                    log_format = os.getenv("MIXSEEK_LOG_FORMAT", "text")
+                    # CLI utils と同じ方針で cast を使用（LogfireConfig 側でバリデーション済み）
+                    log_format = cast(LogFormatType, os.getenv("MIXSEEK_LOG_FORMAT", "text"))
                     file_enabled = os.getenv("MIXSEEK_LOG_FILE", "1") in ("true", "1")
                     setup_logfire(
                         logfire_config,
-                        log_format=log_format,  # type: ignore[arg-type]
+                        log_format=log_format,
                         workspace=workspace,
                         file_enabled=file_enabled,
                     )

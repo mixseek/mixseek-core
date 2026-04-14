@@ -124,10 +124,25 @@ mixseek team "..." --config team.toml
 
 ログファイルは`$MIXSEEK_WORKSPACE/logs/mixseek.log`に統一されています。
 
-### カスタムエージェントのロガー
+### ロガー名の統一ルール
 
-カスタムエージェントから統一ロガーのハンドラ（stderr/mixseek.log）にログを伝搬するには、
-`"mixseek.*"` 名前空間のロガーを使用してください：
+mixseek-core の統一ロガーは `"mixseek"` 名前空間で propagate 経由に集約されます。ロガー取得方法はコードの位置によって使い分けてください。
+
+#### 1. mixseek パッケージ内部コード（`src/mixseek/**`）
+
+`logging.getLogger(__name__)` を使用します。`__name__` は `mixseek.config.manager` のように `"mixseek."` プレフィックスを自然に持つため、統一ロガーに正しく伝搬します。
+
+```python
+import logging
+
+# 例: src/mixseek/config/manager.py
+# __name__ == "mixseek.config.manager" → "mixseek" ロガーに伝搬
+logger = logging.getLogger(__name__)
+```
+
+#### 2. mixseek パッケージ外部（カスタムエージェント等）
+
+`"mixseek."` プレフィックスの named logger を明示指定します。`__name__` だと `"mixseek"` 名前空間外になり、統一ロガーのハンドラ（stderr/mixseek.log）に伝搬しません。
 
 ```python
 import logging
@@ -135,9 +150,11 @@ import logging
 # 統一ロガーに伝搬する
 logger = logging.getLogger("mixseek.custom_agents.my_agent")
 
-# __name__ を使う場合は "mixseek" 名前空間外になるため伝搬しない
+# 以下は "mixseek" 名前空間外のため伝搬しない（非推奨）
 # logger = logging.getLogger(__name__)
 ```
+
+要点: ロガー名が `"mixseek"` または `"mixseek."` で始まっていれば伝搬する、という一貫したルールで統一ロガーのハンドラに集約されます。
 
 ## Logfire統合
 

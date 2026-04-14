@@ -224,6 +224,10 @@ def finalize_mode3_handlers() -> None:
     logfire.configure() 完了後にこれらを除去して重複を防止する。
     """
     mixseek_logger = logging.getLogger("mixseek")
+    # type(h) is logging.StreamHandler による厳密型一致チェックは意図的:
+    # ConsoleOptions 移行後も残したい LogfireLoggingHandler 等の StreamHandler サブクラスを
+    # 誤って除去しないため、サブクラスを含む isinstance ではなく型完全一致で判定する。
+    # 将来カスタム StreamHandler サブクラスを追加する場合、残すかどうかをここで判断すること。
     handlers_to_remove = [
         h for h in mixseek_logger.handlers if (type(h) is logging.StreamHandler or isinstance(h, logging.FileHandler))
     ]

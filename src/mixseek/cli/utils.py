@@ -170,9 +170,8 @@ def setup_logfire_from_cli(
             console_output=console_enabled,
         )
     elif os.getenv("LOGFIRE_ENABLED") == "1":
-        logfire_config = LogfireConfig.from_env()
         # CLI値で console_output を上書き（CLI > env の優先度）
-        logfire_config = logfire_config.model_copy(update={"console_output": console_enabled})
+        logfire_config = LogfireConfig.from_env().model_copy(update={"console_output": console_enabled})
 
     # 初期化
     if logfire_config is not None and logfire_config.enabled:

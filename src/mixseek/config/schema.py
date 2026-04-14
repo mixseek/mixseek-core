@@ -1109,6 +1109,15 @@ class TeamSettings(MixSeekBaseSettings):
         description="最大Member Agent数",
     )
 
+    member_dispatch: Literal["selective", "broadcast"] = Field(
+        default="selective",
+        description=(
+            "メンバーエージェント呼び出し方式。"
+            "selective: LLMが自律的にAgent選択、"
+            "broadcast: 全Agent強制実行後にLLMで集約"
+        ),
+    )
+
     # Leader Agent設定（必須）
     leader: dict[str, Any] = Field(
         description="Leader Agent設定（LeaderAgentSettingsとして解釈）",

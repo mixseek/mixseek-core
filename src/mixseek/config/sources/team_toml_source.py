@@ -115,6 +115,9 @@ class TeamTomlSource(PydanticBaseSettingsSource):
             "leader": team_data.get("leader", {}),
             "members": resolved_members,
         }
+        # member_dispatch: TOML に存在する場合のみ設定（Pydantic Fieldデフォルトに委譲）
+        if "member_dispatch" in team_data:
+            self.toml_data["member_dispatch"] = team_data["member_dispatch"]
 
     def _resolve_member_reference(self, member_data: dict[str, Any]) -> dict[str, Any]:
         """Member Agent参照を解決（Feature 027互換）。

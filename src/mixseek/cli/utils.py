@@ -7,12 +7,13 @@ import os
 import sys
 import traceback
 from pathlib import Path
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar, cast
 
 import typer
+from pydantic import ValidationError
 
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
-from mixseek.config.logging import LoggingConfig
+from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
 from mixseek.observability import setup_logfire, setup_logging
 
 # Exit code constants
@@ -119,71 +120,68 @@ def setup_logfire_from_cli(
     logfire: bool,
     logfire_metadata: bool,
     logfire_http: bool,
-    workspace: Path | None,
     verbose: bool,
+    log_format: str = "text",
+    workspace: Path | None = None,
+    file_enabled: bool = True,
+    console_enabled: bool = True,
 ) -> None:
     """Logfire初期化（CLI共通ロジック）
-
-    T096: CLIフラグから直接LogfireConfigを作成（Article 9準拠）
-    優先順位: CLI flags > Environment variables > TOML
-    CLIフラグは enabled/privacy_mode/capture_http のみ指定、
-    project_name/send_to_logfire は環境変数/TOMLから継承
 
     Args:
         logfire: --logfireフラグ
         logfire_metadata: --logfire-metadataフラグ
         logfire_http: --logfire-httpフラグ
-        workspace: ワークスペースパス
         verbose: 詳細ログ表示フラグ
+        log_format: ログ出力形式（text/json）
+        workspace: ワークスペースパス
+        file_enabled: ファイル出力有効化フラグ
+        console_enabled: コンソール出力有効化フラグ
     """
     logfire_config = None
 
     if logfire or logfire_metadata or logfire_http:
-        # 1. まず環境変数/TOMLから基本設定を読み取る
+        # 環境変数から基本設定を読み取る（project_name/send_to_logfire の継承用）
         base_config = None
         if os.getenv("LOGFIRE_PROJECT") or os.getenv("LOGFIRE_SEND_TO_LOGFIRE"):
-            # 環境変数が設定されている場合
             base_config = LogfireConfig.from_env()
-        elif workspace:
-            # TOMLから読み取り
-            base_config = LogfireConfig.from_toml(workspace)
 
-        # 2. CLIフラグでプライバシーモードとHTTPキャプチャを決定
+        # CLIフラグでプライバシーモードとHTTPキャプチャを決定
         if logfire:
-            # --logfire: Full mode (すべてキャプチャ)
             privacy_mode = LogfirePrivacyMode.FULL
             capture_http_flag = False
         elif logfire_metadata:
-            # --logfire-metadata: Metadata only (プロンプト/応答除外)
             privacy_mode = LogfirePrivacyMode.METADATA_ONLY
             capture_http_flag = False
         elif logfire_http:
-            # --logfire-http: Full mode + HTTP capture
             privacy_mode = LogfirePrivacyMode.FULL
             capture_http_flag = True
         else:
             privacy_mode = LogfirePrivacyMode.DISABLED
             capture_http_flag = False
 
-        # 3. CLIフラグ優先でマージ（project_name/send_to_logfireは継承）
+        # CLIフラグ優先でマージ
         logfire_config = LogfireConfig(
-            enabled=True,  # CLI指定
-            privacy_mode=privacy_mode,  # CLI指定
-            capture_http=capture_http_flag,  # CLI指定
-            project_name=base_config.project_name if base_config else None,  # 環境変数/TOML継承
-            send_to_logfire=base_config.send_to_logfire if base_config else True,  # 環境変数/TOML継承
+            enabled=True,
+            privacy_mode=privacy_mode,
+            capture_http=capture_http_flag,
+            project_name=base_config.project_name if base_config else None,
+            send_to_logfire=base_config.send_to_logfire if base_config else True,
+            console_output=console_enabled,
         )
     elif os.getenv("LOGFIRE_ENABLED") == "1":
-        # 環境変数からLogfireConfig作成
-        logfire_config = LogfireConfig.from_env()
-    elif workspace:
-        # TOML設定を試みる（最低優先度）
-        logfire_config = LogfireConfig.from_toml(workspace)
+        # CLI値で console_output を上書き（CLI > env の優先度）
+        logfire_config = LogfireConfig.from_env().model_copy(update={"console_output": console_enabled})
 
     # 初期化
     if logfire_config is not None and logfire_config.enabled:
         try:
-            setup_logfire(logfire_config, workspace)
+            setup_logfire(
+                logfire_config,
+                log_format=cast(LogFormatType, log_format),
+                workspace=workspace,
+                file_enabled=file_enabled,
+            )
             if verbose:
                 typer.secho("✓ Logfire observability enabled", fg=typer.colors.GREEN, err=True)
         except Exception as e:
@@ -203,6 +201,7 @@ def setup_logging_from_cli(
     logfire_enabled: bool,
     workspace: Path | None,
     verbose: bool,
+    log_format: str = "text",
 ) -> None:
     """標準logging初期化（CLI共通ロジック）
 
@@ -213,26 +212,26 @@ def setup_logging_from_cli(
         logfire_enabled: Logfire有効化フラグ
         workspace: ワークスペースパス
         verbose: 詳細ログ表示フラグ
-
-    Note:
-        優先順位: CLI flags > Environment variables > TOML > defaults
-        CLIフラグは --no-log-console, --no-log-file で無効化を指定
+        log_format: ログ出力形式（text/json）
     """
-    # Build LoggingConfig from CLI flags (highest priority)
-    # CLI flags override environment variables and TOML
-    config = LoggingConfig(
-        logfire_enabled=logfire_enabled,
-        console_enabled=not no_log_console,
-        file_enabled=not no_log_file,
-        log_level=log_level,  # type: ignore[arg-type]
-    )
+    try:
+        config = LoggingConfig(
+            logfire_enabled=logfire_enabled,
+            console_enabled=not no_log_console,
+            file_enabled=not no_log_file,
+            log_level=cast(LevelName, log_level),
+            log_format=cast(LogFormatType, log_format),
+        )
+    except ValidationError as e:
+        typer.echo(f"Error: ログ設定が不正です: {e}", err=True)
+        raise typer.Exit(code=2)
 
-    # Setup standard logging
     try:
         setup_logging(config, workspace)
         if verbose:
             typer.secho(
-                f"✓ Logging configured (level={log_level}, console={not no_log_console}, file={not no_log_file})",
+                f"✓ Logging configured (level={log_level}, format={log_format}, "
+                f"console={not no_log_console}, file={not no_log_file})",
                 fg=typer.colors.GREEN,
                 err=True,
             )
@@ -244,3 +243,79 @@ def setup_logging_from_cli(
         )
         if verbose:
             typer.echo(traceback.format_exc(), err=True)
+
+
+def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
+    """Logfireフラグの排他的チェック。
+
+    Args:
+        logfire: --logfireフラグ
+        logfire_metadata: --logfire-metadataフラグ
+        logfire_http: --logfire-httpフラグ
+
+    Raises:
+        typer.Exit: 複数のLogfireフラグが指定された場合
+    """
+    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
+    if logfire_flags_count > 1:
+        typer.secho(
+            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(1)
+
+
+def initialize_observability(
+    *,
+    log_level: str,
+    no_log_console: bool,
+    no_log_file: bool,
+    logfire: bool,
+    logfire_metadata: bool,
+    logfire_http: bool,
+    verbose: bool,
+    log_format: str | None,
+    workspace: Path | None,
+) -> None:
+    """CLI共通のロギング・Logfire初期化。
+
+    標準logging初期化、Logfire初期化を一括で行う。
+    evaluate/exec/member/team 全コマンドで共通のロジックを統一。
+    Logfireフラグの排他チェックは validate_logfire_flags() で事前に行うこと。
+
+    Args:
+        log_level: ログレベル (debug/info/warning/error/critical)
+        no_log_console: コンソール出力無効化フラグ
+        no_log_file: ファイル出力無効化フラグ
+        logfire: --logfireフラグ
+        logfire_metadata: --logfire-metadataフラグ
+        logfire_http: --logfire-httpフラグ
+        verbose: 詳細ログ表示フラグ
+        log_format: ログ出力形式（text/json/None）
+        workspace: 解決済みワークスペースパス
+    """
+    # 標準logging初期化（Logfireより先に実行）
+    logfire_enabled = logfire or logfire_metadata or logfire_http or os.getenv("LOGFIRE_ENABLED") == "1"
+    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    setup_logging_from_cli(
+        log_level,
+        no_log_console,
+        no_log_file,
+        logfire_enabled,
+        workspace,
+        verbose,
+        effective_log_format,
+    )
+
+    # Logfire初期化
+    setup_logfire_from_cli(
+        logfire,
+        logfire_metadata,
+        logfire_http,
+        verbose,
+        log_format=effective_log_format,
+        workspace=workspace,
+        file_enabled=not no_log_file,
+        console_enabled=not no_log_console,
+    )

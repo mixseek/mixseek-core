@@ -92,14 +92,12 @@ class TestExecDryRunFlag:
 
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
-    @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
-    @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
+    @patch(f"{_EXEC_MODULE}.initialize_observability")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     def test_dry_run_valid_config_exit_0(
         self,
         mock_config_mgr: MagicMock,
-        mock_setup_logging: MagicMock,
-        mock_setup_logfire: MagicMock,
+        mock_init_obs: MagicMock,
         mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
         runner: CliRunner,
@@ -120,14 +118,12 @@ class TestExecDryRunFlag:
         mock_execute_orch.assert_not_called()
 
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
-    @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
-    @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
+    @patch(f"{_EXEC_MODULE}.initialize_observability")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     def test_dry_run_valid_config_json_output(
         self,
         mock_config_mgr: MagicMock,
-        mock_setup_logging: MagicMock,
-        mock_setup_logfire: MagicMock,
+        mock_init_obs: MagicMock,
         mock_preflight: MagicMock,
         runner: CliRunner,
         orchestrator_toml: Path,
@@ -154,14 +150,12 @@ class TestExecDryRunFlag:
         assert '"categories"' in result.output
 
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
-    @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
-    @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
+    @patch(f"{_EXEC_MODULE}.initialize_observability")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     def test_dry_run_invalid_config_exit_2(
         self,
         mock_config_mgr: MagicMock,
-        mock_setup_logging: MagicMock,
-        mock_setup_logfire: MagicMock,
+        mock_init_obs: MagicMock,
         mock_preflight: MagicMock,
         runner: CliRunner,
         orchestrator_toml: Path,
@@ -204,14 +198,12 @@ class TestExecPreflightIntegration:
     @patch(f"{_EXEC_MODULE}.close_all_auth_clients", new_callable=AsyncMock)
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
-    @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
-    @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
+    @patch(f"{_EXEC_MODULE}.initialize_observability")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     def test_normal_exec_preflight_fail_stops(
         self,
         mock_config_mgr: MagicMock,
-        mock_setup_logging: MagicMock,
-        mock_setup_logfire: MagicMock,
+        mock_init_obs: MagicMock,
         mock_preflight: MagicMock,
         mock_execute_orch: MagicMock,
         mock_close_auth: AsyncMock,
@@ -236,14 +228,12 @@ class TestExecPreflightIntegration:
     @patch(f"{_EXEC_MODULE}._execute_orchestration")
     @patch(f"{_EXEC_MODULE}.Orchestrator")
     @patch(f"{_EXEC_MODULE}.run_preflight_check")
-    @patch(f"{_EXEC_MODULE}.setup_logfire_from_cli")
-    @patch(f"{_EXEC_MODULE}.setup_logging_from_cli")
+    @patch(f"{_EXEC_MODULE}.initialize_observability")
     @patch(f"{_EXEC_MODULE}.ConfigurationManager")
     def test_normal_exec_preflight_pass_continues(
         self,
         mock_config_mgr: MagicMock,
-        mock_setup_logging: MagicMock,
-        mock_setup_logfire: MagicMock,
+        mock_init_obs: MagicMock,
         mock_preflight: MagicMock,
         mock_orchestrator_cls: MagicMock,
         mock_execute_orch: MagicMock,

@@ -40,6 +40,7 @@ from mixseek.cli.commands.evaluate_helper import (
     evaluate_content,
 )
 from mixseek.cli.common_options import (
+    LOG_FORMAT_OPTION,
     LOG_LEVEL_OPTION,
     LOGFIRE_HTTP_OPTION,
     LOGFIRE_METADATA_OPTION,
@@ -49,7 +50,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import setup_logfire_from_cli, setup_logging_from_cli
+from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
@@ -74,6 +75,7 @@ def team(
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
     logfire_http: bool = LOGFIRE_HTTP_OPTION,
+    log_format: str | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Execute team of Member Agents (development/testing only)
 
@@ -97,24 +99,10 @@ def team(
 
         mixseek team "Question" --config team.toml --logfire-http
     """
-    # Logfire初期化（早期実行）
-    # 優先順位: CLIフラグ > 環境変数 > TOML設定
+    # Logfireフラグの排他的チェック（workspace解決より先に実行）
+    validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
-    # 排他的チェック（複数のlogfireフラグは指定できない）
-    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
-    if logfire_flags_count > 1:
-        typer.secho(
-            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            fg=typer.colors.RED,
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
-    # T096: CLIフラグから環境変数への書き込みを削除（Article 9準拠）
-    # CLIフラグはLogfireConfig初期化時に直接使用
-
-    # 設定読み込み（CLIフラグ、環境変数、TOML設定のいずれかで有効化可能）
-    # Phase 12 (T084): ConfigurationManager経由でワークスペース取得（Article 9準拠）
+    # ワークスペース解決（Phase 12 T084: ConfigurationManager経由）
     workspace_resolved = workspace
     if not workspace_resolved:
         try:
@@ -122,7 +110,6 @@ def team(
             orchestrator_settings: OrchestratorSettings = config_manager.load_settings(OrchestratorSettings)
             workspace_resolved = orchestrator_settings.workspace_path
         except Exception as e:
-            # Article 9準拠: 明示的エラーメッセージ（暗黙的フォールバック削除）
             typer.secho(
                 f"ERROR: Failed to resolve workspace path: {e}",
                 fg=typer.colors.RED,
@@ -139,12 +126,18 @@ def team(
     if workspace_resolved:
         os.environ[WORKSPACE_ENV_VAR] = str(workspace_resolved)
 
-    # 標準logging初期化（Logfireより先に実行）
-    logfire_enabled = logfire or logfire_metadata or logfire_http
-    setup_logging_from_cli(log_level, no_log_console, no_log_file, logfire_enabled, workspace_resolved, verbose)
-
-    # Logfire初期化（共通ロジック）
-    setup_logfire_from_cli(logfire, logfire_metadata, logfire_http, workspace_resolved, verbose)
+    # ロギング・Logfire初期化（CLI共通ヘルパー）
+    initialize_observability(
+        log_level=log_level,
+        no_log_console=no_log_console,
+        no_log_file=no_log_file,
+        logfire=logfire,
+        logfire_metadata=logfire_metadata,
+        logfire_http=logfire_http,
+        verbose=verbose,
+        log_format=log_format,
+        workspace=workspace_resolved,
+    )
 
     # FR-022: 開発・テスト専用警告表示
     typer.secho(

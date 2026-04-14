@@ -13,6 +13,7 @@ Usage:
         ...
 """
 
+import click
 import typer
 
 # Workspace option - used by: init, team, evaluate, exec, config, ui
@@ -67,4 +68,11 @@ NO_LOG_FILE_OPTION = typer.Option(
     False,
     "--no-log-file",
     help="Disable file log output",
+)
+
+LOG_FORMAT_OPTION = typer.Option(
+    None,
+    "--log-format",
+    click_type=click.Choice(["text", "json"]),
+    help="ログ出力形式 (text/json, デフォルト: text)",
 )

@@ -160,6 +160,25 @@ class TestLoggingIntegrationHook:
             log_message = mock_logger.log.call_args[0][1]
             assert "Error: Test error message" in log_message
 
+    @pytest.mark.asyncio
+    async def test_handle_event_metadata_preserves_unicode(self) -> None:
+        """メタデータ内の日本語がUnicodeエスケープされずに保持される"""
+        event = IntegrationEvent(
+            event_type=IntegrationEventType.AGENT_CREATED,
+            timestamp=datetime.now(UTC),
+            agent_name="test-agent",
+            agent_type="plain",
+            metadata={"description": "テスト説明"},
+        )
+
+        hook = LoggingIntegrationHook(log_level="INFO")
+        with patch.object(hook, "logger") as mock_logger:
+            await hook.handle_event(event)
+
+            log_message = mock_logger.log.call_args[0][1]
+            # 日本語がそのまま含まれること（\u30c6\u30b9\u30c8ではなく）
+            assert "テスト説明" in log_message
+
 
 class TestMetricsIntegrationHook:
     """Test MetricsIntegrationHook."""

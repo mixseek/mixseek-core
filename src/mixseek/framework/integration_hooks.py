@@ -94,7 +94,7 @@ class LoggingIntegrationHook(IntegrationHook):
             message += f" | Error: {event.error}"
 
         if event.metadata:
-            message += f" | Metadata: {json.dumps(event.metadata)}"
+            message += f" | Metadata: {json.dumps(event.metadata, ensure_ascii=False)}"
 
         self.logger.log(self.log_level, message)
 

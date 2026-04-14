@@ -393,7 +393,7 @@ class ConfigViewService:
             settings = self.get_all_settings()
 
         if not settings:
-            return json.dumps([])
+            return json.dumps([], ensure_ascii=False)
 
         # Build array of setting objects
         settings_list = []

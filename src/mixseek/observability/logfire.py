@@ -1,96 +1,204 @@
-"""Logfire observability integration (Article 9 compliant).
+"""Logfire Observability統合。
 
-このモジュールはLogfireの初期化とPydantic AI instrumentationを提供します。
-すべての処理はConstitution Article 9（Data Accuracy Mandate）に準拠します。
-
-Path 2 Architecture:
-    Logfire spans → ConsoleOptions(output=TeeWriter) → Console (stderr) + File
-                → send_to_logfire → Logfire cloud (optional)
+text/json で ConsoleOptions の使用/不使用を切り替える。
+- text: ConsoleOptions + TeeWriter(stderr + mixseek.log) でスパンツリー表示
+- json: ConsoleOptions無効 + JsonSpanProcessor で構造化JSON出力
 """
 
 from __future__ import annotations
 
 import atexit
+import json
 import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, TextIO
+from typing import IO, TYPE_CHECKING, Any, Literal, TextIO
 
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
+from mixseek.config.logging import LogFormatType
 from mixseek.observability.tee_writer import TeeWriter
+
+if TYPE_CHECKING:
+    from logfire import ConsoleOptions
+    from opentelemetry.context import Context
+    from opentelemetry.sdk.trace import ReadableSpan
 
 logger = logging.getLogger(__name__)
 
 
-def setup_logfire(config: LogfireConfig, workspace: Path | None = None) -> None:
-    """Logfire初期化（Article 9準拠）.
+class JsonSpanProcessor:
+    """OpenTelemetry スパンを構造化 JSON ログレコードに変換し、"mixseek.traces" ロガーに書き込む。
+
+    SpanProcessor プロトコルを直接実装する。
+    "mixseek.traces" → 親 "mixseek" に伝搬 → StreamHandler + FileHandler で出力。
+    LogfireLoggingHandler には SkipTracesFilter で再送防止済み。
+    """
+
+    def __init__(self) -> None:
+        self._traces_logger = logging.getLogger("mixseek.traces")
+
+    @staticmethod
+    def _parse_json_values(attrs: dict[str, Any]) -> dict[str, Any]:
+        """JSON文字列の属性値をPythonオブジェクトに復元し、二重シリアライズを防止する。
+
+        pydantic-ai/logfire はスパン属性に複雑なデータをJSON文字列として格納する。
+        そのまま JsonFormatter に渡すと二重エスケープが発生するため、事前にデシリアライズする。
+        """
+        result: dict[str, Any] = {}
+        for k, v in attrs.items():
+            if isinstance(v, str) and len(v) >= 2 and v[0] in ("{", "["):
+                try:
+                    result[k] = json.loads(v)
+                except (json.JSONDecodeError, ValueError):
+                    result[k] = v
+            else:
+                result[k] = v
+        return result
+
+    def on_start(self, span: ReadableSpan, parent_context: Context | None = None) -> None:
+        """スパン開始時に構造化 JSON レコードを出力"""
+        record_data: dict[str, Any] = {
+            "type": "span_start",
+            "trace_id": format(span.context.trace_id, "032x"),
+            "span_name": span.name,
+            "span_id": format(span.context.span_id, "016x"),
+            "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
+            "attributes": self._parse_json_values(dict(span.attributes)) if span.attributes else {},
+        }
+        self._traces_logger.info(
+            f"{span.name} started",
+            extra=record_data,
+        )
+
+    def on_end(self, span: ReadableSpan) -> None:
+        """スパン完了時に構造化 JSON レコードを出力"""
+        duration_ms = None
+        if span.end_time and span.start_time:
+            duration_ms = (span.end_time - span.start_time) / 1_000_000
+
+        # span.events をシリアライズ可能な形式に変換
+        events = []
+        if span.events:
+            for event in span.events:
+                events.append(
+                    {
+                        "name": event.name,
+                        "timestamp": event.timestamp,
+                        "attributes": dict(event.attributes) if event.attributes else {},
+                    }
+                )
+
+        record_data: dict[str, Any] = {
+            "type": "span_end",
+            "trace_id": format(span.context.trace_id, "032x"),
+            "span_name": span.name,
+            "span_id": format(span.context.span_id, "016x"),
+            "parent_span_id": format(span.parent.span_id, "016x") if span.parent else None,
+            "duration_ms": duration_ms,
+            "status": span.status.status_code.name if span.status else None,
+            "events": events,
+            "attributes": self._parse_json_values(dict(span.attributes)) if span.attributes else {},
+        }
+        self._traces_logger.info(
+            f"{span.name} completed",
+            extra=record_data,
+        )
+
+    def shutdown(self) -> None:
+        pass
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
+
+def setup_logfire(
+    config: LogfireConfig,
+    log_format: LogFormatType = "text",
+    workspace: Path | None = None,
+    file_enabled: bool = True,
+) -> None:
+    """Logfire初期化。log_format に応じて出力方式を切り替える。
+
+    - text: ConsoleOptions + TeeWriter(stderr + mixseek.log) でスパンツリー表示
+    - json: ConsoleOptions無効 + JsonSpanProcessor で構造化JSON出力
 
     Args:
         config: Logfire設定
-        workspace: MIXSEEKワークスペースパス（ファイル出力用）
-
-    Raises:
-        ImportError: logfireパッケージ未インストール時
-        RuntimeError: 初期化失敗時
-
-    Note:
-        - config.enabled=Falseの場合は何もしない（early return）
-        - Pydantic AI instrumentationを自動設定
-        - プライバシーモードに応じてセンシティブデータを除外
-        - HTTPXインストルメンテーションはオプション
-        - ConsoleOptionsでローカル出力を制御（console/file）
-
-    Example:
-        >>> from mixseek.config.logfire import LogfireConfig
-        >>> config = LogfireConfig.from_env()
-        >>> setup_logfire(config, workspace=Path("/path/to/workspace"))
-        ✓ Logfire observability enabled
+        log_format: ログ出力形式（text/json）
+        workspace: ワークスペースパス（ファイル出力用）
+        file_enabled: ファイル出力有効化フラグ
     """
     if not config.enabled:
         logger.debug("Logfire is disabled (config.enabled=False)")
         return
 
-    # Import logfire (graceful degradation)
+    # 再初期化時のFDリーク防止: 既存ファイルハンドルをクローズ
+    _cleanup_file_handles()
+
     try:
         import logfire
+        from logfire import ConsoleOptions
     except ImportError as e:
         raise ImportError("Logfire not installed. Install with: uv sync --extra logfire") from e
 
     try:
-        # T098 Revision: Restore LOGFIRE_PROJECT environment variable
-        # Article 9 Exception: Logfire library design constraint
-        # - logfire.configure() has NO project_name parameter
-        # - LOGFIRE_PROJECT environment variable is the ONLY way to set project name
-        # - This is an external library requirement, not implicit fallback
+        # T098: LOGFIRE_PROJECT 環境変数の設定
         if config.project_name:
             os.environ["LOGFIRE_PROJECT"] = config.project_name
 
-        # Build TeeWriter for local output destinations
-        console_options = _build_console_options(config, workspace)
+        additional_processors: list[Any] = []
+        console: ConsoleOptions | Literal[False] = False
+        file_handle: IO[str] | None = None
 
-        # Configure Logfire with send_to_logfire and console options
+        if log_format == "text":
+            # Mode 3: ConsoleOptions + TeeWriter
+            # console_output と file_enabled に基づいて writers を組み立てる
+            writers: list[TextIO] = []
+            if config.console_output:
+                writers.append(sys.stderr)
+            if file_enabled and workspace:
+                log_dir = workspace / "logs"
+                log_dir.mkdir(parents=True, exist_ok=True)
+                file_handle = open(log_dir / "mixseek.log", "a", encoding="utf-8")  # noqa: SIM115
+                _logfire_file_handles.append(file_handle)
+                writers.append(file_handle)
+
+            if writers:
+                if len(writers) == 1:
+                    console = ConsoleOptions(output=writers[0])
+                else:
+                    console = ConsoleOptions(output=TeeWriter(writers))  # type: ignore[arg-type]
+            # writers が空の場合は console=False のまま
+        elif log_format == "json":
+            # Mode 4: ConsoleOptions無効 + JsonSpanProcessor
+            console = False
+            additional_processors.append(JsonSpanProcessor())
+
         logfire.configure(
             send_to_logfire=config.send_to_logfire,
-            console=console_options,
+            console=console,
+            additional_span_processors=additional_processors or None,
         )
 
-        # Pydantic AI instrumentation
+        # Mode 3 (logfire + text): ConsoleOptions 確立後に StreamHandler/FileHandler を除去
+        # ConsoleOptions が有効な場合のみ（writers が空でない場合）
+        if log_format == "text" and console is not False:
+            finalize_mode3_handlers()
+
+        # PydanticAI instrumentation（プライバシーモード対応）
         if config.privacy_mode == LogfirePrivacyMode.METADATA_ONLY:
-            # プロンプト/応答を除外（本番推奨）
             logfire.instrument_pydantic_ai(
-                include_content=False,  # プロンプト/応答除外
-                include_binary_content=False,  # バイナリ除外
+                include_content=False,
+                include_binary_content=False,
             )
             logger.info("Logfire instrumentation: metadata_only mode (content excluded)")
 
         elif config.privacy_mode == LogfirePrivacyMode.FULL:
-            # すべてキャプチャ（開発環境）
             logfire.instrument_pydantic_ai()
             logger.info("Logfire instrumentation: full mode (all content captured)")
 
         elif config.privacy_mode == LogfirePrivacyMode.DISABLED:
-            # Logfire無効（instrumentationなし）
             logger.info("Logfire instrumentation: disabled mode (no instrumentation)")
             return
 
@@ -100,79 +208,49 @@ def setup_logfire(config: LogfireConfig, workspace: Path | None = None) -> None:
                 logfire.instrument_httpx(capture_all=True)
                 logger.info("HTTPX instrumentation enabled (HTTP requests/responses captured)")
             except Exception as e:
-                # HTTPXインストルメンテーション失敗は警告のみ
                 logger.warning(f"HTTPX instrumentation failed: {e}")
 
-        # 成功ログ（CLI側で表示を制御）
         logger.info("Logfire observability enabled successfully")
 
     except Exception as e:
         raise RuntimeError(f"Logfire initialization failed: {e}") from e
 
 
-# Store file handles for cleanup (module-level to prevent garbage collection)
-_logfire_file_handles: list[TextIO] = []
+def finalize_mode3_handlers() -> None:
+    """Mode 3 (logfire+text) 用: ConsoleOptions 確立後に StreamHandler/FileHandler を除去する。
+
+    setup_logging() は全モードで StreamHandler/FileHandler を追加する（setup_logfire() 完了前の
+    ログ欠損防止のため）。Mode 3 では ConsoleOptions + TeeWriter が全出力を担当するので、
+    logfire.configure() 完了後にこれらを除去して重複を防止する。
+    """
+    mixseek_logger = logging.getLogger("mixseek")
+    # type(h) is logging.StreamHandler による厳密型一致チェックは意図的:
+    # ConsoleOptions 移行後も残したい LogfireLoggingHandler 等の StreamHandler サブクラスを
+    # 誤って除去しないため、サブクラスを含む isinstance ではなく型完全一致で判定する。
+    # 将来カスタム StreamHandler サブクラスを追加する場合、残すかどうかをここで判断すること。
+    handlers_to_remove = [
+        h for h in mixseek_logger.handlers if (type(h) is logging.StreamHandler or isinstance(h, logging.FileHandler))
+    ]
+    for h in handlers_to_remove:
+        # FileHandler のみクローズ（StreamHandler(stderr) はクローズしない）
+        if isinstance(h, logging.FileHandler):
+            h.close()
+        mixseek_logger.removeHandler(h)
+
+
+# ファイルハンドル管理（text + logfire モード用）
+_logfire_file_handles: list[IO[str]] = []
 
 
 def _cleanup_file_handles() -> None:
-    """Close all stored file handles on process exit.
-
-    Registered with atexit to ensure proper cleanup of file resources.
-    This prevents resource leaks in long-running processes and test environments.
-    """
+    """プロセス終了時にファイルハンドルをクローズ。"""
     for handle in _logfire_file_handles:
         try:
             if not handle.closed:
                 handle.close()
         except Exception:
-            pass  # Ignore errors during cleanup
+            pass
     _logfire_file_handles.clear()
 
 
-# Register cleanup function
 atexit.register(_cleanup_file_handles)
-
-
-def _build_console_options(config: LogfireConfig, workspace: Path | None) -> Any:
-    """Build ConsoleOptions for Logfire span local output.
-
-    Args:
-        config: Logfire configuration with console_output/file_output settings
-        workspace: Workspace path for file output
-
-    Returns:
-        ConsoleOptions with TeeWriter, or False if no local output enabled
-
-    Note:
-        TeeWriter enables simultaneous output to multiple destinations.
-        File handles are stored in module-level list to prevent garbage collection.
-    """
-    from logfire import ConsoleOptions
-
-    writers: list[TextIO] = []
-
-    # Add console output (stderr)
-    if config.console_output:
-        writers.append(sys.stderr)
-
-    # Add file output if workspace provided
-    if config.file_output and workspace is not None:
-        log_dir = workspace / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_path = log_dir / "logfire.log"
-        # Open file in append mode, store handle to prevent garbage collection
-        file_handle = open(log_path, "a", encoding="utf-8")  # noqa: SIM115
-        _logfire_file_handles.append(file_handle)
-        writers.append(file_handle)
-
-    # Return ConsoleOptions with TeeWriter, or False if no outputs
-    if not writers:
-        return False
-
-    if len(writers) == 1:
-        # Single output - use directly without TeeWriter
-        return ConsoleOptions(output=writers[0])
-
-    # Multiple outputs - use TeeWriter (duck-typed as TextIO)
-    tee_writer = TeeWriter(writers)
-    return ConsoleOptions(output=tee_writer)  # type: ignore[arg-type]

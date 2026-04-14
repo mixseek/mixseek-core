@@ -34,6 +34,69 @@ from typer.testing import CliRunner
 from mixseek.cli.main import app
 
 
+def _extract_json(text: str) -> str:
+    """stdout テキストから JSON 部分のみを抽出する。
+
+    CliRunner の mix_stderr=True（デフォルト）では、stderr のログメッセージが
+    stdout に混入することがある。JSON出力の前後にあるログ行を除去する。
+    1行のJSONログ行（"type":"log" を含む）は除外し、
+    複数行のフォーマット済みJSONを抽出する。
+    """
+    import json as _json
+
+    # まず全体を試みる
+    stripped = text.strip()
+    try:
+        _json.loads(stripped)
+        return stripped
+    except _json.JSONDecodeError:
+        pass
+
+    # ログ行（1行JSON）を除外し、コマンド出力のJSON部分を結合
+    lines = text.split("\n")
+    clean_lines: list[str] = []
+    for line in lines:
+        s = line.strip()
+        # 1行JSONログ行を除外（"type":"log" または "type":"span_" を含む）
+        if s.startswith("{") and s.endswith("}") and ('"type":"log"' in s or '"type": "log"' in s):
+            continue
+        # ログのプレフィックス行（タイムスタンプ + ロガー名 + レベル）を除外
+        log_levels = (" - INFO - ", " - WARNING - ", " - DEBUG - ", " - ERROR - ")
+        if " - mixseek" in line and any(lvl in line for lvl in log_levels):
+            continue
+        # "Configuration file not found" 等のログメッセージを除外
+        if line.strip().startswith("Configuration file not found"):
+            continue
+        # インデント付きのログ続き行を除外
+        if clean_lines and not clean_lines[-1].strip() and line.startswith("  "):
+            continue
+        clean_lines.append(line)
+
+    result = "\n".join(clean_lines).strip()
+    try:
+        _json.loads(result)
+        return result
+    except _json.JSONDecodeError:
+        pass
+
+    return text
+
+
+@pytest.fixture(autouse=True)
+def _suppress_loggers():
+    """テスト中にログ出力を抑制し、CliRunner のstdout汚染を防止。"""
+    import logging
+
+    # "mixseek" ロガーとroot ロガーの両方を抑制
+    for logger_name in ("mixseek", ""):
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.CRITICAL + 1)  # すべてのログを抑制
+    yield
+    for logger_name in ("mixseek", ""):
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.WARNING)
+
+
 class TestConfigShowCommand:
     """Tests for `mixseek config show` command (T056)"""
 
@@ -209,7 +272,7 @@ teams = []
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
         # Verify valid JSON
-        data = json.loads(result.stdout)
+        data = json.loads(_extract_json(result.stdout))
         assert isinstance(data, dict), "JSON output should be an object"
 
         # Verify structure
@@ -271,7 +334,7 @@ teams = []
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
         # Verify valid JSON
-        data = json.loads(result.stdout)
+        data = json.loads(_extract_json(result.stdout))
         assert isinstance(data, dict), "JSON output should be an object"
 
         # Verify structure includes teams key (even if empty)
@@ -340,7 +403,7 @@ evaluator_config = "configs/evaluator.toml"
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
         # Verify valid JSON
-        data = json.loads(result.stdout)
+        data = json.loads(_extract_json(result.stdout))
         assert isinstance(data, dict), "JSON output should be an object"
 
         # Verify required fields
@@ -643,7 +706,7 @@ judgment_config = "configs/judgment.toml"
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
         # Verify valid JSON
-        data = json.loads(result.stdout)
+        data = json.loads(_extract_json(result.stdout))
         assert isinstance(data, dict), "JSON output should be an object"
 
         # Verify evaluator is present (same level as orchestrator/teams)
@@ -708,7 +771,7 @@ teams = []
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
         # Verify valid JSON
-        data = json.loads(result.stdout)
+        data = json.loads(_extract_json(result.stdout))
         assert isinstance(data, dict), "JSON output should be an object"
 
         # Verify evaluator is present with default values
@@ -846,7 +909,7 @@ class TestConfigListCommand:
 
         # Assertion: Output is valid JSON
         try:
-            data = json.loads(result.stdout)
+            data = json.loads(_extract_json(result.stdout))
         except json.JSONDecodeError as e:
             raise AssertionError(f"Output is not valid JSON: {e}\n{result.stdout}")
 

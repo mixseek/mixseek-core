@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from mixseek.config import ConfigurationManager, LeaderAgentSettings, OrchestratorSettings
 from mixseek.config.sources.tracing_source import SourceTrace
@@ -187,6 +188,60 @@ class TestConfigurationManager:
     """
 
     pass
+
+
+class TestDefaultConfigWarningUsesExtra:
+    """デフォルト設定フォールバック時の警告ログがextraフィールドを使用することを検証。
+
+    JSON出力時にメッセージ内のJSON埋め込みによる二重エスケープを防止するための修正。
+    """
+
+    def test_evaluator_default_warning_uses_extra(self, tmp_path: Path) -> None:
+        """get_evaluator_settings: extraにdefault_configurationが含まれる"""
+        manager = ConfigurationManager(workspace=tmp_path)
+        with patch("mixseek.config.manager.logger") as mock_logger:
+            manager.get_evaluator_settings()
+
+            mock_logger.warning.assert_called_once()
+            msg = mock_logger.warning.call_args[0][0]
+            extra = mock_logger.warning.call_args[1].get("extra", {})
+            # メッセージにJSON文字列が埋め込まれていないこと
+            assert "\n{" not in msg
+            # extraにdefault_configurationが含まれること
+            assert "default_configuration" in extra
+            assert isinstance(extra["default_configuration"], dict)
+
+    def test_judgment_default_warning_uses_extra(self, tmp_path: Path) -> None:
+        """get_judgment_settings: extraにdefault_configurationが含まれる"""
+        manager = ConfigurationManager(workspace=tmp_path)
+        with patch("mixseek.config.manager.logger") as mock_logger:
+            manager.get_judgment_settings()
+
+            warning_calls = [
+                c for c in mock_logger.warning.call_args_list if "Configuration file not found" in c[0][0]
+            ]
+            assert len(warning_calls) >= 1
+            msg = warning_calls[0][0][0]
+            extra = warning_calls[0][1].get("extra", {})
+            assert "\n{" not in msg
+            assert "default_configuration" in extra
+            assert isinstance(extra["default_configuration"], dict)
+
+    def test_prompt_builder_default_warning_uses_extra(self, tmp_path: Path) -> None:
+        """get_prompt_builder_settings: extraにdefault_configurationが含まれる"""
+        manager = ConfigurationManager(workspace=tmp_path)
+        with patch("mixseek.config.manager.logger") as mock_logger:
+            manager.get_prompt_builder_settings()
+
+            warning_calls = [
+                c for c in mock_logger.warning.call_args_list if "Configuration file not found" in c[0][0]
+            ]
+            assert len(warning_calls) >= 1
+            msg = warning_calls[0][0][0]
+            extra = warning_calls[0][1].get("extra", {})
+            assert "\n{" not in msg
+            assert "default_configuration" in extra
+            assert isinstance(extra["default_configuration"], dict)
 
 
 class TestCLIArgumentsIntegration:

@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from mixseek.cli.common_options import (
+    LOG_FORMAT_OPTION,
     LOG_LEVEL_OPTION,
     LOGFIRE_HTTP_OPTION,
     LOGFIRE_METADATA_OPTION,
@@ -19,7 +20,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import setup_logfire_from_cli, setup_logging_from_cli
+from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
@@ -52,27 +53,6 @@ DRY_RUN_OPTION = typer.Option(
     "--dry-run",
     help="設定検証のみ実行し、オーケストレーションは実行しない",
 )
-
-
-def _validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
-    """Logfireフラグの排他的検証
-
-    Args:
-        logfire: --logfireフラグ
-        logfire_metadata: --logfire-metadataフラグ
-        logfire_http: --logfire-httpフラグ
-
-    Raises:
-        typer.Exit: 複数のLogfireフラグが指定された場合
-    """
-    logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
-    if logfire_flags_count > 1:
-        typer.secho(
-            "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            fg=typer.colors.RED,
-            err=True,
-        )
-        raise typer.Exit(code=1)
 
 
 async def _execute_orchestration(
@@ -135,6 +115,7 @@ def exec_command(
     log_level: str = LOG_LEVEL_OPTION,
     no_log_console: bool = NO_LOG_CONSOLE_OPTION,
     no_log_file: bool = NO_LOG_FILE_OPTION,
+    log_format: str | None = LOG_FORMAT_OPTION,
 ) -> None:
     """ユーザプロンプトを複数チームで並列実行
 
@@ -158,8 +139,8 @@ def exec_command(
 
     async def _execute() -> None:
         try:
-            # 1. Logfireフラグ検証
-            _validate_logfire_flags(logfire, logfire_metadata, logfire_http)
+            # 1. Logfireフラグの排他的チェック
+            validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
             # 2. ワークスペースパス解決（Phase 12 T085: ConfigurationManager経由）
             # Note: workspace_pathはLogfire初期化にのみ使用（オプショナル機能）
@@ -176,19 +157,25 @@ def exec_command(
             if workspace_path:
                 os.environ[WORKSPACE_ENV_VAR] = str(workspace_path)
 
-            # 3. 標準logging初期化（Logfireより先に実行）
-            logfire_enabled = logfire or logfire_metadata or logfire_http
-            setup_logging_from_cli(log_level, no_log_console, no_log_file, logfire_enabled, workspace_path, verbose)
+            # 3. ロギング・Logfire初期化（CLI共通ヘルパー）
+            initialize_observability(
+                log_level=log_level,
+                no_log_console=no_log_console,
+                no_log_file=no_log_file,
+                logfire=logfire,
+                logfire_metadata=logfire_metadata,
+                logfire_http=logfire_http,
+                verbose=verbose,
+                log_format=log_format,
+                workspace=workspace_path,
+            )
 
-            # 4. Logfire初期化
-            setup_logfire_from_cli(logfire, logfire_metadata, logfire_http, workspace_path, verbose)
-
-            # 4.5. config必須チェック（dry-run/通常の両方で必要）
+            # 4. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
                 typer.echo("Error: --config オプションは必須です", err=True)
                 raise typer.Exit(code=2)
 
-            # 4.6. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
+            # 5. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
             preflight_result = run_preflight_check(config, workspace)
 
             # dry-runの場合は常に結果を出力して終了、通常モードはエラー時のみ出力して終了
@@ -196,17 +183,17 @@ def exec_command(
                 _output_preflight_result(preflight_result, output_format)
                 raise typer.Exit(code=0 if preflight_result.is_valid else 2)
 
-            # 5. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
+            # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
                 typer.echo("Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです", err=True)
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
 
-            # 6. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
+            # 7. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
             # Note: exec コマンドではリーダーボード機能のため常に DB 保存
             orchestrator = Orchestrator(settings=orchestrator_settings, save_db=True)
 
-            # 7. 実行
+            # 8. 実行
             summary = await _execute_orchestration(
                 orchestrator,
                 user_prompt,
@@ -215,11 +202,11 @@ def exec_command(
                 len(orchestrator_settings.teams),
             )
 
-            # 8. 結果出力
+            # 9. 結果出力
             # Note: exec コマンドでは常に DB に保存
             _output_results(summary, output_format)
 
-            # 9. 終了コード判定
+            # 10. 終了コード判定
             if summary.failed_teams_info:
                 if summary.team_results:
                     # 部分成功（成功チームあり + 失敗チームあり）

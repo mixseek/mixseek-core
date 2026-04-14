@@ -170,12 +170,12 @@ def exec_command(
                 workspace=workspace_path,
             )
 
-            # 3. config必須チェック（dry-run/通常の両方で必要）
+            # 4. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
                 typer.echo("Error: --config オプションは必須です", err=True)
                 raise typer.Exit(code=2)
 
-            # 4.6. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
+            # 5. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
             preflight_result = run_preflight_check(config, workspace)
 
             # dry-runの場合は常に結果を出力して終了、通常モードはエラー時のみ出力して終了
@@ -183,17 +183,17 @@ def exec_command(
                 _output_preflight_result(preflight_result, output_format)
                 raise typer.Exit(code=0 if preflight_result.is_valid else 2)
 
-            # 5. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
+            # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
                 typer.echo("Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです", err=True)
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
 
-            # 6. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
+            # 7. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
             # Note: exec コマンドではリーダーボード機能のため常に DB 保存
             orchestrator = Orchestrator(settings=orchestrator_settings, save_db=True)
 
-            # 7. 実行
+            # 8. 実行
             summary = await _execute_orchestration(
                 orchestrator,
                 user_prompt,
@@ -202,11 +202,11 @@ def exec_command(
                 len(orchestrator_settings.teams),
             )
 
-            # 8. 結果出力
+            # 9. 結果出力
             # Note: exec コマンドでは常に DB に保存
             _output_results(summary, output_format)
 
-            # 9. 終了コード判定
+            # 10. 終了コード判定
             if summary.failed_teams_info:
                 if summary.team_results:
                     # 部分成功（成功チームあり + 失敗チームあり）

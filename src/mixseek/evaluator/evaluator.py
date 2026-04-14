@@ -394,10 +394,14 @@ class Evaluator:
 
             except Exception as e:
                 # カスタムメトリクスのロードエラーは警告として扱う（起動は継続）
+                # 構造化ログ: extra 経由でフィールドを渡し、JsonFormatter でトップレベルキー化する
                 logger.warning(
-                    f"Failed to load custom metric '{metric_name}' from config: {e}. "
-                    f"This metric will not be available for evaluation. "
-                    f"Config: {metric_config}"
+                    "Failed to load custom metric from config. This metric will not be available for evaluation.",
+                    extra={
+                        "metric_name": metric_name,
+                        "error": str(e),
+                        "metric_config": metric_config,
+                    },
                 )
 
     def _load_metric_from_directory(self, class_name: str) -> BaseMetric:

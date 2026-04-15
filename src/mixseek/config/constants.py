@@ -1,18 +1,10 @@
 """Constants for MixSeek configuration."""
 
-from typing import Literal
-
 # Default project name placeholder for sample configuration
 DEFAULT_PROJECT_NAME: str = "mixseek-project"
 
 # Environment variable name for workspace path
 WORKSPACE_ENV_VAR: str = "MIXSEEK_WORKSPACE"
-
-# Log format default
-DEFAULT_LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-# Log level default
-DEFAULT_LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 # Maximum recursion depth for config file loading (Phase 13 T107, FR-043)
 # Prevents infinite loops and stack overflow in nested configuration references

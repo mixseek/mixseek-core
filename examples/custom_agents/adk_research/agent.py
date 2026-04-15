@@ -35,6 +35,7 @@ from examples.custom_agents.adk_research.runner import ADKRunnerWrapper
 from mixseek.agents.member.base import BaseMemberAgent
 from mixseek.models.member_agent import AgentType, MemberAgentConfig, MemberAgentResult, ResultStatus
 
+# "mixseek.*" 名前空間外のため統一ロガーに非伝搬。詳細は docs/observability.md 参照
 logger = logging.getLogger(__name__)
 
 

@@ -1,7 +1,6 @@
 """Configuration Manager for unified settings management."""
 
 import contextvars
-import json
 import logging
 from datetime import UTC
 from pathlib import Path
@@ -11,6 +10,8 @@ from pydantic_settings import BaseSettings
 from pydantic_settings.sources import EnvSettingsSource
 
 from .sources.tracing_source import SourceTrace
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .schema import (
@@ -539,9 +540,9 @@ class ConfigurationManager:
 
         # FR-049準拠: ファイルが存在しない場合はデフォルト値で初期化
         default_settings = EvaluatorSettings()
-        default_json = json.dumps(default_settings.model_dump(mode="json"), indent=2, ensure_ascii=False)
-        logging.warning(
-            f"Configuration file not found: {default_config}. Using default configuration:\n{default_json}"
+        logger.warning(
+            f"Configuration file not found: {default_config}. Using default configuration.",
+            extra={"default_configuration": default_settings.model_dump(mode="json")},
         )
         return default_settings
 
@@ -651,9 +652,9 @@ class ConfigurationManager:
 
         # ファイルが存在しない場合はデフォルト値で初期化
         default_settings = JudgmentSettings()
-        default_json = json.dumps(default_settings.model_dump(mode="json"), indent=2, ensure_ascii=False)
-        logging.warning(
-            f"Configuration file not found: {default_config}. Using default configuration:\n{default_json}"
+        logger.warning(
+            f"Configuration file not found: {default_config}. Using default configuration.",
+            extra={"default_configuration": default_settings.model_dump(mode="json")},
         )
         return default_settings
 
@@ -803,8 +804,8 @@ class ConfigurationManager:
 
         # ファイルが存在しない場合はデフォルト値で初期化
         default_settings = PromptBuilderSettings()
-        default_json = json.dumps(default_settings.model_dump(mode="json"), indent=2, ensure_ascii=False)
-        logging.warning(
-            f"Configuration file not found: {default_config}. Using default configuration:\n{default_json}"
+        logger.warning(
+            f"Configuration file not found: {default_config}. Using default configuration.",
+            extra={"default_configuration": default_settings.model_dump(mode="json")},
         )
         return default_settings

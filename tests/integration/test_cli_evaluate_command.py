@@ -4,7 +4,7 @@ Tests the complete CLI integration with logging and Logfire options.
 """
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from typer.testing import CliRunner
 
@@ -93,11 +93,10 @@ class TestEvaluateCommand:
         assert result.exit_code == 1
         assert "Only one of --logfire" in result.stdout
 
-    @patch("mixseek.cli.commands.evaluate.setup_logging_from_cli")
-    @patch("mixseek.cli.commands.evaluate.setup_logfire_from_cli")
+    @patch("mixseek.cli.commands.evaluate.initialize_observability")
     @patch("mixseek.cli.commands.evaluate.evaluate_content")
     def test_logging_setup_called_with_correct_params(
-        self, mock_evaluate: AsyncMock, mock_setup_logfire: AsyncMock, mock_setup_logging: AsyncMock, tmp_path: Path
+        self, mock_evaluate: AsyncMock, mock_init_obs: MagicMock, tmp_path: Path
     ) -> None:
         """Test that logging setup functions are called with correct parameters."""
         mock_result = EvaluationResult(
@@ -126,10 +125,8 @@ class TestEvaluateCommand:
         )
 
         assert result.exit_code == 0
-        # Verify setup_logging_from_cli was called
-        assert mock_setup_logging.called
-        # Verify setup_logfire_from_cli was called
-        assert mock_setup_logfire.called
+        # Verify initialize_observability was called
+        assert mock_init_obs.called
 
     @patch("mixseek.cli.commands.evaluate.evaluate_content")
     def test_workspace_option(self, mock_evaluate: AsyncMock, tmp_path: Path) -> None:

@@ -5,7 +5,7 @@ including proper mocking to avoid external API dependencies.
 """
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from typer.testing import CliRunner
 
@@ -128,11 +128,10 @@ class TestMemberCommand:
         assert result.exit_code == 1
         assert "Only one of --logfire" in result.stdout
 
-    @patch("mixseek.cli.commands.member.setup_logging_from_cli")
-    @patch("mixseek.cli.commands.member.setup_logfire_from_cli")
+    @patch("mixseek.cli.commands.member.initialize_observability")
     @patch("mixseek.cli.commands.member.execute_agent_from_config")
     def test_logging_setup_called_with_correct_params(
-        self, mock_execute: AsyncMock, mock_setup_logfire: AsyncMock, mock_setup_logging: AsyncMock, tmp_path: Path
+        self, mock_execute: AsyncMock, mock_init_obs: MagicMock, tmp_path: Path
     ) -> None:
         """Test that logging setup functions are called with correct parameters."""
         mock_result = MemberAgentResult(
@@ -160,10 +159,8 @@ class TestMemberCommand:
         )
 
         assert result.exit_code == 0
-        # Verify setup_logging_from_cli was called
-        assert mock_setup_logging.called
-        # Verify setup_logfire_from_cli was called
-        assert mock_setup_logfire.called
+        # Verify initialize_observability was called
+        assert mock_init_obs.called
 
     @patch("mixseek.cli.commands.member.execute_agent_from_config")
     def test_verbose_option_uses_common_constant(self, mock_execute: AsyncMock, tmp_path: Path) -> None:

@@ -68,6 +68,7 @@ def test_ui_command_with_logfire_flag(mock_workspace, mock_streamlit_runner):
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass
@@ -92,6 +93,7 @@ def test_ui_command_with_logfire_metadata_flag(mock_workspace, mock_streamlit_ru
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass
@@ -115,6 +117,7 @@ def test_ui_command_with_logfire_http_flag(mock_workspace, mock_streamlit_runner
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass
@@ -138,6 +141,7 @@ def test_ui_command_exclusive_flags(mock_workspace, mock_streamlit_runner):
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
 
     # Verify: Exit code 1
@@ -157,6 +161,7 @@ def test_ui_command_without_logfire(mock_workspace, mock_streamlit_runner):
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass
@@ -180,6 +185,7 @@ def test_ui_command_logfire_with_env_project(mock_workspace, mock_streamlit_runn
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass
@@ -201,6 +207,7 @@ def test_ui_command_streamlit_called_correctly(mock_workspace, mock_streamlit_ru
             log_level="info",
             no_log_console=False,
             no_log_file=False,
+            log_format=None,
         )
     except (typer.Exit, KeyboardInterrupt):
         pass

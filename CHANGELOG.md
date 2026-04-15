@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a14 (2026-04-15)
+
+### Fix
+
+- **cli**: exec.pyのステップ番号重複を修正（3重複→4〜10に連番化）
+- **logging**: UI側のtype: ignore[arg-type]をcast(LogFormatType/LevelName)に統一
+- **logging**: logging_setup.pyのLogfireハンドラエラーログを構造化
+- **logging**: evaluator.pyのカスタムメトリクスロードエラーログを構造化
+- CLAUDE.mdのリバートとlog-refactor.md計画ファイルの削除
+- **logging**: JsonSpanProcessorにtrace_idとeventsを追加
+- **config**: config/logging.pyのPR範囲外docstring翻訳を元に戻す
+- **config**: constants.pyのPR範囲外コメント翻訳を元に戻す
+- **typing**: logfire.pyのAny型をTYPE_CHECKINGガードで具体型に変更
+- **logging**: JSONログ出力時の二重エスケープ・Unicodeエスケープを修正
+- **typing**: CI mypyエラー34件を修正
+- **ui**: ループ内の冗長なimport jsonを削除
+- **logging**: extra dictの冗長なtimestampフィールドを削除
+- **logging**: copilotレビュー指摘を修正（実装3件+テスト3件）
+- **logging**: copilotレビュー指摘2点を修正
+
+### Refactor
+
+- **cli**: setup_logfire_from_cliのmodel_copy 2行を1行に統合
+- **examples**: adk_researchのロガーNOTEコメントを1行に短縮
+- **cli**: logfire/logging初期化ロジックをCLI共通ヘルパーに統一
+- **logging**: _STANDARD_FIELDSをモジュールレベル定数に統一
+- **cli**: --log-format オプション追加、setup_logfire シグネチャ対応
+- **logging**: root logger → "mixseek" named loggerに統一し4モード対応
+
 ## v0.1.0a13 (2026-04-08)
 
 ### Feat

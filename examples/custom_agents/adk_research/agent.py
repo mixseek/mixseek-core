@@ -7,8 +7,8 @@ with MixSeek-Core's BaseMemberAgent interface.
 Features:
 - Single search query with google_search tool (User Story 1)
 - Deep Research pipeline with ParallelAgent + SequentialAgent (User Story 2)
-- Structured error handling with LLM-interpreted messages (FR-005, FR-006)
-- Source tracking in metadata (FR-004)
+- Structured error handling with LLM-interpreted messages
+- Source tracking in metadata
 - Debug mode with file output (logs ADK events and grounding data)
 """
 
@@ -108,7 +108,7 @@ class ADKResearchAgent(BaseMemberAgent):
             "- Format your findings clearly with bullet points"
         )
 
-        # Apply configuration parameters (Article 9 compliance)
+        # Apply configuration parameters
         generate_content_config = genai_types.GenerateContentConfig(
             temperature=self.adk_config.temperature,
             max_output_tokens=self.adk_config.max_output_tokens,
@@ -173,7 +173,7 @@ Guidelines:
         Returns:
             SequentialAgent containing the full pipeline.
         """
-        # Define focus areas for up to 5 researchers (FR-003 compliance)
+        # Define focus areas for up to 5 researchers
         focus_areas = [
             "technical aspects and implementation details",
             "market trends and industry analysis",
@@ -215,7 +215,7 @@ Guidelines:
         return pipeline
 
     def _parse_sources(self, response: dict[str, Any]) -> list[SearchResult]:
-        """Extract source URLs/titles from ADK grounding metadata (FR-004/SC-004).
+        """Extract source URLs/titles from ADK grounding metadata.
 
         Parses the grounding metadata from ADK tool responses to extract
         structured source information. Falls back to URL extraction from
@@ -231,7 +231,7 @@ Guidelines:
         sources: list[SearchResult] = []
         seen_urls: set[str] = set()
 
-        # Primary source: Extract from grounding metadata (Article 9 compliance)
+        # Primary source: Extract from grounding metadata
         grounding_metadata = response.get("grounding_metadata", [])
         for grounding in grounding_metadata:
             for source_data in grounding.get("sources", []):
@@ -302,7 +302,7 @@ Guidelines:
         return "UNKNOWN_ERROR", f"An unexpected error occurred: {error}"
 
     async def _handle_error(self, error: Exception) -> MemberAgentResult:
-        """Generate structured error result with LLM-interpreted message (FR-006).
+        """Generate structured error result with LLM-interpreted message.
 
         Creates a MemberAgentResult with:
         - Structured metadata (error_code, message, timestamp)
@@ -318,7 +318,7 @@ Guidelines:
         error_code, base_message = self._classify_error(error)
         timestamp = datetime.now(UTC).isoformat()
 
-        # Generate Markdown error content (FR-006 requires content explanation)
+        # Generate Markdown error content
         error_content = f"""## Error: {error_code}
 
 {base_message}
@@ -365,7 +365,7 @@ Guidelines:
         else:
             error_content += f"Original error: {error}\n"
 
-        # Return MemberAgentResult with both content and metadata (FR-006 compliance)
+        # Return MemberAgentResult with both content and metadata
         # Note: Using direct construction instead of .error() to include content
         return MemberAgentResult(
             status=ResultStatus.ERROR,
@@ -595,7 +595,7 @@ Guidelines:
                 logger.info(f"Starting single search for: {task[:50]}...")
                 adk_agent = self._create_researcher()
 
-            # Create runner with timeout from config (FR-005 compliance)
+            # Create runner with timeout from config
             runner = ADKRunnerWrapper(
                 agent=adk_agent,
                 app_name="adk_research",

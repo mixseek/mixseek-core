@@ -1,6 +1,6 @@
 # Configuration Test Fixtures
 
-Sample TOML configuration files for testing the Configuration Manager feature (051-configuration).
+Sample TOML configuration files for testing the Configuration Manager feature.
 
 ## Files Overview
 
@@ -103,9 +103,9 @@ When adding new test fixtures:
 3. **Comments**: Include comments explaining non-obvious values
 4. **Consistency**: Ensure values are realistic and testable
 
-## Article 9 Compliance
+## Data Accuracy Compliance
 
-These fixtures are designed to test Article 9 (Data Accuracy Mandate):
+These fixtures are designed to test Data Accuracy Mandate:
 - All values are explicitly set (no implicit defaults in fixtures)
 - Each file represents a clear scenario (dev, prod, minimal, partial)
 - Fixtures enable testing of proper error handling for missing values
@@ -113,6 +113,4 @@ These fixtures are designed to test Article 9 (Data Accuracy Mandate):
 
 ## Related Documentation
 
-- `/specs/051-configuration/quickstart.md` - Usage examples
-- `/specs/051-configuration/spec.md` - Full specification
 - `/tests/integration/config/test_toml_loading.py` - TOML loading tests

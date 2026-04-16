@@ -6,7 +6,6 @@ Functions:
     render_team_progress_list: チーム進捗一覧テーブル表示
 
 References:
-    - Spec: specs/014-ui/spec.md (FR-023, SC-012)
     - Pattern: build/lib/mixseek_ui/components/leaderboard_table.py
 """
 

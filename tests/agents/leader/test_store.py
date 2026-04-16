@@ -1,7 +1,5 @@
 """AggregationStore のテスト
 
-Article 3: Test-First Imperative準拠
-
 DuckDB並列書き込み、Message History永続化、リトライロジックのテスト。
 
 Tests:
@@ -27,7 +25,7 @@ from mixseek.storage.aggregation_store import AggregationStore, DatabaseWriteErr
 
 
 class TestAggregationStore:
-    """AggregationStore基本機能テスト（T023-T024, T026-T027）"""
+    """AggregationStore基本機能テスト"""
 
     @pytest.fixture
     def test_workspace(self) -> Generator[Path]:
@@ -52,7 +50,7 @@ class TestAggregationStore:
 
     @pytest.mark.asyncio
     async def test_save_and_load_round_history(self, test_workspace: Path) -> None:
-        """save_aggregation + load_round_history（FR-006, FR-007, FR-007-1）
+        """save_aggregation + load_round_history
 
         単一トランザクションでMessage History + MemberSubmissionsRecordを保存。
         """
@@ -92,7 +90,7 @@ class TestAggregationStore:
         assert len(loaded_record.submissions) == 1
         assert loaded_record.submissions[0].agent_name == "analyst"
 
-        # Message History完全復元（FR-012）
+        # Message History完全復元
         assert loaded_messages == []  # 空リストで保存したので空リスト
 
     @pytest.mark.asyncio
@@ -168,12 +166,12 @@ class TestAggregationStore:
     async def test_environment_variable_not_set(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """環境変数MIXSEEK_WORKSPACE未設定エラー（FR-016、Edge Case、Article 9準拠）"""
+        """環境変数MIXSEEK_WORKSPACE未設定エラー（Edge Case）"""
         # Arrange: 環境変数削除
         monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
-        # Act & Assert: Article 9準拠でWorkspacePathNotSpecifiedErrorまたはExceptionを期待
+        # Act & Assert: WorkspacePathNotSpecifiedErrorまたはExceptionを期待
         with pytest.raises(Exception) as exc_info:
             AggregationStore()
 
@@ -182,7 +180,7 @@ class TestAggregationStore:
 
     @pytest.mark.asyncio
     async def test_exponential_backoff_retry(self, test_workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """エクスポネンシャルバックオフリトライ（FR-019）
+        """エクスポネンシャルバックオフリトライ
 
         1秒、2秒、4秒のリトライ、最大3回。
         """
@@ -223,7 +221,7 @@ class TestAggregationStore:
 
     @pytest.mark.asyncio
     async def test_max_retries_exceeded(self, test_workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """最大リトライ回数超過後エラー（FR-019）"""
+        """最大リトライ回数超過後エラー"""
         # Arrange
         store = AggregationStore()
         execution_id = str(uuid4())

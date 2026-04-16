@@ -6,9 +6,6 @@ Test Coverage:
     - Leader Board data flow (DuckDB → UserPromptBuilder → formatted prompt)
     - End-to-end prompt formatting with real components
 
-References:
-    - Spec: specs/092-user-prompt-builder-team/spec.md
-    - Contract: specs/092-user-prompt-builder-team/contracts/prompt-builder-api.md
 """
 
 from datetime import UTC, datetime
@@ -50,7 +47,7 @@ class TestPromptBuilderIntegration:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_prompt_builder_with_real_store(self, workspace: Path, store: AggregationStore) -> None:
-        """T016: UserPromptBuilder統合テスト（実際のDuckDBストア使用）
+        """UserPromptBuilder統合テスト（実際のDuckDBストア使用）
 
         Test flow:
         1. Create execution_id and save round history to DuckDB
@@ -156,7 +153,7 @@ class TestPromptBuilderIntegration:
         store: AggregationStore,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """T016: RoundController統合テスト（UserPromptBuilder使用）
+        """RoundController統合テスト（UserPromptBuilder使用）
 
         Test flow:
         1. Set up RoundController with UserPromptBuilder
@@ -272,7 +269,7 @@ class TestPromptBuilderIntegration:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_prompt_builder_round1_no_history(self, workspace: Path, store: AggregationStore) -> None:
-        """T016: Round 1プロンプト（履歴なし）統合テスト"""
+        """Round 1プロンプト（履歴なし）統合テスト"""
         # Given: UserPromptBuilder
         settings = PromptBuilderSettings()
         builder = UserPromptBuilder(settings=settings, store=store)
@@ -305,7 +302,7 @@ class TestPromptBuilderIntegration:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_prompt_builder_with_multiple_teams_ranking(self, workspace: Path, store: AggregationStore) -> None:
-        """T016: 複数チームランキング統合テスト"""
+        """複数チームランキング統合テスト"""
         # Given: execution_id
         execution_id = str(uuid4())
 

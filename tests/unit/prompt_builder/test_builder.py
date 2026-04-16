@@ -1,8 +1,4 @@
-"""Unit tests for UserPromptBuilder class.
-
-Feature: 092-user-prompt-builder-team
-Date: 2025-11-19
-"""
+"""Unit tests for UserPromptBuilder class."""
 
 from datetime import UTC, datetime
 from pathlib import Path
@@ -188,7 +184,7 @@ class TestUserPromptBuilderCustomTemplate:
     """Tests for custom TOML template usage (User Story 2)."""
 
     async def test_custom_template_from_toml(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """T017: Test custom template usage from TOML config."""
+        """Test custom template usage from TOML config."""
         # Given: Create custom TOML config with custom template
         configs_dir = tmp_path / "configs"
         configs_dir.mkdir(parents=True, exist_ok=True)
@@ -227,7 +223,7 @@ class TestUserPromptBuilderCustomTemplate:
         assert "ユーザから指定されたタスク" not in result
 
     async def test_placeholder_variables_user_prompt(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """T018: Test {{ user_prompt }} placeholder variable."""
+        """Test {{ user_prompt }} placeholder variable."""
         configs_dir = tmp_path / "configs"
         configs_dir.mkdir(parents=True, exist_ok=True)
         toml_path = configs_dir / "prompt_builder.toml"
@@ -252,7 +248,7 @@ class TestUserPromptBuilderCustomTemplate:
         assert "PROMPT: カスタムユーザプロンプト" in result
 
     async def test_placeholder_variables_round_number(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """T018: Test {{ round_number }} placeholder variable."""
+        """Test {{ round_number }} placeholder variable."""
         configs_dir = tmp_path / "configs"
         configs_dir.mkdir(parents=True, exist_ok=True)
         toml_path = configs_dir / "prompt_builder.toml"
@@ -279,7 +275,7 @@ class TestUserPromptBuilderCustomTemplate:
     async def test_placeholder_variables_submission_history(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """T018: Test {{ submission_history }} placeholder variable."""
+        """Test {{ submission_history }} placeholder variable."""
         monkeypatch.delenv("TZ", raising=False)
         now = datetime.now(UTC)
 
@@ -322,7 +318,7 @@ class TestUserPromptBuilderCustomTemplate:
         assert "Test submission" in result
 
     async def test_placeholder_variables_ranking_table(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """T018: Test {{ ranking_table }} placeholder variable."""
+        """Test {{ ranking_table }} placeholder variable."""
         monkeypatch.delenv("TZ", raising=False)
         now = datetime.now(UTC)
 
@@ -376,7 +372,7 @@ class TestUserPromptBuilderCustomTemplate:
     async def test_placeholder_variables_current_datetime(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """T018: Test {{ current_datetime }} placeholder variable."""
+        """Test {{ current_datetime }} placeholder variable."""
         monkeypatch.delenv("TZ", raising=False)
 
         configs_dir = tmp_path / "configs"

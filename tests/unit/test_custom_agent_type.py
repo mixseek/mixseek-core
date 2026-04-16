@@ -3,8 +3,7 @@
 This test suite validates that users can register and use custom agent types
 beyond the built-in AgentType enum values.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the implementation to ensure proper extensibility.
+These tests are written BEFORE the implementation to ensure proper extensibility.
 """
 
 from typing import Any

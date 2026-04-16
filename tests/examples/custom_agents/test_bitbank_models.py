@@ -1,4 +1,4 @@
-"""Unit tests for bitbank Pydantic models (TASK-003)."""
+"""Unit tests for bitbank Pydantic models."""
 
 import pytest
 from pydantic import ValidationError

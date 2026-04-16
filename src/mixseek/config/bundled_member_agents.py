@@ -99,7 +99,7 @@ class BundledMemberAgentLoader:
             BundledMemberAgentError: If member agent not found or loading fails
 
         Note:
-            Article 10 (DRY): Uses ConfigurationManager for consistent loading logic.
+            DRY: Uses ConfigurationManager for consistent loading logic.
 
         Example:
             >>> loader = BundledMemberAgentLoader(workspace=Path("/workspace"))

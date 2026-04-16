@@ -20,7 +20,7 @@ from mixseek.round_controller.models import ImprovementJudgment
 @pytest.mark.asyncio
 @patch("mixseek.round_controller.judgment_client.Agent")
 async def test_judge_improvement_prospects_should_continue(mock_agent_class: MagicMock) -> None:
-    """T047: LLMによる改善見込み判定 - 継続すべき場合"""
+    """LLMによる改善見込み判定 - 継続すべき場合"""
 
     # Mock Pydantic AI Agent
     mock_agent = MagicMock()
@@ -67,7 +67,7 @@ async def test_judge_improvement_prospects_should_continue(mock_agent_class: Mag
 @pytest.mark.asyncio
 @patch("mixseek.round_controller.judgment_client.Agent")
 async def test_judge_improvement_prospects_should_not_continue(mock_agent_class: MagicMock) -> None:
-    """T047: LLMによる改善見込み判定 - 終了すべき場合"""
+    """LLMによる改善見込み判定 - 終了すべき場合"""
 
     # Mock Pydantic AI Agent
     mock_agent = MagicMock()
@@ -114,7 +114,7 @@ async def test_judge_improvement_prospects_should_not_continue(mock_agent_class:
 @pytest.mark.asyncio
 @patch("mixseek.round_controller.judgment_client.Agent")
 async def test_judge_improvement_prospects_retry_on_failure(mock_agent_class: MagicMock) -> None:
-    """T047: 判定失敗時のリトライポリシー（3回リトライ）
+    """判定失敗時のリトライポリシー（3回リトライ）
 
     Note: Agent handles retries internally, so we can only verify that
     the Agent is configured with the correct retry count. The actual
@@ -163,7 +163,7 @@ async def test_judge_improvement_prospects_retry_on_failure(mock_agent_class: Ma
 @pytest.mark.asyncio
 @patch("mixseek.round_controller.judgment_client.Agent")
 async def test_judge_improvement_prospects_all_retries_failed_raises_exception(mock_agent_class: MagicMock) -> None:
-    """T047: 全リトライ失敗時は例外を投げる（フォールバックはcontroller側で処理）"""
+    """全リトライ失敗時は例外を投げる（フォールバックはcontroller側で処理）"""
 
     # Mock Agent - always fail
     mock_agent = MagicMock()

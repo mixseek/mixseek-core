@@ -1,4 +1,4 @@
-"""Security hardening tests for Configuration Manager - Phase 11 T074."""
+"""Security hardening tests for Configuration Manager."""
 
 from pathlib import Path
 from typing import Any
@@ -12,7 +12,7 @@ from mixseek.config.sources.toml_source import (
 
 
 class TestPathTraversalPrevention:
-    """Test path traversal attack prevention - T074 security hardening."""
+    """Test path traversal attack prevention."""
 
     def test_validate_safe_path_rejects_parent_traversal(self) -> None:
         """Test that path traversal with .. is rejected."""
@@ -57,7 +57,7 @@ class TestPathTraversalPrevention:
 
 
 class TestErrorMessageSanitization:
-    """Test error message sanitization - T074 security hardening."""
+    """Test error message sanitization."""
 
     def test_sanitize_removes_absolute_paths(self) -> None:
         """Test that absolute paths are removed from error messages."""
@@ -121,7 +121,7 @@ class TestErrorMessageSanitization:
 
 
 class TestSecurityHardeningIntegration:
-    """Integration tests for security hardening - T074."""
+    """Integration tests for security hardening."""
 
     def test_path_validation_in_toml_loading(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test path validation is applied during TOML loading."""

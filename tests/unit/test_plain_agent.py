@@ -3,8 +3,8 @@
 This test suite validates the Plain Member Agent implementation,
 including initialization, execution, error handling, and configuration.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the Plain Agent implementation to ensure proper functionality and error handling.
+These tests are written BEFORE the Plain Agent implementation to ensure
+proper functionality and error handling.
 """
 
 from unittest.mock import AsyncMock, MagicMock
@@ -35,7 +35,6 @@ class TestPlainMemberAgent:
 
     def test_agent_initialization(self, plain_agent_config: MemberAgentConfig) -> None:
         """Test Plain Agent initialization."""
-        # Import will fail until T010 is implemented
         from mixseek.agents.member.plain import PlainMemberAgent
 
         agent = PlainMemberAgent(plain_agent_config)

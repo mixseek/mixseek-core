@@ -1,4 +1,4 @@
-"""End-to-end tests for Configuration Manager workflow (T088).
+"""End-to-end tests for Configuration Manager workflow.
 
 このテストは、実際のユーザーシナリオでConfiguration Managerが正しく動作することを検証します：
 - mixseek team コマンドのワークフロー
@@ -7,7 +7,7 @@
 - 優先順位チェーン: CLI > ENV > .env > TOML > defaults
 - トレーサビリティ: ソース追跡
 - User Stories (US1-US7) のE2E検証
-- SC-007: すべてのモジュールでConfigurationManager使用
+- すべてのモジュールでConfigurationManager使用
 """
 
 from pathlib import Path
@@ -134,7 +134,7 @@ class TestExecCommandWorkflow:
     """mixseek exec コマンドのE2Eワークフロー。"""
 
     def test_exec_command_loads_orchestrator_settings(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """orchestrator.tomlを正しく読み込める（US4準拠, FR-011）。"""
+        """orchestrator.tomlを正しく読み込める。"""
         from mixseek.orchestrator import load_orchestrator_settings
 
         # Arrange: Clear environment variables to avoid interference
@@ -158,7 +158,7 @@ config = "team2.toml"
 """
         )
 
-        # Act: Load orchestrator settings (FR-011: direct OrchestratorSettings)
+        # Act: Load orchestrator settings (direct OrchestratorSettings)
         orchestrator_settings = load_orchestrator_settings(orchestrator_toml, workspace=workspace)
 
         # Assert: Settings loaded correctly
@@ -166,7 +166,7 @@ config = "team2.toml"
         assert len(orchestrator_settings.teams) == 2
 
     def test_exec_command_workspace_resolution(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """workspace解決が正しく動作する（Article 9準拠）。"""
+        """workspace解決が正しく動作する。"""
         # Arrange: Set MIXSEEK_WORKSPACE_PATH (correct env var for OrchestratorSettings)
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -259,10 +259,10 @@ tool_description = "Agent 1"
 
 
 class TestBackwardCompatibilityE2E:
-    """後方互換性のE2Eテスト（FR-020）。"""
+    """後方互換性のE2Eテスト。"""
 
     def test_legacy_evaluation_config_api(self, tmp_path: Path) -> None:
-        """EvaluationConfig.from_toml_file()が動作する（FR-020準拠）。"""
+        """EvaluationConfig.from_toml_file()が動作する。"""
         from mixseek.models.evaluation_config import EvaluationConfig
 
         # Arrange: Create legacy evaluator.toml
@@ -295,12 +295,12 @@ weight = 1.0
 
 
 class TestArticle9ComplianceE2E:
-    """Article 9準拠のE2Eテスト: 暗黙的なフォールバック禁止。"""
+    """暗黙的なフォールバック禁止のE2Eテスト。"""
 
     def test_no_workspace_raises_explicit_error(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """workspace未指定時に明示的エラー（Article 9準拠）。"""
+        """workspace未指定時に明示的エラー。"""
         from pydantic_core import ValidationError
 
         # Arrange: Clear environment variables to ensure workspace is truly not specified
@@ -320,7 +320,7 @@ class TestArticle9ComplianceE2E:
     def test_load_team_config_no_implicit_cwd(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """load_team_config()が暗黙的にCWDを使わない（Article 9準拠 - T078 fix）。"""
+        """load_team_config()が暗黙的にCWDを使わない。"""
         from mixseek.agents.leader.config import load_team_config
         from mixseek.exceptions import WorkspacePathNotSpecifiedError
 

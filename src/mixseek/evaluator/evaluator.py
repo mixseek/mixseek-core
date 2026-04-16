@@ -81,19 +81,19 @@ class Evaluator:
     ) -> None:
         """設定を使用してEvaluatorを初期化します。
 
-        .. note:: FR-046, FR-047準拠
+        .. note::
             EvaluatorSettings を受け取り、内部で EvaluationConfig に変換します。
             設定の生成は呼び出し側の責務です。
 
         Args:
             settings: Evaluator設定（EvaluatorSettings インスタンス、必須）
-            prompt_builder_settings: PromptBuilder設定（必須、Article 9準拠）
+            prompt_builder_settings: PromptBuilder設定（必須）
 
         Raises:
             TypeError: settings が指定されていない場合
             ValueError: 設定の検証が失敗した場合
         """
-        # FR-047: EvaluatorSettings を EvaluationConfig に変換
+        # EvaluatorSettings を EvaluationConfig に変換
         self.config = evaluator_settings_to_evaluation_config(settings)
         self.prompt_builder_settings = prompt_builder_settings
 
@@ -108,7 +108,7 @@ class Evaluator:
         # カスタムメトリクスレジストリ
         self._custom_metrics: dict[str, BaseMetric] = {}
 
-        # TOML設定からカスタムメトリクスをロード (FR-007)
+        # TOML設定からカスタムメトリクスをロード
         if self.config.custom_metrics:
             self._load_custom_metrics_from_config(self.config.custom_metrics)
 
@@ -156,13 +156,13 @@ class Evaluator:
             asyncio.run(main())
             ```
         """
-        # 入力検証 (FR-013) - Pydanticバリデータで既に処理済み
+        # 入力検証 - Pydanticバリデータで既に処理済み
         # 必要に応じて追加チェックをここに追加可能
 
         # 使用する設定を決定
         config = request.config if request.config else self.config
 
-        # 各メトリクスを順次評価 (FR-014)
+        # 各メトリクスを順次評価
         metric_scores = []
         for metric_config in config.metrics:
             metric_name = metric_config.name
@@ -173,7 +173,7 @@ class Evaluator:
             try:
                 # メトリクスの型に応じて適切なパラメータで評価を実行
                 if isinstance(metric, LLMJudgeMetric):
-                    # このメトリクス用のLLMパラメータを取得（FR-019のフォールバックロジック）
+                    # このメトリクス用のLLMパラメータを取得（フォールバックロジック）
                     model = config.get_model_for_metric(metric_name)
                     temperature = config.get_temperature_for_metric(metric_name)
                     max_tokens = config.get_max_tokens_for_metric(metric_name)
@@ -183,7 +183,7 @@ class Evaluator:
                     stop_sequences = config.get_stop_sequences_for_metric(metric_name)
                     top_p = config.get_top_p_for_metric(metric_name)
                     seed = config.get_seed_for_metric(metric_name)
-                    # LLM-as-a-Judgeメトリクスの場合はLLMパラメータを渡す (FR-010, FR-019)
+                    # LLM-as-a-Judgeメトリクスの場合はLLMパラメータを渡す
                     score = await metric.evaluate(
                         user_query=request.user_query,
                         submission=request.submission,
@@ -219,7 +219,7 @@ class Evaluator:
                 e.metric_name = metric_name
                 raise
 
-        # 重み付き総合スコアを計算 (FR-004)
+        # 重み付き総合スコアを計算
         overall_score = self._calculate_overall_score(metric_scores, config)
 
         # 結果を返却
@@ -274,7 +274,7 @@ class Evaluator:
         self._custom_metrics[name] = metric
 
     def _get_metric(self, metric_name: str) -> BaseMetric:
-        """名前によるメトリクス実装の取得（FR-020）。
+        """名前によるメトリクス実装の取得。
 
         クラス名を指定することで評価指標を識別し、src/mixseek/evaluator/metrics/ディレクトリから
         該当クラスを自動的に検索・ロードします。
@@ -301,7 +301,7 @@ class Evaluator:
         if metric_name in self._builtin_metrics:
             return self._builtin_metrics[metric_name]
 
-        # メトリクスディレクトリから動的にロード（FR-020）
+        # メトリクスディレクトリから動的にロード
         # NOTE: metricsディレクトリにファイルを直接配置したカスタムメトリクス用。
         # ビルトインはステップ2で、TOML [custom_metrics] 経由はステップ1で解決される。
         try:
@@ -344,7 +344,7 @@ class Evaluator:
         return round(total_score, 2)
 
     def _load_custom_metrics_from_config(self, custom_metrics: dict[str, dict[str, Any]]) -> None:
-        """TOML設定からカスタムメトリクスを動的にロードします (FR-007)。
+        """TOML設定からカスタムメトリクスを動的にロードします。
 
         custom_metricsの形式例:
         [custom_metrics]
@@ -405,7 +405,7 @@ class Evaluator:
                 )
 
     def _load_metric_from_directory(self, class_name: str) -> BaseMetric:
-        """メトリクスディレクトリからクラス名でメトリクスを動的にロードします（FR-020）。
+        """メトリクスディレクトリからクラス名でメトリクスを動的にロードします。
 
         src/mixseek/evaluator/metrics/ディレクトリ内のPythonファイルを検索し、
         指定されたクラス名のメトリクスクラスを見つけてインスタンス化します。
@@ -495,15 +495,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # workspace_pathを明示的に取得（Article 9準拠）
+    # workspace_pathを明示的に取得
     workspace_path = get_workspace_path(cli_arg=args.workspace)
 
-    # ConfigurationManager で Evaluator 設定を読み込み（FR-050準拠）
+    # ConfigurationManager で Evaluator 設定を読み込み
     manager = ConfigurationManager(workspace=workspace_path)
     evaluator_settings = manager.get_evaluator_settings(args.evaluator_config)
     prompt_builder_settings = manager.get_prompt_builder_settings()
 
-    # FR-046準拠: EvaluatorSettings と PromptBuilderSettings を渡して初期化
+    # EvaluatorSettings と PromptBuilderSettings を渡して初期化
     evaluator = Evaluator(
         settings=evaluator_settings,
         prompt_builder_settings=prompt_builder_settings,

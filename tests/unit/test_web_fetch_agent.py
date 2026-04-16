@@ -3,8 +3,7 @@
 This test suite validates the Web Fetch Member Agent implementation,
 including provider validation, tool configuration, error handling, and execution.
 
-According to Article 3 (Test-First Imperative), these tests validate
-the Web Fetch Agent implementation for Issue #230.
+These tests validate the Web Fetch Agent implementation for Issue #230.
 """
 
 from unittest.mock import AsyncMock, MagicMock

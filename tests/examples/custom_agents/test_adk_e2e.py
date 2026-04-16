@@ -65,7 +65,7 @@ class TestADKResearchAgentE2E:
     async def test_single_search_real_api(self) -> None:
         """Test single search with real Gemini API.
 
-        SC-001: Should complete within 10 seconds for simple queries.
+        Should complete within 10 seconds for simple queries.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)
@@ -85,7 +85,7 @@ class TestADKResearchAgentE2E:
         assert result.metadata["mode"] == "single_search"
         assert result.execution_time_ms is not None
 
-        # SC-001: 10 second target (with margin for network variability)
+        # 10 second target (with margin for network variability)
         assert elapsed_time < 30, f"Single search took {elapsed_time:.2f}s (target: <10s)"
 
         await agent.cleanup()
@@ -94,7 +94,7 @@ class TestADKResearchAgentE2E:
     async def test_deep_research_real_api(self) -> None:
         """Test Deep Research pipeline with real Gemini API.
 
-        SC-002: Should complete within 30 seconds for deep research.
+        Should complete within 30 seconds for deep research.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)
@@ -116,7 +116,7 @@ class TestADKResearchAgentE2E:
         # Verify metadata
         assert result.metadata["mode"] == "deep_research"
 
-        # SC-002: 30 second target (with margin for network variability)
+        # 30 second target (with margin for network variability)
         assert elapsed_time < 90, f"Deep research took {elapsed_time:.2f}s (target: <30s)"
 
         await agent.cleanup()
@@ -125,7 +125,7 @@ class TestADKResearchAgentE2E:
     async def test_google_search_tool_execution(self) -> None:
         """Test that google_search tool is actually executed.
 
-        Verifies FR-001: System uses google_search tool for web search.
+        Verifies system uses google_search tool for web search.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)
@@ -147,7 +147,7 @@ class TestADKResearchAgentE2E:
     async def test_source_tracking(self) -> None:
         """Test that sources are tracked in metadata.
 
-        Verifies FR-004: Source information stored in metadata.
+        Verifies source information stored in metadata.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)
@@ -171,7 +171,7 @@ class TestADKResearchAgentE2E:
     async def test_markdown_output_format(self) -> None:
         """Test that output is in Markdown format.
 
-        Verifies FR-002: Output in Markdown format.
+        Verifies output in Markdown format.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)
@@ -233,7 +233,7 @@ class TestADKResearchAgentIntegration:
     async def test_member_agent_result_compatibility(self) -> None:
         """Test that MemberAgentResult is fully compatible.
 
-        Verifies SC-007: 100% compatibility with Leader Agent.
+        Verifies 100% compatibility with Leader Agent.
         """
         config = get_e2e_config()
         agent = ADKResearchAgent(config)

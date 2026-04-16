@@ -360,11 +360,6 @@ make -C dockerfiles/prod build
 6. **クロスプラットフォームでテスト**: カスタム値を使用する場合、macOS と Linux の両方でテスト
 7. **エラーは早期に検出**: 無効な値がある場合、Docker ビルドの早い段階でエラーが発生するため、エラーメッセージを注意深く読む
 
-## 関連ドキュメント
-
-- **技術詳細**: 詳細は `/specs/004-modify-docker-user/` を参照
-- **実装計画**: `../specs/004-modify-docker-user/plan.md`
-- **データモデル**: `../specs/004-modify-docker-user/data-model.md`
 
 ## ヘルプ
 

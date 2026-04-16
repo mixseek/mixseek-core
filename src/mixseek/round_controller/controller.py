@@ -1,6 +1,5 @@
 """Round Controller - ラウンドライフサイクル管理
 
-Feature: 037-mixseek-core-round-controller
 This module manages multi-round execution for a single team.
 """
 
@@ -63,7 +62,7 @@ class RoundController:
     ) -> None:
         """Initialize RoundController instance
 
-        .. note:: FR-046準拠
+        .. note::
             Orchestrator から EvaluatorSettings, JudgmentSettings, PromptBuilderSettings を受け取ります。
 
         Args:
@@ -81,7 +80,7 @@ class RoundController:
             FileNotFoundError: If team_config_path does not exist
             ValidationError: If team configuration is invalid
         """
-        # T088 fix: Use ConfigurationManager to load TeamSettings
+        # Use ConfigurationManager to load TeamSettings
         config_manager = ConfigurationManager(workspace=workspace)
         team_settings = config_manager.load_team_settings(team_config_path)
 
@@ -217,7 +216,7 @@ class RoundController:
         Returns:
             LeaderBoardEntry: Best submission entry
         """
-        # T026: Multi-round loop
+        # Multi-round loop
         for round_number in range(1, self.task.max_rounds + 1):
             # 進捗ファイル更新（ラウンド開始）
             self._write_progress_file(round_number, status="running")
@@ -231,11 +230,11 @@ class RoundController:
             )
             self.round_history.append(round_state)
 
-            # T023: Round continuation judgment (3-stage)
+            # Round continuation judgment (3-stage)
             should_continue, exit_reason = await self._should_continue_round(user_prompt, round_number)
 
             if not should_continue:
-                # T027-T029: Finalize and return best submission
+                # Finalize and return best submission
                 return await self._finalize_and_return_best(exit_reason, span)
 
         # Max rounds reached
@@ -285,7 +284,7 @@ class RoundController:
         round_started_at = datetime.now(UTC)
 
         # 1. Create Member Agents
-        # T088 fix: Use member_settings_to_config() for consistent MemberAgentConfig generation
+        # Use member_settings_to_config() for consistent MemberAgentConfig generation
         member_agents: dict[str, object] = {}
         for member_settings in self.team_settings.members:
             # member_settings_to_config()を使用（詳細設定を保持）
@@ -329,7 +328,7 @@ class RoundController:
         # 進捗ファイル更新: Evaluator実行開始
         self._write_progress_file(round_number, status="running", current_agent="evaluator")
 
-        # FR-046準拠: EvaluatorSettings と PromptBuilderSettings から Evaluator を生成
+        # EvaluatorSettings と PromptBuilderSettings から Evaluator を生成
         evaluator = Evaluator(
             settings=self.evaluator_settings,
             prompt_builder_settings=self.prompt_builder_settings,
@@ -414,7 +413,7 @@ class RoundController:
         return round_state
 
     async def _should_continue_round(self, user_query: str, current_round: int) -> tuple[bool, str]:
-        """Determine if should continue to next round (T023: 3-stage judgment)
+        """Determine if should continue to next round (3-stage judgment)
 
         Args:
             user_query: Original user query/prompt
@@ -441,7 +440,7 @@ class RoundController:
             return True, ""
 
         # Stage (b): LLM-based judgment
-        # FR-013: RoundControllerがRoundPromptContextを作成してプロンプト整形
+        # RoundControllerがRoundPromptContextを作成してプロンプト整形
         judgment_context = RoundPromptContext(
             user_prompt=user_query,
             round_number=current_round,
@@ -455,7 +454,7 @@ class RoundController:
         # UserPromptBuilderでプロンプト整形
         formatted_prompt = await self.prompt_builder.build_judgment_prompt(judgment_context)
 
-        # 整形済みプロンプトをJudgmentClientに渡す（FR-021）
+        # 整形済みプロンプトをJudgmentClientに渡す
         judgment = await self.judgment_client.judge_improvement_prospects(formatted_prompt)
 
         # Stage (c): Check maximum rounds (override LLM decision)
@@ -489,7 +488,7 @@ class RoundController:
         return True, ""
 
     async def _finalize_and_return_best(self, exit_reason: str, span: Any | None) -> LeaderBoardEntry:
-        """Finalize execution and return best LeaderBoardEntry (T027-T029)
+        """Finalize execution and return best LeaderBoardEntry
 
         Args:
             exit_reason: Reason for termination
@@ -498,10 +497,10 @@ class RoundController:
         Returns:
             LeaderBoardEntry: Best submission entry
         """
-        # T027: Find best round (highest score, latest round if tied)
+        # Find best round (highest score, latest round if tied)
         best_state = max(self.round_history, key=lambda s: (s.evaluation_score, s.round_number))
 
-        # T028: Update leader_board with final_submission flag and exit_reason
+        # Update leader_board with final_submission flag and exit_reason
         if self.store is not None:
             await self.store.save_to_leader_board(
                 execution_id=self.task.execution_id,
@@ -516,7 +515,7 @@ class RoundController:
                 exit_reason=exit_reason,
             )
 
-        # T029: Create and return LeaderBoardEntry
+        # Create and return LeaderBoardEntry
         leader_board_entry = LeaderBoardEntry(
             execution_id=self.task.execution_id,
             team_id=self.team_config.team_id,

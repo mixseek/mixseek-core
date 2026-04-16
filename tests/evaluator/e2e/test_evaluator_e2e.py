@@ -1,10 +1,10 @@
 """End-to-end tests with real LLM APIs.
 
 Tests cover:
-- T069: E2E test with real Anthropic API
-- T070: E2E test with real OpenAI API
-- T071: E2E test with per-metric model override (Claude + GPT)
-- T072: E2E test validating quickstart.md examples
+- E2E test with real Anthropic API
+- E2E test with real OpenAI API
+- E2E test with per-metric model override (Claude + GPT)
+- E2E test validating quickstart.md examples
 
 NOTE: These tests require valid API keys:
 - ANTHROPIC_API_KEY for Claude tests
@@ -38,7 +38,7 @@ requires_openai_key = pytest.mark.skipif(
 
 @pytest.mark.e2e
 class TestAnthropicIntegration:
-    """T069: E2E tests with real Anthropic API (Claude)."""
+    """E2E tests with real Anthropic API (Claude)."""
 
     @requires_anthropic_key
     @pytest.mark.asyncio
@@ -156,7 +156,7 @@ weight = 0.5
 
 @pytest.mark.e2e
 class TestOpenAIIntegration:
-    """T070: E2E tests with real OpenAI API (GPT)."""
+    """E2E tests with real OpenAI API (GPT)."""
 
     @requires_openai_key
     @pytest.mark.asyncio
@@ -224,7 +224,7 @@ weight = 0.3
 
 @pytest.mark.e2e
 class TestMultiProviderIntegration:
-    """T071: E2E test with per-metric model override (mixed providers)."""
+    """E2E test with per-metric model override (mixed providers)."""
 
     @requires_anthropic_key
     @requires_openai_key
@@ -295,7 +295,7 @@ model = "openai:gpt-4o"
 
 @pytest.mark.e2e
 class TestQuickstartExamples:
-    """T072: E2E tests validating quickstart.md examples."""
+    """E2E tests validating quickstart.md examples."""
 
     @requires_anthropic_key
     @pytest.mark.asyncio
@@ -450,7 +450,7 @@ model = "openai:gpt-4o"
     @requires_anthropic_key
     @pytest.mark.asyncio
     async def test_consistency_across_multiple_evaluations(self, tmp_path: Path) -> None:
-        """Test that evaluation consistency meets SC-002 requirement (< 5% variance)."""
+        """Test that evaluation consistency meets consistency requirement (< 5% variance)."""
         config_content = """
 default_model = "anthropic:claude-sonnet-4-5-20250929"
 max_retries = 3
@@ -493,7 +493,7 @@ weight = 1.0
         print(f"\n[E2E Consistency] Scores: {scores}")
         print(f"  Mean: {mean_score:.2f}, Std Dev: {std_dev:.2f}, Variance: {variance_percent:.2f}%")
 
-        # Verify consistency (< 5% variance for SC-002)
+        # Verify consistency (< 5% variance)
         # Note: With temperature=0, variance should be minimal
         # However, LLM providers may still have some stochasticity
         assert variance_percent < 10.0, f"Variance {variance_percent:.2f}% exceeds threshold"

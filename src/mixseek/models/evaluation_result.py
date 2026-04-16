@@ -13,7 +13,7 @@ class MetricScore(BaseModel):
         metric_name: メトリクスの名前（例："clarity_coherence"、"coverage"、"relevance"）
         score: 数値スコア（任意の実数値）。組み込みLLMJudgeMetricsは0-100を返しますが、
             カスタムメトリクスでは負の値や100を超える値も許容されます
-        evaluator_comment: スコアの詳細な説明（FR-012）
+        evaluator_comment: スコアの詳細な説明
 
     Example:
         ```python
@@ -52,7 +52,7 @@ class MetricScore(BaseModel):
 
     evaluator_comment: str = Field(
         ...,
-        description="スコアの詳細な説明（FR-012）。空文字列も許容される。",
+        description="スコアの詳細な説明。空文字列も許容される。",
         examples=[
             "The response is well-structured and easy to understand. "
             "Technical terms are explained clearly. Minor improvements possible in conclusion.",
@@ -100,7 +100,7 @@ class EvaluationResult(BaseModel):
 
     このモデルは、評価システムの最終出力を表し、
     個別のメトリクススコアと重み付き平均として計算された
-    集約された総合スコアを含みます（FR-004、FR-012）。
+    集約された総合スコアを含みます。
 
     Attributes:
         metrics: 個別のメトリクススコアのリスト
@@ -132,12 +132,12 @@ class EvaluationResult(BaseModel):
         ```
 
     Validation Rules:
-        - metrics: 少なくとも1つのメトリクスを含む必要がある（FR-001は3つの組み込みメトリクスを要求）
+        - metrics: 少なくとも1つのメトリクスを含む必要がある
         - overall_score: 任意の実数値（制約なし）
         - overall_score: メトリクススコアの重み付き平均と一致する必要がある
     """
 
-    metrics: list[MetricScore] = Field(..., description="個別のメトリクススコアのリスト（FR-012）", min_length=1)
+    metrics: list[MetricScore] = Field(..., description="個別のメトリクススコアのリスト", min_length=1)
 
     overall_score: float = Field(
         ...,

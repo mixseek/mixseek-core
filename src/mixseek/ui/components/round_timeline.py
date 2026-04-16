@@ -6,8 +6,6 @@ Functions:
     render_round_timeline: ラウンドタイムラインのPlotly Ganttチャート表示
 
 References:
-    - Spec: specs/014-ui/spec.md (FR-020, SC-010)
-    - Research: specs/014-ui/research.md (Section 1: Plotly Express選定)
     - Plotly docs: https://plotly.com/python/gantt/
 """
 

@@ -1,4 +1,4 @@
-"""Orchestrator-specific TOML configuration source (T086)."""
+"""Orchestrator-specific TOML configuration source."""
 
 import tomllib
 from pathlib import Path
@@ -9,7 +9,7 @@ from pydantic_settings import PydanticBaseSettingsSource
 
 
 class OrchestratorTomlSource(PydanticBaseSettingsSource):
-    """Orchestrator設定専用のTOMLソース（T086：orchestrator.toml形式サポート）。
+    """Orchestrator設定専用のTOMLソース（orchestrator.toml形式サポート）。
 
     orchestrator.toml形式の例:
         [orchestrator]

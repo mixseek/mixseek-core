@@ -1,6 +1,5 @@
 """Leader Agent モデルのテスト
 
-Article 3: Test-First Imperative準拠
 このテストは実装前に作成され、Red（失敗）を確認します。
 
 Tests:
@@ -208,7 +207,7 @@ class TestMemberSubmissionsRecord:
         assert record.failure_count == 0
 
     def test_successful_submissions_computed_field(self) -> None:
-        """successful_submissions computed field（FR-002: エラー除外）"""
+        """successful_submissions computed field（エラー除外）"""
         # Arrange
         submissions = [
             MemberSubmission(
@@ -327,7 +326,7 @@ class TestMemberSubmissionsRecord:
         assert record.failure_count == 1
 
     def test_total_usage_aggregation(self) -> None:
-        """total_usage computed field（FR-005: 全Member Agentのリソース使用量合計）"""
+        """total_usage computed field（全Member Agentのリソース使用量合計）"""
         # Arrange
         submissions = [
             MemberSubmission(

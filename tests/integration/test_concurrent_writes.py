@@ -5,9 +5,6 @@ Test Coverage:
     - asyncio.to_thread並列実行
     - ロック競合なし確認
 
-References:
-    - Spec: specs/008-leader/spec.md (US2, FR-014, SC-001, SC-005)
-    - Research: specs/008-leader/research.md (R5)
 """
 
 import asyncio
@@ -24,7 +21,7 @@ from mixseek.storage.aggregation_store import AggregationStore
 
 
 class TestConcurrentWrites:
-    """並列書き込みテスト（T018）"""
+    """並列書き込みテスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:
@@ -35,7 +32,7 @@ class TestConcurrentWrites:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_10_teams_parallel_writes(self, store: AggregationStore) -> None:
-        """10チーム×5ラウンド並列書き込み（FR-014, SC-001）"""
+        """10チーム×5ラウンド並列書き込み"""
 
         async def team_worker(team_id: str, num_rounds: int, execution_id: str) -> None:
             """チームシミュレーション"""
@@ -82,7 +79,7 @@ class TestConcurrentWrites:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_all_data_saved_successfully(self, store: AggregationStore) -> None:
-        """全データ正常保存確認（SC-005）"""
+        """全データ正常保存確認"""
 
         # Generate execution_id for this test run (simulating one orchestration execution)
         execution_id = str(uuid4())
@@ -121,7 +118,7 @@ class TestConcurrentWrites:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_mvcc_no_lock_contention(self, store: AggregationStore) -> None:
-        """MVCC動作確認: ロック競合なし（FR-009）"""
+        """MVCC動作確認: ロック競合なし"""
 
         # Generate execution_id for this test run (simulating one orchestration execution)
         execution_id = str(uuid4())

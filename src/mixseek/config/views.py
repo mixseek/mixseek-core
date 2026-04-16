@@ -3,7 +3,6 @@
 This module provides classes and functions to display configuration settings
 in human-readable formats (table, JSON, etc.) for the CLI commands.
 
-Article 9 Compliance:
 - Configuration values are explicitly sourced from ConfigurationManager
 - No implicit defaults or assumptions
 - Proper error handling and propagation
@@ -497,7 +496,6 @@ class ConfigViewService:
         Returns:
             Formatted hierarchical string
 
-        Phase 13 T105: FR-041
         """
         lines = []
 
@@ -776,7 +774,7 @@ class ConfigViewService:
     def _is_sensitive_field(field_name: str) -> bool:
         """Check if a field name contains sensitive information patterns.
 
-        Article 9 Compliance: Uses explicit pattern list and exception list (no implicit assumptions).
+        Uses explicit pattern list and exception list (no implicit assumptions).
 
         Performance: Uses pre-computed frozenset for O(1) membership testing.
 
@@ -805,7 +803,7 @@ class ConfigViewService:
     def _mask_value(field_name: str, value: Any) -> str:
         """Mask sensitive field values for security.
 
-        Article 9 Compliance: Explicit security policy for sensitive data.
+        Explicit security policy for sensitive data.
 
         Args:
             field_name: The field name to check

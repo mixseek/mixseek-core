@@ -1,8 +1,7 @@
 """DuckDB接続ヘルパー for Mixseek UI.
 
 このモジュールはmixseek.dbへの接続とワークスペースパス取得を提供します。
-Article 9 (Data Accuracy Mandate) 準拠: 環境変数の明示的読み取り、
-デフォルト値の暗黙的使用禁止。
+環境変数の明示的読み取り、デフォルト値の暗黙的使用禁止。
 
 Functions:
     get_workspace_path: 環境変数MIXSEEK_WORKSPACEからパス取得
@@ -11,7 +10,6 @@ Functions:
 References:
     - Existing pattern: build/lib/mixseek_ui/utils/workspace.py
     - Existing pattern: build/lib/mixseek_ui/utils/duckdb_conn.py
-    - Constitution: .specify/memory/constitution.md (Article 9)
 """
 
 import os
@@ -23,8 +21,7 @@ import duckdb
 def get_workspace_path() -> Path:
     """環境変数MIXSEEK_WORKSPACEからワークスペースパスを取得.
 
-    Article 9準拠: 環境変数が未設定の場合は例外を投げ、
-    デフォルト値を使用しない。
+    環境変数が未設定の場合は例外を投げ、デフォルト値を使用しない。
 
     Returns:
         Path: ワークスペースディレクトリの絶対パス
@@ -73,7 +70,7 @@ def get_db_connection() -> duckdb.DuckDBPyConnection | None:
 
         return duckdb.connect(str(db_path), read_only=True)
     except ValueError as e:
-        # 環境変数未設定時は例外を再発生（Article 9準拠）
+        # 環境変数未設定時は例外を再発生
         raise e
     except Exception:
         # DuckDB接続エラー（ロック等）はNone返却

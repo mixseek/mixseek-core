@@ -36,13 +36,12 @@ logger = logging.getLogger(__name__)
 
 
 def load_orchestrator_settings(config_path: Path, workspace: Path | None = None) -> OrchestratorSettings:
-    """オーケストレータ設定TOML読み込み（FR-011: OrchestratorSettings直接返却）
+    """オーケストレータ設定TOML読み込み（OrchestratorSettings直接返却）
 
-    .. note:: FR-011: Architecture Simplification
+    .. note::
         ConfigurationManager.load_orchestrator_settings()を使用してorchestrator.tomlを読み込み、
         OrchestratorSettingsを直接返します（中間モデルOrchestratorConfigは不要）。
 
-        Article 9準拠:
         - ConfigurationManager経由でTOML読み込み（トレース可能）
         - 暗黙的なCWDフォールバックなし
         - workspace未指定時はWorkspacePathNotSpecifiedErrorを発生
@@ -59,7 +58,7 @@ def load_orchestrator_settings(config_path: Path, workspace: Path | None = None)
         ValueError: 設定のバリデーションエラー
         WorkspacePathNotSpecifiedError: workspace未指定かつENV/TOMLでも解決不可
     """
-    # workspace未指定時は明示的エラー（Article 9準拠）
+    # workspace未指定時は明示的エラー
     if workspace is None:
         from mixseek.utils.env import get_workspace_path
 
@@ -79,7 +78,7 @@ class Orchestrator:
         save_db: bool = True,
         on_round_complete: OnRoundCompleteCallback | None = None,
     ) -> None:
-        """Orchestratorインスタンス作成（FR-011: OrchestratorSettings直接受け取り）
+        """Orchestratorインスタンス作成（OrchestratorSettings直接受け取り）
 
         Args:
             settings: オーケストレータ設定（OrchestratorSettings）
@@ -91,7 +90,7 @@ class Orchestrator:
             ValidationError: 設定バリデーション失敗時
 
         Note:
-            FR-011により、OrchestratorConfigの代わりにOrchestratorSettingsを直接受け取ります。
+            OrchestratorConfigの代わりにOrchestratorSettingsを直接受け取ります。
             これによりアーキテクチャが簡素化され、中間モデルが不要になります。
         """
         self.settings = settings
@@ -218,7 +217,7 @@ class Orchestrator:
             )
             logger.debug(f"Registered team: {temp_config.team_id} ({temp_config.team_name})")
 
-        # Evaluator設定を取得（FR-050準拠）
+        # Evaluator設定を取得
         config_manager = ConfigurationManager(workspace=self.workspace)
         evaluator_settings = config_manager.get_evaluator_settings(self.settings.evaluator_config)
 
@@ -228,7 +227,7 @@ class Orchestrator:
         # PromptBuilder設定を取得
         prompt_builder_settings = config_manager.get_prompt_builder_settings(self.settings.prompt_builder_config)
 
-        # RoundController作成 (Feature 037, FR-046: pass all settings)
+        # RoundController作成
         controllers = [
             RoundController(
                 team_config_path=team_config_path,
@@ -254,7 +253,7 @@ class Orchestrator:
 
         execution_time = time.time() - start_time
 
-        # 結果収集 (Feature 037: receive LeaderBoardEntry instead of RoundResult)
+        # 結果収集
         team_results: list[LeaderBoardEntry] = []
         failed_teams_info: list[FailedTeamInfo] = []
 
@@ -288,7 +287,7 @@ class Orchestrator:
                     )
                 )
 
-        # 最高スコアチーム特定 (Feature 037: 0-100 scale)
+        # 最高スコアチーム特定
         best_team_id = None
         best_score = None
 
@@ -403,7 +402,7 @@ class Orchestrator:
     ) -> LeaderBoardEntry:
         """チーム単位の実行（タイムアウト付き）
 
-        Feature 037: Returns LeaderBoardEntry instead of RoundResult
+        Returns LeaderBoardEntry
         """
         team_id = controller.get_team_id()
         team_name = controller.get_team_name()
@@ -413,7 +412,7 @@ class Orchestrator:
         self.team_statuses[team_id].started_at = datetime.now(UTC)
         logger.info(f"Starting team {team_id} ({team_name})...")
 
-        # リトライロジック: HTTP Read エラーに対する復旧 (Phase 12: ConfigurationManager経由)
+        # リトライロジック: HTTP Read エラーに対する復旧
         max_retries = self.max_retries
         for attempt in range(max_retries + 1):
             try:

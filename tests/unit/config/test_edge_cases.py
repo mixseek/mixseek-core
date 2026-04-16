@@ -1,4 +1,4 @@
-"""Edge case tests for Configuration Manager - Phase 11 T073."""
+"""Edge case tests for Configuration Manager."""
 
 from pathlib import Path
 from typing import Any
@@ -9,7 +9,7 @@ from mixseek.config import ConfigurationManager, LeaderAgentSettings, Orchestrat
 
 
 class TestInvalidTOMLSyntax:
-    """Test invalid TOML syntax handling - T073 edge case 1."""
+    """Test invalid TOML syntax handling."""
 
     def test_toml_syntax_error_with_unclosed_bracket(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test handling of TOML syntax error (unclosed bracket)."""
@@ -50,7 +50,7 @@ class TestInvalidTOMLSyntax:
 
 
 class TestNestedEnvironmentVariableEdgeCases:
-    """Test nested environment variable mapping edge cases - T073 edge case 2."""
+    """Test nested environment variable mapping edge cases."""
 
     def test_nested_env_var_with_empty_value(self, monkeypatch: Any) -> None:
         """Test nested environment variable with empty value raises validation error."""
@@ -96,7 +96,7 @@ class TestNestedEnvironmentVariableEdgeCases:
 
 
 class TestCLIFieldNameMappingEdgeCases:
-    """Test CLI field name mapping edge cases - T073 edge case 3."""
+    """Test CLI field name mapping edge cases."""
 
     def test_cli_hyphen_to_underscore_conversion(self) -> None:
         """Test CLI field name mapping (hyphen to underscore)."""

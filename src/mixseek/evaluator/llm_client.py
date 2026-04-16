@@ -35,8 +35,8 @@ async def evaluate_with_llm(
         instruction: 評価者の役割と指示を定義するシステムプロンプト
         user_prompt: 評価するクエリとSubmissionを含むユーザープロンプト
         model: LLMモデル識別子（フォーマット："provider:model-name"）
-        temperature: LLM temperature設定（FR-019）
-        max_tokens: LLM max_tokens設定、Noneの場合は制限なし（FR-019）
+        temperature: LLM temperature設定
+        max_tokens: LLM max_tokens設定、Noneの場合は制限なし
         response_model: 構造化された出力検証のためのPydanticモデルクラス
         max_retries: 最大リトライ試行回数（デフォルト：3）
         timeout_seconds: HTTPタイムアウト（秒）。Noneの場合はデフォルトタイムアウト
@@ -90,7 +90,7 @@ async def evaluate_with_llm(
             "(e.g., 'anthropic:claude-sonnet-4-5-20250929')"
         )
 
-    # 認証済みモデル作成（DRY準拠、Article 10）
+    # 認証済みモデル作成（DRY準拠）
     try:
         authenticated_model = create_authenticated_model(model)
     except Exception as e:
@@ -101,7 +101,7 @@ async def evaluate_with_llm(
             retry_count=0,
         ) from e
 
-    # ModelSettings作成（FR-019）
+    # ModelSettings作成
     model_settings = ModelSettings(temperature=temperature)
     if max_tokens is not None:
         model_settings["max_tokens"] = max_tokens

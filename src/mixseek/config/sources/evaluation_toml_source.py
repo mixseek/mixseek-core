@@ -13,7 +13,7 @@ from pydantic_settings import PydanticBaseSettingsSource
 
 
 class EvaluationTomlSource(PydanticBaseSettingsSource):
-    """Evaluation設定専用のTOMLソース（T080実装）。
+    """Evaluation設定専用のTOMLソース。
 
     evaluator.toml形式（EvaluationConfig互換）を読み込み、
     EvaluatorSettingsスキーマに変換します。

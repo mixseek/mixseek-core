@@ -4,9 +4,6 @@ Test Coverage:
     - CLI → 集約 → DB保存 → 読み込みの完全フロー
     - 複数チーム実行 → Leader Boardランキング
 
-References:
-    - Spec: specs/008-leader/spec.md
-    - 全User Stories統合テスト
 """
 
 from pathlib import Path
@@ -19,7 +16,7 @@ from mixseek.storage.aggregation_store import AggregationStore
 
 
 class TestEndToEnd:
-    """エンドツーエンドテスト（T045）"""
+    """エンドツーエンドテスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:

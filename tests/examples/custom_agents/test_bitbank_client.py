@@ -1,4 +1,4 @@
-"""Tests for bitbank API client (TASK-007).
+"""Tests for bitbank API client.
 
 This module contains tests for BitbankAPIClient class.
 All tests follow TDD Red phase - tests are written before implementation.

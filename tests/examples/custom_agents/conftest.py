@@ -100,7 +100,7 @@ def sample_search_results() -> list[SearchResult]:
 
 @pytest.fixture
 def mock_adk_response() -> dict[str, Any]:
-    """Create a mock ADK response for testing with grounding metadata (FR-004)."""
+    """Create a mock ADK response for testing with grounding metadata."""
     return {
         "content": """## Research Summary
 

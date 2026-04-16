@@ -197,7 +197,7 @@ class TestUS5AcceptanceScenarios:
 
         **Given** No config.toml file exists
         **When** Loading settings
-        **Then** All values use defaults (Article 9: graceful fallback)
+        **Then** All values use defaults
         """
         # Setup - don't create config.toml
         original_cwd = os.getcwd()
@@ -290,7 +290,7 @@ class TestUS5AcceptanceScenarios:
 
         **Given** MIXSEEK_CONFIG_FILE points to nonexistent file
         **When** Loading settings
-        **Then** Defaults are used (Article 9: graceful error handling)
+        **Then** Defaults are used
         """
         # Setup
         nonexistent = tmp_path / "nonexistent.toml"
@@ -318,7 +318,7 @@ class TestUS5AcceptanceScenarios:
 
         **Given** config.toml with syntax errors
         **When** Loading settings
-        **Then** Exception is raised (Article 9: proper error propagation)
+        **Then** Exception is raised
         """
         # Setup
         config_file = tmp_path / "config.toml"

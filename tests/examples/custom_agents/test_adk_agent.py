@@ -74,7 +74,7 @@ class TestADKResearchAgentHelpers:
     def test_parse_sources_extracts_from_grounding_metadata(
         self, sample_member_agent_config: MemberAgentConfig
     ) -> None:
-        """Test _parse_sources extracts sources from grounding metadata (FR-004)."""
+        """Test _parse_sources extracts sources from grounding metadata."""
         agent = ADKResearchAgent(sample_member_agent_config)
 
         response = {
@@ -199,7 +199,7 @@ class TestADKResearchAgentErrorHandling:
 
     @pytest.mark.asyncio
     async def test_handle_error_returns_error_result(self, sample_member_agent_config: MemberAgentConfig) -> None:
-        """Test _handle_error returns proper error result with content (FR-006)."""
+        """Test _handle_error returns proper error result with content."""
         agent = ADKResearchAgent(sample_member_agent_config)
 
         error = Exception("Rate limit exceeded")
@@ -207,7 +207,7 @@ class TestADKResearchAgentErrorHandling:
 
         assert result.status == ResultStatus.ERROR
         assert result.error_code == "RATE_LIMIT"
-        # FR-006: Error content must include natural-language explanation
+        # Error content must include natural-language explanation
         assert "RATE_LIMIT" in result.content
         assert "Troubleshooting" in result.content
         assert result.metadata["error_code"] == "RATE_LIMIT"

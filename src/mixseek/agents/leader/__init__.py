@@ -10,9 +10,6 @@ Components:
     - tools: Member Agent tool registration (register_member_tools)
     - dependencies: RunContext dependencies (TeamDependencies)
 
-References:
-    - Spec: specs/008-leader/spec.md
-    - Plan: specs/008-leader/plan.md
 """
 
 from mixseek.agents.leader.agent import create_leader_agent

@@ -46,7 +46,7 @@ def test_run_orchestration_creates_execution(monkeypatch: pytest.MonkeyPatch, tm
     mock_orchestrator = MagicMock()
     mock_orchestrator.execute = AsyncMock(return_value=mock_summary)
 
-    # load_orchestrator_settingsをモック（FR-011: OrchestratorSettings直接返す）
+    # load_orchestrator_settingsをモック（OrchestratorSettings直接返す）
     mock_settings = MagicMock()
     mock_settings.timeout_per_team_seconds = 300
     mock_settings.workspace_path = tmp_path
@@ -95,7 +95,7 @@ def test_run_orchestration_returns_completed_status(monkeypatch: pytest.MonkeyPa
     mock_orchestrator = MagicMock()
     mock_orchestrator.execute = AsyncMock(return_value=mock_summary)
 
-    # load_orchestrator_settingsをモック（FR-011: OrchestratorSettings直接返す）
+    # load_orchestrator_settingsをモック（OrchestratorSettings直接返す）
     mock_settings = MagicMock()
     mock_settings.timeout_per_team_seconds = 300
     mock_settings.workspace_path = tmp_path

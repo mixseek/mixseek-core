@@ -69,7 +69,7 @@ async def test_single_round_e2e_with_new_schema(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T046: 単一ラウンドのE2Eテスト（新DuckDBスキーマで動作することを検証）"""
+    """単一ラウンドのE2Eテスト（新DuckDBスキーマで動作することを検証）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -106,7 +106,7 @@ async def test_single_round_e2e_with_new_schema(
     )
     mock_judgment_client_class.return_value = mock_client
 
-    # テスト用設定ファイル作成（FR-011: OrchestratorSettings直接使用）
+    # テスト用設定ファイル作成（OrchestratorSettings直接使用）
     team_config_path = Path.cwd() / "tests" / "fixtures" / "team1.toml"
 
     settings = OrchestratorSettings(
@@ -120,7 +120,7 @@ async def test_single_round_e2e_with_new_schema(
     # オーケストレーション実行
     summary = await orchestrator.execute(user_prompt="E2E Test Prompt", timeout_seconds=300)
 
-    # T046: 検証 - 新DuckDBスキーマでの動作確認
+    # 検証 - 新DuckDBスキーマでの動作確認
     assert summary is not None
     assert len(summary.team_results) == 1
     assert summary.best_score == 88.0
@@ -177,7 +177,7 @@ async def test_multi_round_e2e_iterative_improvement(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T053: 複数ラウンドのE2Eテスト（反復改善の動作を検証）"""
+    """複数ラウンドのE2Eテスト（反復改善の動作を検証）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -235,7 +235,7 @@ async def test_multi_round_e2e_iterative_improvement(
     mock_client.judge_improvement_prospects = AsyncMock(side_effect=mock_judgment)
     mock_judgment_client_class.return_value = mock_client
 
-    # テスト用設定ファイル（FR-011: OrchestratorSettings直接使用）
+    # テスト用設定ファイル（OrchestratorSettings直接使用）
     team_config_path = Path.cwd() / "tests" / "fixtures" / "team1.toml"
 
     settings = OrchestratorSettings(
@@ -249,7 +249,7 @@ async def test_multi_round_e2e_iterative_improvement(
     # オーケストレーション実行
     summary = await orchestrator.execute(user_prompt="E2E Multi-Round Test", timeout_seconds=300)
 
-    # T053: 検証 - 複数ラウンドの反復改善
+    # 検証 - 複数ラウンドの反復改善
     assert summary is not None
     assert len(summary.team_results) == 1
 

@@ -1,18 +1,10 @@
-"""Template generation tests (Phase 10 - User Story 7)
+"""Template generation tests
 
 Tests for TOML template generation engine and format.
 
-Article 3: Test-First Imperative準拠
+Test-First Imperative準拠
 - Tests written BEFORE implementation
 - RED phase: All tests should FAIL initially
-- Test goals defined in phase10-test-plan.md
-
-Test Coverage:
-- T065: Template format tests
-
-References:
-- Spec: specs/051-configuration/spec.md (User Story 7)
-- Plan: specs/051-configuration/phase10-test-plan.md
 
 Note:
     RED PHASE TESTS - Expected to FAIL until implementation is complete
@@ -27,18 +19,16 @@ from mixseek.config.template import TemplateGenerator
 
 
 class TestTemplateGeneration:
-    """Tests for template generation (T065 - Phase 10)"""
+    """Tests for template generation"""
 
     @pytest.fixture
     def template_generator(self) -> TemplateGenerator:
         """Create template generator instance"""
         return TemplateGenerator()
 
-    # ========== T065.1: Required Fields Are Empty ==========
-
     def test_template_required_fields_empty(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.1: Test required fields in template are represented as empty values
+        Test required fields in template are represented as empty values
 
         **Expected Format**:
         ```toml
@@ -68,11 +58,9 @@ class TestTemplateGeneration:
         except Exception as e:
             pytest.fail(f"Generated template is not valid TOML: {e}")
 
-    # ========== T065.2: Optional Fields Are Commented ==========
-
     def test_template_optional_fields_commented(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.2: Test optional fields are commented with default values
+        Test optional fields are commented with default values
 
         **Expected Format**:
         ```toml
@@ -97,11 +85,9 @@ class TestTemplateGeneration:
         # Verify template structure
         assert "=" in template, "Template should have field assignments"
 
-    # ========== T065.3: Hierarchical Structure for Team Component ==========
-
     def test_template_team_hierarchical(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.3: Test team.toml has proper hierarchical structure
+        Test team.toml has proper hierarchical structure
 
         **Expected Format**:
         ```toml
@@ -132,11 +118,9 @@ class TestTemplateGeneration:
         except Exception as e:
             pytest.fail(f"Generated team template is not valid TOML: {e}")
 
-    # ========== T065.4: Comments Include Type and Description ==========
-
     def test_template_comments_complete(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.4: Test template comments include type, description, constraints
+        Test template comments include type, description, constraints
 
         **Expected Format**:
         ```toml
@@ -170,11 +154,9 @@ class TestTemplateGeneration:
         # Note: May not always have all keywords, but should be informative
         assert len(comment_lines) > 0, "Template should have comments"
 
-    # ========== T065.5: Generated TOML Is Valid ==========
-
     def test_template_valid_toml_syntax(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.5: Test generated template is valid TOML syntax
+        Test generated template is valid TOML syntax
 
         **Acceptance Criteria**:
         - Template can be parsed by tomllib without errors
@@ -195,11 +177,9 @@ class TestTemplateGeneration:
             except Exception as e:
                 pytest.fail(f"{component} template is not valid TOML: {e}")
 
-    # ========== T065.6: All Settings Classes Included ==========
-
     def test_template_all_settings_classes(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.6: Test full template includes all settings classes
+        Test full template includes all settings classes
 
         **Expected Inclusion**:
         - OrchestratorSettings
@@ -230,11 +210,9 @@ class TestTemplateGeneration:
         # Should have references to multiple settings classes
         assert found_count >= 2, "Template should reference multiple settings classes"
 
-    # ========== T065.7: Component-Specific Template ==========
-
     def test_template_component_specific(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.7: Test component-specific templates only include relevant fields
+        Test component-specific templates only include relevant fields
 
         **Acceptance Criteria**:
         - orchestrator.toml contains only OrchestratorSettings
@@ -256,11 +234,9 @@ class TestTemplateGeneration:
         except Exception as e:
             pytest.fail(f"Component template is not valid TOML: {e}")
 
-    # ========== T065.8: Template Customization Options ==========
-
     def test_template_generation_options(self, template_generator: TemplateGenerator) -> None:
         """
-        T065.8: Test template generation supports customization options
+        Test template generation supports customization options
 
         **Acceptance Criteria**:
         - Can specify different output formats

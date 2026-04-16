@@ -116,7 +116,7 @@ class TestADKAgentConfig:
             ADKAgentConfig(timeout_seconds=301)
 
     def test_extra_fields_forbidden(self) -> None:
-        """Test that extra fields are rejected (Article 9 compliance)."""
+        """Test that extra fields are rejected."""
         with pytest.raises(ValidationError):
             ADKAgentConfig(unknown_field="value")  # type: ignore[call-arg]
 

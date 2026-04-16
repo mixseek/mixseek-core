@@ -11,7 +11,7 @@ MixSeek-Coreは、Pydantic Settingsベースの統一設定管理システムを
 - **統一設定管理**: すべての設定値を Configuration Manager で一元管理
 - **優先順位チェーン**: CLI > 環境変数 > .env > TOML > デフォルト値
 - **トレーサビリティ**: 各設定値の出所を追跡可能
-- **Article 9準拠**: Data Accuracy Mandate に完全準拠
+- **Data Accuracy Mandate** に完全準拠
 
 ## 優先順位チェーン
 
@@ -363,9 +363,9 @@ source .env
 mixseek team "タスク" --config team.toml
 ```
 
-## Article 9 準拠
+## Data Accuracy Mandate 準拠
 
-Configuration Manager は Article 9 (Data Accuracy Mandate) に完全準拠しています：
+Configuration Manager は Data Accuracy Mandate に完全準拠しています：
 
 ### 準拠ポイント
 
@@ -381,7 +381,7 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 
 manager = ConfigurationManager()
 
-# 設定読み込み（Article 9準拠）
+# 設定読み込み
 settings = manager.load_settings(OrchestratorSettings)
 
 # エラーが発生した場合、明確なメッセージが表示される
@@ -458,7 +458,7 @@ mixseek team "タスク" --config team.toml --verbose
 - `private_key`
 - `access_key`
 
-**Article 9準拠**: 機密情報フィールドは明示的なパターンリストで定義されています（暗黙的な推測は行いません）。
+機密情報フィールドは明示的なパターンリストで定義されています（暗黙的な推測は行いません）。
 
 #### 例
 

@@ -1,8 +1,4 @@
-"""Unit tests for prompt_builder models.
-
-Feature: 092-user-prompt-builder-team, 140-user-prompt-builder-evaluator-judgement
-Date: 2025-11-19, 2025-11-25
-"""
+"""Unit tests for prompt_builder models."""
 
 from datetime import UTC, datetime
 
@@ -37,11 +33,7 @@ class TestPromptBuilderSettings:
             PromptBuilderSettings(team_user_prompt="   ")
 
     def test_default_evaluator_user_prompt(self) -> None:
-        """Test that default evaluator_user_prompt is set correctly.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that default evaluator_user_prompt is set correctly."""
         settings = PromptBuilderSettings()
         assert settings.evaluator_user_prompt
         assert "{{ user_prompt }}" in settings.evaluator_user_prompt
@@ -49,29 +41,17 @@ class TestPromptBuilderSettings:
         assert "{{ current_datetime }}" in settings.evaluator_user_prompt
 
     def test_empty_evaluator_user_prompt_raises_error(self) -> None:
-        """Test that empty evaluator_user_prompt raises ValidationError.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that empty evaluator_user_prompt raises ValidationError."""
         with pytest.raises(ValidationError, match="evaluator_user_prompt cannot be empty"):
             PromptBuilderSettings(evaluator_user_prompt="")
 
     def test_whitespace_only_evaluator_user_prompt_raises_error(self) -> None:
-        """Test that whitespace-only evaluator_user_prompt raises ValidationError.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that whitespace-only evaluator_user_prompt raises ValidationError."""
         with pytest.raises(ValidationError, match="evaluator_user_prompt cannot be empty"):
             PromptBuilderSettings(evaluator_user_prompt="   ")
 
     def test_default_judgment_user_prompt(self) -> None:
-        """Test that default judgment_user_prompt is set correctly.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that default judgment_user_prompt is set correctly."""
         settings = PromptBuilderSettings()
         assert settings.judgment_user_prompt
         assert "{{ user_prompt }}" in settings.judgment_user_prompt
@@ -79,20 +59,12 @@ class TestPromptBuilderSettings:
         assert "{{ ranking_table }}" in settings.judgment_user_prompt
 
     def test_empty_judgment_user_prompt_raises_error(self) -> None:
-        """Test that empty judgment_user_prompt raises ValidationError.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that empty judgment_user_prompt raises ValidationError."""
         with pytest.raises(ValidationError, match="judgment_user_prompt cannot be empty"):
             PromptBuilderSettings(judgment_user_prompt="")
 
     def test_whitespace_only_judgment_user_prompt_raises_error(self) -> None:
-        """Test that whitespace-only judgment_user_prompt raises ValidationError.
-
-        Feature: 140-user-prompt-builder-evaluator-judgement
-        Task: T014
-        """
+        """Test that whitespace-only judgment_user_prompt raises ValidationError."""
         with pytest.raises(ValidationError, match="judgment_user_prompt cannot be empty"):
             PromptBuilderSettings(judgment_user_prompt="   ")
 
@@ -207,11 +179,7 @@ class TestRoundPromptContext:
 
 
 class TestEvaluatorPromptContext:
-    """Tests for EvaluatorPromptContext model.
-
-    Feature: 140-user-prompt-builder-evaluator-judgement
-    Task: T014
-    """
+    """Tests for EvaluatorPromptContext model."""
 
     def test_valid_context(self) -> None:
         """Test valid EvaluatorPromptContext creation."""

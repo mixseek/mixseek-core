@@ -3,11 +3,9 @@
 This module provides utilities for loading and validating Member Agent
 configurations from TOML files with environment variable overrides.
 
-.. note:: T088移行完了
-    内部実装はConfigurationManager.load_member_settings()を使用しています。
-    詳細設定（retry_config, usage_limits等）はTOML [agent]セクションから直接読み込みます。
-    Note: これらはMemberAgentSettingsスキーマに含まれないため、別途処理が必要です。
-    外部APIはT088移行後も変更なしで使用可能です。
+内部実装はConfigurationManager.load_member_settings()を使用しています。
+詳細設定（retry_config, usage_limits等）はTOML [agent]セクションから直接読み込みます。
+Note: これらはMemberAgentSettingsスキーマに含まれないため、別途処理が必要です。
 """
 
 import tomllib
@@ -47,14 +45,14 @@ def member_settings_to_config(
         Issue #146完全対応: plugin, tool_settingsはMemberAgentSettingsから直接読み込み
         agent_dataがNoneの場合、すべてのオプション設定はデフォルト値が使用されます。
         workspace引数は、system_instructionがNoneの場合にbundled agent TOMLから
-        デフォルト値を読み込む際に使用されます（Article 10 DRY準拠）。
+        デフォルト値を読み込む際に使用されます。
     """
     # agent_dataがNoneの場合は空dictを使用
     if agent_data is None:
         agent_data = {}
 
     # system_instructionフィールドの変換
-    # settings.system_instructionが未定義（None）の場合、デフォルトTOMLから読み込む（FR-005）
+    # settings.system_instructionが未定義（None）の場合、デフォルトTOMLから読み込む
     if settings.system_instruction is None:
         # agent_type を bundled agent name にマッピング
         from typing import Literal
@@ -70,11 +68,11 @@ def member_settings_to_config(
             # カスタムエージェント等、デフォルトTOMLが存在しない場合は空文字列
             system_instruction_text = ""
         else:
-            # 標準エージェントの場合、BundledMemberAgentLoaderで読み込み（Article 10 DRY準拠）
+            # 標準エージェントの場合、BundledMemberAgentLoaderで読み込み
             from mixseek.config.bundled_member_agents import BundledMemberAgentLoader
 
             loader = BundledMemberAgentLoader(workspace=workspace)
-            bundled_settings = loader.load(bundled_name)  # 例外発生時はそのまま伝播（Article 9準拠）
+            bundled_settings = loader.load(bundled_name)  # 例外発生時はそのまま伝播
             system_instruction_text = bundled_settings.system_instruction or ""  # str | None → str
     else:
         system_instruction_text = settings.system_instruction
@@ -130,20 +128,17 @@ def member_settings_to_config(
 class MemberAgentLoader:
     """Loader for Member Agent configurations and environment settings.
 
-    .. note:: T088移行完了
-        内部実装はConfigurationManagerを使用するように更新されました。
-        外部APIは変更なしで使用可能です（既存コードへの影響なし）。
+    内部実装はConfigurationManagerを使用するように更新されました。
+    外部APIは変更なしで使用可能です（既存コードへの影響なし）。
     """
 
     @staticmethod
     def load_config(toml_path: Path) -> MemberAgentConfig:
         """Load and validate Member Agent configuration from TOML file.
 
-        .. note:: T088移行完了
-            内部実装は新しいConfigurationManager.load_member_settings()を使用しています。
-            詳細設定（retry_config, usage_limits等）はTOML [agent]セクションから別途読み込みます。
-            Note: これらはMemberAgentSettingsスキーマに含まれないため、直接読み込みが必要です。
-            外部APIはT088移行後も変更なしで使用可能です。
+        内部実装はConfigurationManager.load_member_settings()を使用しています。
+        詳細設定（retry_config, usage_limits等）はTOML [agent]セクションから別途読み込みます。
+        Note: これらはMemberAgentSettingsスキーマに含まれないため、直接読み込みが必要です。
 
         Args:
             toml_path: Path to TOML configuration file
@@ -155,18 +150,18 @@ class MemberAgentLoader:
             FileNotFoundError: If configuration file does not exist
             ValueError: If configuration is invalid
         """
-        # T088移行: 新しいConfigurationManagerを使用
+        # 新しいConfigurationManagerを使用
         from mixseek.config.manager import ConfigurationManager
         from mixseek.utils.env import get_workspace_path
 
-        # T088 fix: 相対パスを絶対パスに変換
+        # 相対パスを絶対パスに変換
         # 例: configs/agents/plain_agent.toml → /path/to/repo/configs/agents/plain_agent.toml
         resolved_path = toml_path.resolve()
 
         if not resolved_path.exists():
             raise FileNotFoundError(f"Configuration file not found: {toml_path} (resolved: {resolved_path})")
 
-        # Article 9 compliance: Explicit workspace specification required
+        # Explicit workspace specification required
         # Workspace must be provided via MIXSEEK_WORKSPACE environment variable
         # No implicit fallbacks allowed - fail fast if not specified
         workspace = get_workspace_path(cli_arg=None)

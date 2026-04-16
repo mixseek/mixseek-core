@@ -1,6 +1,6 @@
-"""Tool functions for bitbank API integration (TASK-010, TASK-012, TASK-014).
+"""Tool functions for bitbank API integration.
 
-All tools comply with Article 9 (Data Accuracy Mandate) and Article 16 (Type Safety).
+All tools comply with Data Accuracy Mandate and Type Safety.
 """
 
 import numpy as np
@@ -16,7 +16,7 @@ from examples.custom_agents.bitbank.models import (
 
 
 async def get_ticker_data(pair: str, config: BitbankAPIConfig) -> BitbankTickerData:
-    """Get ticker data for a currency pair (TASK-010: FR-001).
+    """Get ticker data for a currency pair.
 
     Args:
         pair: Currency pair (e.g., "btc_jpy").
@@ -57,7 +57,7 @@ async def get_ticker_data(pair: str, config: BitbankAPIConfig) -> BitbankTickerD
 async def get_candlestick_data(
     pair: str, candle_type: str, year: int, config: BitbankAPIConfig
 ) -> BitbankCandlestickData:
-    """Get candlestick data for a currency pair (TASK-012: FR-002).
+    """Get candlestick data for a currency pair.
 
     Args:
         pair: Currency pair (e.g., "btc_jpy").
@@ -120,7 +120,7 @@ async def get_candlestick_data(
 def calculate_financial_metrics(
     candlestick_data: BitbankCandlestickData, config: BitbankAPIConfig
 ) -> FinancialSummary:
-    """Calculate financial metrics from candlestick data (TASK-014: FR-003).
+    """Calculate financial metrics from candlestick data.
 
     Args:
         candlestick_data: Candlestick data.

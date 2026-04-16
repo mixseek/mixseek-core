@@ -149,11 +149,11 @@ TOML
 
 ruff
   Pythonのリンターおよびフォーマッター。
-  憲章Article 8のコード品質基準に従い、ruff check --fix . && ruff format . の実行が必須。
+  コード品質基準に従い、ruff check --fix . && ruff format . の実行が必須。
 
 mypy
   Pythonの静的型チェッカー。
-  憲章Article 16の型安全性要件に従い、strict modeでの型チェックが必須。
+  型安全性要件に従い、strict modeでの型チェックが必須。
 
 Web Search Tool
   Pydantic AIが提供するWeb検索機能。

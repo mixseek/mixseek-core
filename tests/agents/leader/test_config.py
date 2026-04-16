@@ -1,7 +1,5 @@
 """Leader Agent TOML設定のテスト
 
-Article 3: Test-First Imperative準拠
-
 Tests:
     - LeaderAgentConfig: Leader Agent設定モデル
     - TeamMemberAgentConfig: Member Agent設定モデル（Tool定義含む）
@@ -283,7 +281,7 @@ class TestLoadTeamConfig:
 
     def test_load_inline_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """インライン定義読み込み"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -322,7 +320,7 @@ max_tokens = 2048
 
     def test_load_with_leader_config(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """[team.leader]セクション読み込み"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -361,8 +359,8 @@ max_tokens = 2048
             toml_path.unlink()
 
     def test_load_reference_format(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """参照形式読み込み（FR-025: DRY Article 10）"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        """参照形式読み込み（DRY）"""
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -415,7 +413,7 @@ tool_description = "Web検索で最新情報を収集します"
 
     def test_reference_file_not_found(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """参照先ファイル不存在エラー（Edge Case）"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -446,7 +444,7 @@ tool_description = "test"
 
     def test_tool_name_override_in_reference(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """参照形式でtool_name上書き"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -549,8 +547,8 @@ tool_description = "テスト"
     def test_load_reference_without_workspace_env(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """MIXSEEK_WORKSPACE未設定時はArticle 9準拠でエラー"""
-        # Article 9準拠: 暗黙的フォールバック禁止
+        """MIXSEEK_WORKSPACE未設定時にエラー"""
+        # 暗黙的フォールバック禁止
         monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
@@ -573,7 +571,7 @@ max_tokens = 2048
             toml_path = Path(f.name)
 
         try:
-            # Act & Assert: Article 9準拠で明示的エラー
+            # Act & Assert: 明示的エラー
             with pytest.raises(Exception) as exc_info:  # WorkspacePathNotSpecifiedError or broader Exception
                 load_team_config(toml_path)
 
@@ -584,7 +582,7 @@ max_tokens = 2048
 
     def test_load_reference_with_absolute_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """絶対パスは常にそのまま使用される"""
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))
@@ -631,13 +629,13 @@ tool_description = "テスト"
             member_toml_path.unlink()
 
     def test_team_config_with_zero_members(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Member Agent 0件のチーム設定を受理（FR-033）
+        """Member Agent 0件のチーム設定を受理
 
         Given: Member Agentが0件のTOML
         When: load_team_config で読み込み
         Then: 正常に読み込まれ、membersが空リスト
         """
-        # Article 9準拠: workspace環境変数を明示的に設定
+        # workspace環境変数を明示的に設定
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(workspace))

@@ -6,7 +6,6 @@ Functions:
     render_round_progress: ラウンド進捗メトリック表示
 
 References:
-    - Spec: specs/014-ui/spec.md (FR-022, SC-011)
     - Pattern: build/lib/mixseek_ui/pages/2_results.py (st.metric表示)
 """
 

@@ -1,13 +1,13 @@
-"""Environment variable mapping strategies (Phase 3-2 - Article 10).
+"""Environment variable mapping strategies.
 
 Provides Strategy + Factory pattern for environment variable mappings.
 
-Article 10 (DRY) Compliance:
+DRY Compliance:
 - Eliminates conditional branching duplication in MappedEnvSettingsSource
 - Centralizes environment variable mapping logic
 - Enables easy extension for new settings classes
 
-Article 11 (Refactoring) Compliance:
+Refactoring Compliance:
 - Replaces conditional logic with polymorphism
 - No V2 classes created, existing code refactored directly
 """

@@ -1,13 +1,13 @@
 """Common validation functions for configuration schemas.
 
 This module provides reusable validation logic to eliminate code duplication
-across settings classes (Article 10: DRY).
+across settings classes.
 
-Constitution Compliance:
-    - Article 10 (DRY): Eliminates duplicate validation logic (97% similarity)
-    - Article 9 (Data Accuracy): Explicit error messages with clear guidance
-    - Article 16 (Type Safety): Comprehensive type annotations
-    - Article 8 (Code Quality): Clean, well-documented code
+Compliance:
+    - DRY: Eliminates duplicate validation logic (97% similarity)
+    - Data Accuracy: Explicit error messages with clear guidance
+    - Type Safety: Comprehensive type annotations
+    - Code Quality: Clean, well-documented code
 """
 
 
@@ -56,11 +56,11 @@ def validate_model_format(value: str, allow_empty: bool = False) -> str:
 
     Design Rationale:
         この関数は以下の設計判断に基づいています：
-        1. **Article 10準拠**: LeaderAgentSettings、EvaluatorSettings、MemberAgentSettingsで
+        1. **DRY準拠**: LeaderAgentSettings、EvaluatorSettings、MemberAgentSettingsで
            重複していたバリデーションロジック（97%一致）を統合
         2. **空文字列の扱い**: MemberAgentSettingsのみ空文字列を許容するため、
            `allow_empty`パラメータで制御
-        3. **エラーメッセージ**: Article 9に従い、明示的で理解しやすいエラーメッセージを提供
+        3. **エラーメッセージ**: 明示的で理解しやすいエラーメッセージを提供
     """
     # allow_empty=True の場合、空文字列やホワイトスペースのみの文字列を許容
     if allow_empty and not value.strip():

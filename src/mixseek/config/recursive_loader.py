@@ -1,17 +1,11 @@
-"""Recursive configuration loader with circular reference detection (Phase 13 T104, T106, T107).
+"""Recursive configuration loader with circular reference detection.
 
 Provides recursive loading of orchestrator → team → member configuration hierarchies
 with built-in circular reference detection and maximum depth limit.
 
-Article 9 Compliance:
 - Explicit error messages with reference paths
 - No implicit defaults or assumptions
 - Proper error propagation
-
-Requirements:
-- FR-040: Recursive loading of orchestrator/team/member configs
-- FR-042: Circular reference detection
-- FR-043: Maximum recursion depth limit (10 levels)
 """
 
 from collections.abc import Callable
@@ -75,7 +69,6 @@ class RecursiveConfigLoader:
             ValueError: If circular reference or max depth exceeded
             tomllib.TOMLDecodeError: If TOML syntax is invalid
 
-        Phase 13 T104, T106, T107: FR-040, FR-042, FR-043
         """
         # Reset state for new loading session
         self._visited_files = set()
@@ -92,8 +85,8 @@ class RecursiveConfigLoader:
     ) -> dict[str, Any]:
         """循環参照・最大深度チェック付きで設定を読み込む（Template Method）。
 
-        Article 10（DRY原則）準拠：循環参照チェックロジックの重複を排除。
-        Article 11（Refactoring Policy）準拠：既存クラスを直接改善（V2クラス作成なし）。
+        DRY原則準拠：循環参照チェックロジックの重複を排除。
+        Refactoring Policy準拠：既存クラスを直接改善（V2クラス作成なし）。
 
         Args:
             file_path: 読み込む設定ファイルパス
@@ -105,13 +98,13 @@ class RecursiveConfigLoader:
         Raises:
             ValueError: 循環参照または最大深度超過の場合
         """
-        # Check circular reference (T106: FR-042)
+        # Check circular reference
         resolved_path = file_path.resolve()
         if resolved_path in self._visited_files:
             reference_chain = " → ".join(str(p) for p in self._reference_path)
             raise ValueError(f"Circular reference detected in configuration files:\n{reference_chain} → {file_path}")
 
-        # Check maximum depth (T107: FR-043)
+        # Check maximum depth
         if self._current_depth >= MAX_CONFIG_RECURSION_DEPTH:
             reference_chain = " → ".join(str(p) for p in self._reference_path)
             raise ValueError(

@@ -1,10 +1,10 @@
 """Integration tests for User Story 3: Custom Metrics Integration.
 
 Tests cover:
-- T065: Custom metric registration and usage
-- T066: Custom metric validation
-- T067: Mixed built-in and custom metrics
-- T068: Rule-based custom metrics (without LLM)
+- Custom metric registration and usage
+- Custom metric validation
+- Mixed built-in and custom metrics
+- Rule-based custom metrics (without LLM)
 """
 
 from pathlib import Path
@@ -103,7 +103,7 @@ class InvalidMetricNoEvaluate(BaseMetric):
 
 
 class TestCustomMetricRegistration:
-    """T065: Test custom metric registration and usage."""
+    """Test custom metric registration and usage."""
 
     @pytest.mark.asyncio
     async def test_register_and_use_custom_metric(
@@ -204,7 +204,7 @@ weight = 0.5
 
 
 class TestCustomMetricValidation:
-    """T066: Test validation of custom metrics."""
+    """Test validation of custom metrics."""
 
     def test_invalid_metric_no_inheritance_raises_error(self, temp_workspace: Path) -> None:
         """Test that metric not inheriting from BaseMetric raises TypeError."""
@@ -296,7 +296,7 @@ weight = 1.0
 
 
 class TestMixedMetrics:
-    """T067: Test mixed built-in and custom metrics."""
+    """Test mixed built-in and custom metrics."""
 
     @pytest.mark.asyncio
     async def test_built_in_and_custom_metrics_together(
@@ -425,7 +425,7 @@ weight = 1.0
 
 
 class TestRuleBasedMetrics:
-    """T068: Test rule-based custom metrics without LLM."""
+    """Test rule-based custom metrics without LLM."""
 
     @pytest.mark.asyncio
     async def test_deterministic_rule_based_metric(

@@ -1,6 +1,6 @@
-"""Pydantic models for bitbank Public API integration (TASK-004).
+"""Pydantic models for bitbank Public API integration.
 
-All models comply with Article 16 (Type Safety Mandate).
+All models comply with Type Safety Mandate.
 """
 
 from datetime import datetime
@@ -254,7 +254,7 @@ class FinancialMetricsConfig(BaseModel):
 
 
 class BitbankAPIConfig(BaseModel):
-    """bitbank API configuration (Article 9 compliant)."""
+    """bitbank API configuration."""
 
     base_url: str = Field(..., description="API base URL")
     timeout_seconds: int = Field(30, gt=0, description="Request timeout in seconds")

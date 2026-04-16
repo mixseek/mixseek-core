@@ -3,10 +3,6 @@
 TOML設定からMember Agent ToolをLeader Agentに動的登録します。
 Pydantic AIのAgent Delegationパターンに準拠。
 
-References:
-    - Spec: specs/008-leader/spec.md (FR-031-034)
-    - Research: specs/008-leader/research.md (Section 1, 3)
-    - Data Model: specs/008-leader/data-model.md (Section 3-4)
 """
 
 from collections.abc import Callable, Coroutine, Mapping
@@ -26,7 +22,7 @@ def register_member_tools(
     team_config: TeamConfig,
     member_agents: Mapping[str, Any],
 ) -> None:
-    """TOML設定からMember Agent ToolをLeader Agentに登録（FR-032）
+    """TOML設定からMember Agent ToolをLeader Agentに登録
 
     各Member AgentをLeader AgentのToolとして動的に登録します。
     Pydantic AIのAgent Delegationパターンに準拠し、ctx.usageを統合します。
@@ -87,7 +83,7 @@ def register_member_tools(
                     }
                     result_obj = await ma.execute(task, context=context)
                     content = result_obj.content
-                    all_messages = result_obj.all_messages  # FR-034: Member Agent message history
+                    all_messages = result_obj.all_messages
                     # Issue #59: MemberAgentResult.status を MemberSubmission に伝播
                     status = result_obj.status.value.upper()  # "SUCCESS", "ERROR", or "WARNING"
                     error_message = result_obj.error_message
@@ -97,10 +93,10 @@ def register_member_tools(
                         requests=1,
                     )
                 else:
-                    # Pydantic AI Agent（FR-034: ctx.usage統合）
+                    # Pydantic AI Agent（ctx.usage統合）
                     result_obj = await ma.run(task, deps=ctx.deps, usage=ctx.usage)
                     content = str(result_obj.output)
-                    all_messages = result_obj.all_messages()  # FR-034: Member Agent message history
+                    all_messages = result_obj.all_messages()
                     # Pydantic AI Agent にはエラー概念がないため常に SUCCESS
                     status = "SUCCESS"
                     error_message = None
@@ -119,7 +115,7 @@ def register_member_tools(
                     usage=usage,
                     execution_time_ms=execution_time_ms,
                     timestamp=end_time,
-                    all_messages=all_messages,  # FR-034: Include Member Agent message history
+                    all_messages=all_messages,
                 )
                 ctx.deps.submissions.append(submission)
 

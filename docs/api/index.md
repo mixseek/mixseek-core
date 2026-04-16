@@ -98,5 +98,3 @@ MixSeek-Coreのアーキテクチャは以下の層で構成されます：
 ## 参考資料
 
 - [TUMIX論文](https://arxiv.org/html/2510.01279v1) - MixSeek-Coreの理論的基盤
-- [仕様書](https://github.com/your-org/mixseek-core/specs/001-specs/spec.md) - 詳細な機能仕様
-- [用語集](https://github.com/your-org/mixseek-core/specs/glossary.md) - MixSeek-Core用語集

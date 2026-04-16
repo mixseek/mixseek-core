@@ -1,7 +1,7 @@
 """Common CLI options shared across commands.
 
 This module defines reusable Typer options to ensure consistency across all CLI commands
-and comply with Constitution Article 10 (DRY Principle).
+and comply with DRY Principle.
 
 Usage:
     from mixseek.cli.common_options import WORKSPACE_OPTION, VERBOSE_OPTION

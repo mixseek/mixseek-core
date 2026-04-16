@@ -1,7 +1,5 @@
 """Agent Delegation のテスト
 
-Article 3: Test-First Imperative準拠
-
 Leader AgentがAgent Delegationパターンでタスクを分析し、
 適切なMember AgentをToolを通じて動的に選択・実行するテスト。
 
@@ -22,11 +20,11 @@ from mixseek.agents.leader.models import MemberSubmission
 
 
 class TestAgentDelegation:
-    """Agent Delegation基本動作テスト（T015, T017, T018）"""
+    """Agent Delegation基本動作テスト"""
 
     @pytest.mark.asyncio
     async def test_tool_registration_succeeds(self) -> None:
-        """Tool登録成功（T015: Agent Delegation基本動作）
+        """Tool登録成功（Agent Delegation基本動作）
 
         register_member_tools関数が正常に実行され、
         エラーなくToolが登録されることを確認。
@@ -75,7 +73,7 @@ class TestAgentDelegation:
 
     @pytest.mark.asyncio
     async def test_deps_submissions_populated(self) -> None:
-        """TeamDependencies.submissionsに記録される（T015）
+        """TeamDependencies.submissionsに記録される
 
         Tool実行時、ctx.deps.submissionsにMemberSubmissionが追加される。
         """
@@ -104,7 +102,7 @@ class TestAgentDelegation:
 
     @pytest.mark.asyncio
     async def test_run_usage_integration(self) -> None:
-        """RunUsage統合（FR-034）
+        """RunUsage統合
 
         ctx.usageがMember Agentに渡され、Member AgentのRunUsageが
         Leader Agentに統合されることを確認。
@@ -131,7 +129,7 @@ class TestAgentDelegation:
 
     @pytest.mark.asyncio
     async def test_failed_member_agent_auto_excluded(self) -> None:
-        """失敗Member Agent自動除外（FR-002、Acceptance 3）
+        """失敗Member Agent自動除外（Acceptance 3）
 
         3つのMember Agentで1つが失敗した場合、
         successful_submissionsに成功応答のみ含まれる。

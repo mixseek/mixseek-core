@@ -4,7 +4,7 @@ Feature: 037-mixseek-core-round-controller, 140-user-prompt-builder-evaluator-ju
 This module implements LLM-based judgment to determine if another round should be executed.
 
 Responsibility: Agent呼び出しとsystem_interaction生成のみ
-プロンプト整形はRoundControllerがUserPromptBuilderで行う（FR-021, FR-013準拠）
+プロンプト整形はRoundControllerがUserPromptBuilderで行う
 """
 
 import textwrap
@@ -46,7 +46,7 @@ class JudgmentClient:
 
     Note:
         Prompt formatting is handled by RoundController using UserPromptBuilder.
-        JudgmentClient only performs LLM calls with formatted prompts (FR-021).
+        JudgmentClient only performs LLM calls with formatted prompts.
     """
 
     def __init__(self, settings: JudgmentSettings) -> None:
@@ -70,7 +70,7 @@ class JudgmentClient:
         """Judge if the team should continue to the next round
 
         This method uses Pydantic AI Agent for structured output and automatic retries.
-        Prompt formatting is handled by RoundController using UserPromptBuilder (FR-021).
+        Prompt formatting is handled by RoundController using UserPromptBuilder.
 
         Args:
             formatted_prompt: Pre-formatted user prompt (from RoundController)
@@ -84,7 +84,7 @@ class JudgmentClient:
         if not formatted_prompt or not formatted_prompt.strip():
             raise ValueError("formatted_prompt cannot be empty")
 
-        # 認証済みモデル作成（DRY準拠、Article 10）
+        # 認証済みモデル作成（DRY準拠）
         authenticated_model = create_authenticated_model(self.settings.model)
 
         # ModelSettings作成（settings から取得、None値はスキップ）

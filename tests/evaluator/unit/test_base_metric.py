@@ -421,11 +421,7 @@ class TestBaseMetricContextFields:
 
 
 class TestLLMJudgeMetricUserPromptBuilderIntegration:
-    """Test suite for LLMJudgeMetric integration with UserPromptBuilder.
-
-    Feature: 140-user-prompt-builder-evaluator-judgement
-    Task: T016
-    """
+    """Test suite for LLMJudgeMetric integration with UserPromptBuilder."""
 
     @patch("mixseek.evaluator.metrics.base.evaluate_with_llm")
     @patch("mixseek.prompt_builder.builder.get_current_datetime_with_timezone")

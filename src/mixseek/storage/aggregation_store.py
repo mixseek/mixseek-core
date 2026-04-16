@@ -11,10 +11,6 @@ Technical Strategy:
     スレッドローカルコネクションにより、各チームが独立した
     コネクションを使用してMVCC並列書き込みを実現。
 
-References:
-    - Spec: specs/008-leader/spec.md (FR-006 ~ FR-016)
-    - Contract: specs/008-leader/contracts/aggregation_store.md
-    - Research: specs/008-leader/research.md (R5)
 """
 
 import asyncio
@@ -97,7 +93,7 @@ class AggregationStore:
         if db_path is not None:
             return db_path
 
-        # Article 9準拠: ConfigurationManager経由でworkspaceを取得
+        # ConfigurationManager経由でworkspaceを取得
         if workspace is None:
             from mixseek.utils.env import get_workspace_path
 
@@ -120,7 +116,7 @@ class AggregationStore:
 
     @contextmanager
     def _transaction(self, conn: duckdb.DuckDBPyConnection) -> Iterator[duckdb.DuckDBPyConnection]:
-        """同期トランザクション管理 (FR-015)
+        """同期トランザクション管理
 
         Args:
             conn: DuckDBコネクション
@@ -152,7 +148,7 @@ class AggregationStore:
         conn.execute("CREATE SEQUENCE IF NOT EXISTS leader_board_id_seq")
         conn.execute("CREATE SEQUENCE IF NOT EXISTS execution_summary_id_seq")
 
-        # round_historyテーブル (FR-006, FR-007, Orchestrator統合)
+        # round_historyテーブル (Orchestrator統合)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS round_history (
                 id INTEGER PRIMARY KEY DEFAULT nextval('round_history_id_seq'),
@@ -285,7 +281,7 @@ class AggregationStore:
     async def save_aggregation(
         self, execution_id: str, aggregated: MemberSubmissionsRecord, message_history: list[ModelMessage]
     ) -> None:
-        """集約結果とMessage Historyを保存 (FR-006, FR-007)
+        """集約結果とMessage Historyを保存
 
         複数Leader Agentから同時呼び出しされても安全（ロックフリー）。
         DuckDB同期APIをasyncio.to_threadでスレッドプールに退避し、
@@ -299,7 +295,7 @@ class AggregationStore:
         Raises:
             DatabaseWriteError: 書き込み失敗（3回リトライ後）
         """
-        # エクスポネンシャルバックオフリトライ (FR-019)
+        # エクスポネンシャルバックオフリトライ
         delays = [1, 2, 4]
 
         for attempt, delay in enumerate(delays, 1):
@@ -338,7 +334,7 @@ class AggregationStore:
         if not result:
             return None, []
 
-        # JSON → Pydantic型に復元 (FR-012)
+        # JSON → Pydantic型に復元
         aggregated = None
         if result[0]:
             aggregated = MemberSubmissionsRecord.model_validate_json(result[0])
@@ -352,7 +348,7 @@ class AggregationStore:
     async def load_round_history(
         self, execution_id: str, team_id: str, round_number: int
     ) -> tuple[MemberSubmissionsRecord | None, list[ModelMessage]]:
-        """ラウンド履歴を読み込み (FR-012)
+        """ラウンド履歴を読み込み
 
         Args:
             execution_id: 実行識別子(UUID)
@@ -382,7 +378,7 @@ class AggregationStore:
         """
         conn = self._get_connection()
 
-        # FR-011: スコア降順、同スコアは作成日時早い順
+        # スコア降順、同スコアは作成日時早い順
         # Feature 037: Use 'score' column instead of 'evaluation_score'
         return conn.execute(
             """
@@ -400,7 +396,7 @@ class AggregationStore:
         ).df()
 
     async def get_leader_board(self, limit: int = 10) -> pd.DataFrame:
-        """Leader Board取得 (FR-011)
+        """Leader Board取得
 
         スコア降順、同スコアは作成日時早い順でソート。
 
@@ -429,7 +425,7 @@ class AggregationStore:
         """
         conn = self._get_connection()
 
-        # JSON内部クエリで統計集計（FR-013）
+        # JSON内部クエリで統計集計
         # Feature 037: Use 'score' column (unlimited range) instead of 'evaluation_score'
         result = conn.execute(
             """
@@ -463,7 +459,7 @@ class AggregationStore:
         }
 
     async def get_team_statistics(self, team_id: str) -> dict[str, float | int]:
-        """チーム統計取得 (FR-013)
+        """チーム統計取得
 
         JSON内部クエリで総ラウンド数、平均スコア、総トークン使用量を集計。
 

@@ -3,7 +3,6 @@
 ラウンドタイムライン、スコア推移グラフを含む統合結果ページ。
 
 References:
-    - Spec: specs/014-ui/spec.md (User Story 2, User Story 5)
     - Develop: Existing leaderboard and submission features
 """
 
@@ -34,7 +33,7 @@ leaderboard = fetch_leaderboard(execution_id)
 # トップサブミッション取得
 top_submission = fetch_top_submission(execution_id)
 
-# トップサブミッションのハイライト（FR-007）
+# トップサブミッションのハイライト
 if top_submission:
     st.subheader("🏆 最高スコアサブミッション")
 
@@ -58,13 +57,13 @@ if top_submission:
 
     st.divider()
 
-# リーダーボードテーブル（FR-008: 行クリックでチーム選択）
+# リーダーボードテーブル（行クリックでチーム選択）
 st.subheader("リーダーボード")
 st.caption("チームの行をクリックすると詳細が表示されます")
 
 selected_entry = render_leaderboard_table(leaderboard)
 
-# チーム詳細ビュー（FR-008）
+# チーム詳細ビュー
 if selected_entry:
     selected_team_id, selected_round_number = selected_entry
     team_submission = fetch_team_submission(execution_id, selected_team_id, selected_round_number)
@@ -95,7 +94,7 @@ if selected_entry:
             st.markdown("**評価フィードバック**")
             st.info(team_submission.evaluation_feedback)
 
-# スコア推移エリア（FR-009, FR-020, SC-010）
+# スコア推移エリア
 st.divider()
 st.subheader("スコア推移")
 render_score_chart(execution_id)

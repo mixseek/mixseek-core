@@ -1,4 +1,4 @@
-"""BitbankAPIAgent implementation (TASK-016).
+"""BitbankAPIAgent implementation.
 
 Custom Member Agent for bitbank Public API integration.
 """

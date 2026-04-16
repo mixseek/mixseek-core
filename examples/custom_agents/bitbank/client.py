@@ -1,7 +1,7 @@
-"""bitbank Public API Client (TASK-008).
+"""bitbank Public API Client.
 
 This module provides an async HTTP client for interacting with the bitbank Public API.
-Article 9 compliant: All configuration values are externalized to TOML.
+All configuration values are externalized to TOML.
 """
 
 import asyncio

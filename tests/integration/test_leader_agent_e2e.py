@@ -26,7 +26,7 @@ from mixseek.storage.aggregation_store import AggregationStore
 
 
 class TestLeaderAgentE2E:
-    """Leader Agent E2Eテスト（T044）"""
+    """Leader Agent E2Eテスト"""
 
     @pytest.fixture
     def test_workspace(self) -> Generator[Path]:
@@ -216,7 +216,7 @@ max_tokens = 100
 
     @pytest.mark.asyncio
     async def test_leader_agent_solo_execution(self, test_workspace: Path) -> None:
-        """Member Agent 0件でLeader Agentが単独で応答生成（SC-008）
+        """Member Agent 0件でLeader Agentが単独で応答生成
 
         Given: Member Agent 0件のチーム設定
         When: Leader Agentを作成・実行

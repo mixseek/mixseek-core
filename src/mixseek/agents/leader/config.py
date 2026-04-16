@@ -1,6 +1,6 @@
 """Leader Agent TOML設定管理
 
-IMPORTANT (T078移行完了): このモジュールのLeaderAgentConfig/TeamConfig/load_team_config()は
+IMPORTANT (移行完了): このモジュールのLeaderAgentConfig/TeamConfig/load_team_config()は
 レガシーAPIとして維持されていますが、内部的にはConfigurationManager（新）を使用します。
 新規コードではConfigurationManager.load_team_settings()を直接使用してください。
 """
@@ -142,11 +142,11 @@ class TeamConfig(BaseModel):
 def load_team_config(toml_path: Path, workspace: Path | None = None) -> TeamConfig:
     """チーム設定TOML読み込み（参照形式サポート）
 
-    .. deprecated:: T078
+    .. deprecated::
         新規コードではConfigurationManager.load_team_settings()を使用してください。
         このAPIは段階的移行期間中は維持されます（既存コードへの影響を最小化）。
 
-    .. note:: T078移行完了
+    .. note:: 移行完了
         内部実装は新しいConfigurationManager.load_team_settings()を使用しています。
         外部APIは変更なしのため、既存コードは動作し続けます。
 
@@ -158,10 +158,10 @@ def load_team_config(toml_path: Path, workspace: Path | None = None) -> TeamConf
         TeamConfig instance
 
     Raises:
-        WorkspacePathNotSpecifiedError: workspace未指定かつ環境変数未設定の場合（Article 9準拠）
+        WorkspacePathNotSpecifiedError: workspace未指定かつ環境変数未設定の場合
         FileNotFoundError: 参照先ファイルが見つからない場合
     """
-    # workspace未指定時は環境変数を確認（Article 9準拠 - T078 fix）
+    # workspace未指定時は環境変数を確認
     if workspace is None:
         from mixseek.exceptions import WorkspacePathNotSpecifiedError
         from mixseek.utils.env import get_workspace_path
@@ -173,7 +173,7 @@ def load_team_config(toml_path: Path, workspace: Path | None = None) -> TeamConf
             # 環境変数未設定の場合は明示的エラー
             raise
 
-    # T078移行: 新しいConfigurationManagerを使用
+    # 新しいConfigurationManagerを使用
     from mixseek.config.manager import ConfigurationManager
 
     manager = ConfigurationManager(workspace=workspace)
@@ -184,7 +184,7 @@ def load_team_config(toml_path: Path, workspace: Path | None = None) -> TeamConf
 
 
 def team_settings_to_team_config(team_settings: TeamSettings) -> TeamConfig:
-    """TeamSettings（新）をTeamConfig（既存API）に変換（T078移行ヘルパー）。
+    """TeamSettings（新）をTeamConfig（既存API）に変換。
 
     ConfigurationManager.load_team_settings()で読み込んだTeamSettingsを
     既存のLeader Agent公開APIで使用できるTeamConfigに変換します。

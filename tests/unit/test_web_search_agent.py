@@ -3,8 +3,8 @@
 This test suite validates the Web Search Member Agent implementation,
 including tool integration, search capabilities, error handling, and configuration.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the Web Search Agent implementation to ensure proper functionality and error handling.
+These tests are written BEFORE the Web Search Agent implementation to ensure
+proper functionality and error handling.
 """
 
 from unittest.mock import AsyncMock, MagicMock
@@ -38,7 +38,6 @@ class TestWebSearchMemberAgent:
 
     def test_agent_initialization(self, web_search_agent_config: MemberAgentConfig) -> None:
         """Test Web Search Agent initialization."""
-        # Import will fail until T017 is implemented
         from mixseek.agents.member.web_search import WebSearchMemberAgent
 
         agent = WebSearchMemberAgent(web_search_agent_config)

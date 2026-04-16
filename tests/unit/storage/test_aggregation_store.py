@@ -6,10 +6,6 @@ Test Coverage:
     - load_round_history: 履歴読み込み、Pydantic AI復元
     - save_to_leader_board: Leader Board保存
     - get_leader_board: ランキング取得
-
-References:
-    - Spec: specs/008-leader/spec.md (US2)
-    - Contract: specs/008-leader/contracts/aggregation_store.md
 """
 
 from pathlib import Path
@@ -25,7 +21,7 @@ from mixseek.storage.aggregation_store import AggregationStore
 
 
 class TestAggregationStoreInit:
-    """AggregationStore初期化テスト（T015）"""
+    """AggregationStore初期化テスト"""
 
     def test_init_with_env_variable(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """正常系: 環境変数から正常初期化"""
@@ -42,12 +38,12 @@ class TestAggregationStoreInit:
     def test_init_env_variable_missing(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """異常系: MIXSEEK_WORKSPACE未設定（FR-016, FR-20, Article 9準拠）"""
+        """異常系: MIXSEEK_WORKSPACE未設定"""
         # Given: 環境変数未設定
         monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
-        # When/Then: WorkspacePathNotSpecifiedError送出（Article 9準拠）
+        # When/Then: WorkspacePathNotSpecifiedError送出
         with pytest.raises(WorkspacePathNotSpecifiedError, match="MIXSEEK_WORKSPACE"):
             AggregationStore()
 
@@ -69,7 +65,7 @@ class TestAggregationStoreInit:
 
 
 class TestSaveAggregation:
-    """save_aggregation テスト（T016）"""
+    """save_aggregation テスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:
@@ -110,7 +106,7 @@ class TestSaveAggregation:
     async def test_save_aggregation_success(
         self, store: AggregationStore, sample_aggregated: MemberSubmissionsRecord
     ) -> None:
-        """正常系: 集約結果保存（FR-006, FR-007）"""
+        """正常系: 集約結果保存"""
         # Given: 集約結果とMessage History
         messages = cast(list[ModelMessage], [ModelRequest(parts=[UserPromptPart(content="Test prompt")])])
 
@@ -131,7 +127,7 @@ class TestSaveAggregation:
     async def test_save_unique_constraint(
         self, store: AggregationStore, sample_aggregated: MemberSubmissionsRecord
     ) -> None:
-        """UNIQUE(team_id, round_number)検証（FR-008）"""
+        """UNIQUE(team_id, round_number)検証"""
         # Given: 同じteam_id + round_numberで2回保存
         messages = cast(list[ModelMessage], [ModelRequest(parts=[UserPromptPart(content="Test")])])
 
@@ -151,7 +147,7 @@ class TestSaveAggregation:
 
 
 class TestLoadRoundHistory:
-    """load_round_history テスト（T017）"""
+    """load_round_history テスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:
@@ -209,7 +205,7 @@ class TestLoadRoundHistory:
 
     @pytest.mark.asyncio
     async def test_pydantic_ai_message_restoration(self, store: AggregationStore) -> None:
-        """Pydantic AI Message完全復元（FR-012）"""
+        """Pydantic AI Message完全復元"""
         from pydantic_ai import RunUsage
 
         # Given: Pydantic AIメッセージ保存
@@ -252,7 +248,7 @@ class TestLeaderBoard:
 
     @pytest.mark.asyncio
     async def test_save_to_leader_board(self, store: AggregationStore) -> None:
-        """正常系: Leader Board保存（FR-010）"""
+        """正常系: Leader Board保存"""
         # When: Leader Board保存
         await store.save_to_leader_board(
             execution_id="550e8400-e29b-41d4-a716-446655440000",
@@ -275,7 +271,7 @@ class TestLeaderBoard:
 
     @pytest.mark.asyncio
     async def test_get_leader_board_ranking(self, store: AggregationStore) -> None:
-        """ランキング取得: スコア降順ソート（FR-011）"""
+        """ランキング取得: スコア降順ソート"""
         # Given: 3チーム保存（異なるスコア）
         await store.save_to_leader_board(
             execution_id="550e8400-e29b-41d4-a716-446655440000",
@@ -319,7 +315,7 @@ class TestLeaderBoard:
 
     @pytest.mark.asyncio
     async def test_get_leader_board_limit(self, store: AggregationStore) -> None:
-        """limit動作（SC-007）"""
+        """limit動作"""
         # Given: 5チーム保存
         for i in range(5):
             await store.save_to_leader_board(
@@ -378,7 +374,7 @@ class TestLeaderBoard:
 
     @pytest.mark.asyncio
     async def test_get_leader_board_tie_breaker(self, store: AggregationStore) -> None:
-        """同スコア時の2次ソート: 作成日時早い順（FR-011）"""
+        """同スコア時の2次ソート: 作成日時早い順"""
         # Given: 同スコア(85.0)の3チームを時間差で保存
         import asyncio
 
@@ -427,7 +423,7 @@ class TestLeaderBoard:
 
 
 class TestRoundStatusTable:
-    """T045: round_statusテーブルへの書き込みテスト（Feature 037）"""
+    """round_statusテーブルへの書き込みテスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:
@@ -484,9 +480,9 @@ class TestRoundStatusTable:
 
 
 class TestLeaderBoardTableNew:
-    """T045: leader_boardテーブルへの書き込みテスト
+    """leader_boardテーブルへの書き込みテスト
 
-    Feature 037 - new schema with execution_id, final_submission, exit_reason
+    New schema with execution_id, final_submission, exit_reason
     """
 
     @pytest.fixture
@@ -543,7 +539,7 @@ class TestLeaderBoardTableNew:
 
     @pytest.mark.asyncio
     async def test_get_ranking_by_execution(self, store: AggregationStore) -> None:
-        """T052: execution_id でランキングを取得するテスト"""
+        """execution_id でランキングを取得するテスト"""
         # Given: Multiple teams with different scores
         execution_id = "exec-001"
         await store.save_to_leader_board(
@@ -591,7 +587,7 @@ class TestLeaderBoardTableNew:
 
 
 class TestTeamStatistics:
-    """チーム統計テスト（T027 - US3）"""
+    """チーム統計テスト"""
 
     @pytest.fixture
     def store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AggregationStore:
@@ -601,7 +597,7 @@ class TestTeamStatistics:
 
     @pytest.mark.asyncio
     async def test_get_team_statistics(self, store: AggregationStore) -> None:
-        """JSON内部クエリで統計集計（FR-013）"""
+        """JSON内部クエリで統計集計"""
         # Given: 複数ラウンドのLeader Boardデータ
         for round_num in range(1, 4):
             score = (0.8 + round_num * 0.05) * 100.0  # Convert to 0-100 scale
@@ -630,7 +626,7 @@ class TestTeamStatistics:
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_statistics_large_dataset(self, store: AggregationStore) -> None:
-        """大量データの統計集計性能（SC-003）"""
+        """大量データの統計集計性能"""
         # NOTE: 100万行のテストは時間がかかるため、
         # 実際の実装では@pytest.mark.performanceマーカーを付けて
         # 通常のCIからは除外することを推奨

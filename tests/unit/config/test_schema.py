@@ -15,10 +15,10 @@ from mixseek.config import (
 
 
 class TestMixSeekBaseSettings:
-    """MixSeekBaseSettingsのテスト (T038)"""
+    """MixSeekBaseSettingsのテスト"""
 
     def test_settings_customise_sources_returns_correct_priority_order(self) -> None:
-        """Test settings_customise_sources() returns correct priority order (T038)"""
+        """Test settings_customise_sources() returns correct priority order"""
         # Verify that settings_customise_sources() returns a tuple of sources
         # ordered by priority: CLI > ENV > dotenv > TOML > secrets
         settings_cls = OrchestratorSettings
@@ -40,7 +40,7 @@ class TestMixSeekBaseSettings:
         assert len(sources) == 5
 
     def test_get_trace_info_retrieves_recorded_traces(self) -> None:
-        """Test get_trace_info() retrieves recorded traces (T038)"""
+        """Test get_trace_info() retrieves recorded traces"""
         # Verify that get_trace_info() can be called (will return None for non-traced fields)
         settings = OrchestratorSettings(workspace_path=Path("/tmp"))
         trace_info = settings.get_trace_info("timeout_per_team_seconds")
@@ -48,20 +48,20 @@ class TestMixSeekBaseSettings:
         assert trace_info is None or trace_info.field_name == "timeout_per_team_seconds"
 
     def test_environment_field_default_value(self) -> None:
-        """Test environment field default value (T038)"""
+        """Test environment field default value"""
         # Verify that environment field defaults to "dev"
         # Create settings with minimal required fields
         settings = OrchestratorSettings(workspace_path=Path("/tmp"))
         assert settings.environment == "dev"
 
     def test_env_prefix_applied_correctly(self) -> None:
-        """Test env_prefix='MIXSEEK_' applied correctly (T038)"""
+        """Test env_prefix='MIXSEEK_' applied correctly"""
         # Verify that the MIXSEEK_ prefix is used for environment variables
         # This is confirmed by model_config in MixSeekBaseSettings
         assert MixSeekBaseSettings.model_config.get("env_prefix") == "MIXSEEK_"
 
     def test_extra_forbid_rejects_unknown_fields(self) -> None:
-        """Test extra='forbid' rejects unknown fields (T038)"""
+        """Test extra='forbid' rejects unknown fields"""
         # Verify that extra='forbid' is set in model_config
         assert MixSeekBaseSettings.model_config.get("extra") == "forbid"
 
@@ -121,7 +121,7 @@ class TestLeaderAgentSettings:
 
 
 class TestOrchestratorSettings:
-    """OrchestratorSettingsのテスト (T031) - NFR-003準拠"""
+    """OrchestratorSettingsのテスト"""
 
     def test_workspace_path_required_in_prod(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
@@ -135,7 +135,7 @@ class TestOrchestratorSettings:
         with pytest.raises(ValidationError) as exc_info:
             OrchestratorSettings(environment="prod")
 
-        # NFR-003: Error should include field identifier
+        # Error should include field identifier
         assert "workspace_path" in str(exc_info.value)
 
     def test_workspace_path_required_in_dev(
@@ -150,7 +150,7 @@ class TestOrchestratorSettings:
         with pytest.raises(ValidationError) as exc_info:
             OrchestratorSettings(environment="dev")
 
-        # NFR-003: Error should include field identifier
+        # Error should include field identifier
         assert "workspace_path" in str(exc_info.value)
 
     def test_validation_error_with_clear_message(
@@ -190,12 +190,12 @@ class TestOrchestratorSettings:
     def test_validation_error_includes_nfr003_elements(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """Test NFR-003: Error includes field, expected format, and actual value"""
+        """Test error includes field, expected format, and actual value"""
         # Clear environment variables
         monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
-        # NFR-003 requires: field identifier + expected format + actual value
+        # Requires: field identifier + expected format + actual value
         with pytest.raises(ValidationError) as exc_info:
             OrchestratorSettings(environment="prod")
 
@@ -236,7 +236,7 @@ class TestOrchestratorSettings:
 
 
 class TestOptionalFieldDefaults:
-    """オプションフィールドのデフォルト値テスト (T032)"""
+    """オプションフィールドのデフォルト値テスト"""
 
     def test_timeout_seconds_uses_default_in_dev(self, tmp_path: Path) -> None:
         """Test timeout_seconds uses default (300) in dev environment"""
@@ -246,7 +246,7 @@ class TestOptionalFieldDefaults:
     def test_timeout_seconds_uses_default_in_prod(self, tmp_path: Path) -> None:
         """Test timeout_seconds uses default (300) in prod environment"""
         # In prod, when unset, should use default (not error)
-        # FR-007 requires same defaults in all environments
+        # Requires same defaults in all environments
         settings = OrchestratorSettings(workspace_path=tmp_path, environment="prod")
         assert settings.timeout_per_team_seconds == 300
 
@@ -279,7 +279,7 @@ class TestOptionalFieldDefaults:
 
 
 class TestOrchestratorSettingsMaxRetries:
-    """OrchestratorSettings.max_retries_per_teamのテスト (Phase 12追加)"""
+    """OrchestratorSettings.max_retries_per_teamのテスト"""
 
     def test_max_retries_per_team_default_value(self, tmp_path: Path) -> None:
         """Test max_retries_per_team default value is 2"""
@@ -332,7 +332,7 @@ class TestOrchestratorSettingsMaxRetries:
 
 
 class TestUISettings:
-    """UISettingsのテスト (Phase 12追加)"""
+    """UISettingsのテスト"""
 
     def test_port_default_value(self, tmp_path: Path) -> None:
         """Test port field default value is 8501"""

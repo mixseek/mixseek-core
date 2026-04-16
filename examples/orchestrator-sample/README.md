@@ -569,7 +569,6 @@ rm -rf workspaces/orchestrator-sample
 
 ## 📄 関連ドキュメント
 
-- [specs/007-orchestration/spec.md](../../specs/007-orchestration/spec.md): 仕様書
 - [docs/orchestrator.md](../../docs/orchestrator.md): 詳細ドキュメント
 
 ---

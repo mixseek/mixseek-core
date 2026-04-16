@@ -3,7 +3,7 @@ port = 8501
 headless = false
 
 [runner]
-enforceSerializableSessionState = true  # Article 9: セッション状態のシリアライズ可能性を強制
+enforceSerializableSessionState = true  # セッション状態のシリアライズ可能性を強制
 
 [theme]
 primaryColor = "#1f77b4"

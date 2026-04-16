@@ -10,8 +10,6 @@ Functions:
     fetch_team_final_submission: チーム最終サブミッション取得
 
 References:
-    - Query specs: specs/014-ui/research.md (Section 2: データベースクエリ仕様)
-    - Database schema: specs/008-leader/contracts/database-schema.sql
     - Existing pattern: build/lib/mixseek_ui/services/leaderboard_service.py
 """
 

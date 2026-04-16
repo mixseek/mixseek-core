@@ -8,9 +8,6 @@ Leader Agentは単一ラウンド内の記録のみを担当します。
 - 前ラウンド非依存: Leader Agentは単一ラウンド内のみ動作
 - 構造化データ記録: Round Controllerが整形処理を担当
 
-References:
-    - Spec: specs/008-leader/spec.md (FR-031-034)
-    - Research: specs/008-leader/research.md (Section 1)
 """
 
 from collections.abc import Mapping
@@ -50,7 +47,7 @@ def create_leader_agent(team_config: TeamConfig, member_agents: Mapping[str, Any
     """
     leader_config = team_config.leader
 
-    # system_instruction取得（FR-027, FR-030）
+    # system_instruction取得
     system_instruction: str | None = DEFAULT_LEADER_SYSTEM_INSTRUCTION
     if leader_config.system_instruction is not None:
         system_instruction = leader_config.system_instruction
@@ -58,7 +55,7 @@ def create_leader_agent(team_config: TeamConfig, member_agents: Mapping[str, Any
         if system_instruction == "":
             system_instruction = None
 
-    # system_prompt取得（FR-032、アドバンスド設定）
+    # system_prompt取得（アドバンスド設定）
     system_prompt = leader_config.system_prompt
 
     # Leader Agent model取得（issue #51準拠）
@@ -106,7 +103,7 @@ def create_leader_agent(team_config: TeamConfig, member_agents: Mapping[str, Any
             retries=retries,
         )
 
-    # Member Agent Toolを動的登録（FR-032）
+    # Member Agent Toolを動的登録
     register_member_tools(leader_agent, team_config, member_agents)
 
     return leader_agent

@@ -251,3 +251,7 @@ __marimo__/
 
 # mixseek default workspace
 .mixseek
+
+# local agent settings
+.claude
+.codex

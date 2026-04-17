@@ -3,8 +3,8 @@
 This test suite validates the Code Execution Member Agent implementation,
 including tool integration, code execution capabilities, error handling, and configuration.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the Code Execution Agent implementation to ensure proper functionality and error handling.
+These tests are written BEFORE the Code Execution Agent implementation to ensure
+proper functionality and error handling.
 """
 
 from typing import Any
@@ -50,7 +50,6 @@ class TestCodeExecutionMemberAgent:
 
     def test_agent_initialization(self, code_execution_agent_config: MemberAgentConfig) -> None:
         """Test Code Execution Agent initialization."""
-        # Import will fail until T022 is implemented
         from mixseek.agents.member.code_execution import CodeExecutionMemberAgent
 
         agent = CodeExecutionMemberAgent(code_execution_agent_config)
@@ -436,6 +435,6 @@ class TestCodeExecutionProviderValidation:
             CodeExecutionMemberAgent(config)
 
         error_message = str(exc_info.value)
-        # Should reference specification and findings
-        assert "spec.md" in error_message or "specification" in error_message.lower()
+        # Should include helpful error details
+        assert "Anthropic Claude" in error_message
         assert "ANTHROPIC_API_KEY" in error_message

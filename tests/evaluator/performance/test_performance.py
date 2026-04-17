@@ -1,8 +1,8 @@
 """Performance tests for evaluator.
 
 Tests cover:
-- T073: SC-001 validation (< 30 seconds for < 2000 chars)
-- T074: SC-002 validation (< 5% variance across evaluations)
+- Latency validation (< 30 seconds for < 2000 chars)
+- Consistency validation (< 5% variance across evaluations)
 
 NOTE: These tests may require real API keys for accurate performance measurement.
 For unit/integration testing, use mocked APIs.
@@ -23,7 +23,7 @@ from mixseek.models.evaluation_result import MetricScore
 
 
 class TestPerformanceLatency:
-    """T073: Test SC-001 requirement (< 30 seconds for < 2000 chars)."""
+    """Test performance requirement (< 30 seconds for < 2000 chars)."""
 
     @pytest.mark.asyncio
     async def test_evaluation_completes_within_30_seconds(self, tmp_path: Path, mock_all_api_keys: None) -> None:
@@ -120,8 +120,8 @@ weight = 0.3
 
         print(f"\n[Performance] Evaluation time: {elapsed_time:.2f}s")
 
-        # Verify SC-001: < 30 seconds
-        assert elapsed_time < 30.0, f"Evaluation took {elapsed_time:.2f}s, exceeds 30s limit (SC-001)"
+        # Verify: < 30 seconds
+        assert elapsed_time < 30.0, f"Evaluation took {elapsed_time:.2f}s, exceeds 30s limit"
 
         # Verify result is valid
         assert result is not None
@@ -188,7 +188,7 @@ weight = 1.0
 
 
 class TestPerformanceConsistency:
-    """T074: Test SC-002 requirement (< 5% variance across evaluations)."""
+    """Test consistency requirement (< 5% variance across evaluations)."""
 
     @pytest.mark.asyncio
     async def test_score_consistency_meets_5_percent_threshold(self, tmp_path: Path, mock_all_api_keys: None) -> None:
@@ -277,8 +277,8 @@ weight = 0.5
         print(f"  Std Dev: {stdev_score:.2f}")
         print(f"  Variance: {variance_percent:.2f}%")
 
-        # Verify SC-002: < 5% variance
-        assert variance_percent < 5.0, f"Variance {variance_percent:.2f}% exceeds 5% threshold (SC-002)"
+        # Verify: < 5% variance
+        assert variance_percent < 5.0, f"Variance {variance_percent:.2f}% exceeds 5% threshold"
 
     @pytest.mark.asyncio
     async def test_individual_metric_consistency(self, tmp_path: Path, mock_all_api_keys: None) -> None:

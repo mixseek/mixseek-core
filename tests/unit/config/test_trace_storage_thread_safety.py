@@ -1,7 +1,7 @@
 """Tests for trace storage thread safety.
 
-Article 3 Compliance: Test-First Implementation
-Phase 2: Verify that trace information is stored per-instance, not shared across instances.
+Test-First Implementation.
+Verify that trace information is stored per-instance, not shared across instances.
 """
 
 import tempfile
@@ -40,7 +40,7 @@ class TestTraceStorageInstanceIsolation:
         """get_trace_info() should return data specific to the instance.
 
         Note:
-            Phase 2-4: load_settings() now attaches trace info via context vars.
+            load_settings() now attaches trace info via context vars.
             This test verifies that trace info is instance-specific.
         """
         with (
@@ -57,7 +57,7 @@ class TestTraceStorageInstanceIsolation:
             trace1 = manager.get_trace_info(settings1, "workspace_path")
             trace2 = manager.get_trace_info(settings2, "workspace_path")
 
-            # Phase 2-4: load_settings() now provides trace info
+            # load_settings() now provides trace info
             # Verify that each instance has its own trace info
             assert trace1 is not None, "load_settings() now attaches trace info"
             assert trace2 is not None, "load_settings() now attaches trace info"

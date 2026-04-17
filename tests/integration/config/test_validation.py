@@ -1,4 +1,4 @@
-"""Integration tests for User Story 4: Required field validation (T036)."""
+"""Integration tests for User Story 4: Required field validation."""
 
 from pathlib import Path
 from typing import Any
@@ -10,7 +10,7 @@ from mixseek.config import OrchestratorSettings
 
 
 class TestUserStory4Integration:
-    """User Story 4のAcceptance Scenarios (T036)。
+    """User Story 4のAcceptance Scenarios。
 
     必須設定の未設定を検知し、明確なエラーメッセージを提供する
     """
@@ -70,7 +70,7 @@ class TestUserStory4Integration:
         assert settings.timeout_per_team_seconds == 300
 
     def test_as4_environment_agnostic_defaults(self, tmp_path: Path) -> None:
-        """AS4: デフォルト値がすべての環境で同一（FR-007準拠）"""
+        """AS4: デフォルト値がすべての環境で同一"""
         dev_settings = OrchestratorSettings(workspace_path=tmp_path, environment="dev")
         prod_settings = OrchestratorSettings(workspace_path=tmp_path, environment="prod")
         assert dev_settings.timeout_per_team_seconds == prod_settings.timeout_per_team_seconds

@@ -99,7 +99,7 @@ class TestWorkspaceCreation:
 class TestEnvironmentVariableHandling:
     """Test environment variable handling."""
 
-    @pytest.mark.skip(reason="CLI environment variable resolution needs implementation (Article 9 compliance)")
+    @pytest.mark.skip(reason="CLI environment variable resolution needs implementation")
     def test_init_with_env_var(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         """Test init works with MIXSEEK_WORKSPACE environment variable."""
         import os

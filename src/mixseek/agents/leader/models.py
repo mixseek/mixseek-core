@@ -23,7 +23,7 @@ class MemberSubmission(BaseModel):
     execution_time_ms: float | None = Field(default=None, description="実行時間（ミリ秒）")
     all_messages: list[ModelMessage] | None = Field(
         default=None,
-        description="Member Agent message history (FR-034)",
+        description="Member Agent message history",
     )
 
 

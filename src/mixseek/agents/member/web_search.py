@@ -41,11 +41,11 @@ class WebSearchMemberAgent(BaseMemberAgent):
         """
         super().__init__(config)
 
-        # Article 9 compliant authentication - NO implicit fallbacks
+        # NO implicit fallbacks in authentication
         try:
             model = create_authenticated_model(config.model)
         except AuthenticationError as e:
-            # Article 9: Explicit error propagation, no silent fallbacks
+            # Explicit error propagation, no silent fallbacks
             raise ValueError(f"Authentication failed: {e}") from e
 
         # Create ModelSettings from config
@@ -136,7 +136,7 @@ class WebSearchMemberAgent(BaseMemberAgent):
             # Execute with Pydantic AI agent
             result = await self._agent.run(task, deps=deps, **kwargs)
 
-            # Capture complete message history (FR-016)
+            # Capture complete message history
             all_messages = result.all_messages()
 
             execution_time_ms = int((time.time() - start_time) * 1000)

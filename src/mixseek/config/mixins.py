@@ -1,7 +1,7 @@
 """Configuration mixins for reusable validation logic.
 
 This module provides mixin classes for common validation patterns
-to eliminate code duplication across settings classes (Article 10: DRY).
+to eliminate code duplication across settings classes.
 """
 
 from pathlib import Path
@@ -15,10 +15,10 @@ class WorkspaceValidatorMixin:
     このミックスインは workspace_path フィールドのバリデーションロジックを提供します。
     OrchestratorSettings と UISettings で重複していたコード（100%一致）を統合します。
 
-    Constitution Compliance:
-        - Article 10 (DRY): 重複コードの削減
-        - Article 9 (Data Accuracy): 明示的なエラー伝播
-        - Article 8 (Code Quality): 型安全性の維持
+    Compliance:
+        - DRY: 重複コードの削減
+        - Data Accuracy: 明示的なエラー伝播
+        - Code Quality: 型安全性の維持
 
     Example:
         >>> from pydantic import BaseSettings, Field

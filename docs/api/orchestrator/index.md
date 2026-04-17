@@ -544,7 +544,3 @@ for task in tasks:
 - **[Orchestrator Guide](../../orchestrator-guide.md)** - 使い方ガイド
 - **[Database Schema](../../database-schema.md)** - DuckDBスキーマ
 
-## 参照
-
-- specs/007-orchestration/contracts/orchestrator-api.md
-- specs/007-orchestration/contracts/round-controller-api.md

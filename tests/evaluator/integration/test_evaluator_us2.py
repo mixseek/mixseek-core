@@ -1,10 +1,10 @@
 """Integration tests for User Story 2: Custom Evaluation Configuration.
 
 Tests cover:
-- T061: Custom configuration with custom weights and per-metric models
-- T062: Metric enable/disable functionality
-- T063: Configuration validation errors
-- T064: Configuration hot-reload
+- Custom configuration with custom weights and per-metric models
+- Metric enable/disable functionality
+- Configuration validation errors
+- Configuration hot-reload
 """
 
 from pathlib import Path
@@ -22,7 +22,7 @@ from mixseek.models.evaluation_result import MetricScore
 
 
 class TestCustomConfiguration:
-    """T061: Test custom configuration with custom weights and per-metric models."""
+    """Test custom configuration with custom weights and per-metric models."""
 
     @pytest.mark.asyncio
     async def test_custom_weights_affect_overall_score(
@@ -165,7 +165,7 @@ model = "openai:gpt-5"
 
 
 class TestMetricEnableDisable:
-    """T062: Test metric enable/disable functionality."""
+    """Test metric enable/disable functionality."""
 
     @pytest.mark.asyncio
     async def test_only_enabled_metrics_evaluated(
@@ -251,7 +251,7 @@ class TestMetricEnableDisable:
 
 
 class TestConfigurationValidation:
-    """T063: Test configuration validation errors."""
+    """Test configuration validation errors."""
 
     def test_invalid_weights_sum_raises_error(self, tmp_path: Path, invalid_weights_config_toml: str) -> None:
         """Test that weights not summing to 1.0 raises ValidationError."""
@@ -342,7 +342,7 @@ weight = 0.5
 
 
 class TestConfigurationHotReload:
-    """T064: Test configuration hot-reload functionality."""
+    """Test configuration hot-reload functionality."""
 
     @pytest.mark.asyncio
     async def test_config_reloaded_on_new_evaluator_instance(

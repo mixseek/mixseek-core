@@ -294,10 +294,10 @@ def run_orchestration(
             if not config_path.exists():
                 raise FileNotFoundError(f"Config file not found: {config_path}")
 
-            # Orchestrator設定を読み込み（FR-011: OrchestratorSettings直接返却）
+            # Orchestrator設定を読み込み
             orchestrator_settings = load_orchestrator_settings(config_path, workspace=workspace)
 
-            # Orchestratorを初期化（FR-011: OrchestratorSettings直接受け取り）
+            # Orchestratorを初期化
             orchestrator = Orchestrator(
                 settings=orchestrator_settings,
             )
@@ -718,7 +718,7 @@ def get_recent_logs(lines: int = 100, level: str = "INFO") -> list[str]:
         - ログファイル: $MIXSEEK_WORKSPACE/logs/mixseek.log
         - ログ形式: %(asctime)s - %(name)s - %(levelname)s - %(message)s
         - ファイル不在時は空リストを返す
-        - FR-026: 実行ログセクション要件
+        - 実行ログセクション要件
         - dequeを使用してファイル全体をメモリに読み込まずに末尾を効率的に取得
     """
     from collections import deque

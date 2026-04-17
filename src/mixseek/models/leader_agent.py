@@ -7,9 +7,6 @@
     - 失敗応答の自動除外とリソース使用量の集計
     - Markdown連結などの整形処理はRound Controllerが実施（本モジュールの責務外）
 
-References:
-    - Spec: specs/008-leader/spec.md (FR-003)
-    - Data Model: specs/008-leader/data-model.md
 """
 
 from datetime import UTC, datetime
@@ -98,8 +95,8 @@ class MemberSubmissionsRecord(BaseModel):
 
     責務:
     - 単一ラウンド内のMember Agent応答を構造化データ（List[MemberSubmission]）として記録
-    - 失敗応答の自動除外（FR-002）
-    - リソース使用量の集計（FR-005）
+    - 失敗応答の自動除外
+    - リソース使用量の集計
 
     責務外（Round Controllerが実施）:
     - Markdown連結などの整形処理
@@ -111,12 +108,12 @@ class MemberSubmissionsRecord(BaseModel):
         team_id: チームの一意識別子
         team_name: チーム名
         all_submissions: 全Member Agentの応答（成功・失敗含む）
-        successful_submissions: 成功したSubmissionのみ（エラー除外済み、FR-002）
+        successful_submissions: 成功したSubmissionのみ（エラー除外済み）
         failed_submissions: 失敗したSubmission（ログ・分析用）
         total_count: 総応答数
         success_count: 成功応答数
         failure_count: 失敗応答数
-        total_usage: 全Member Agentの合計リソース使用量（FR-005）
+        total_usage: 全Member Agentの合計リソース使用量
     """
 
     # ラウンド情報
@@ -131,7 +128,7 @@ class MemberSubmissionsRecord(BaseModel):
 
     # 成功した応答のみ（エラー除外済み）
     successful_submissions: list[MemberSubmission] = Field(
-        default_factory=list, description="成功したSubmissionのみ（FR-002: エラー除外）"
+        default_factory=list, description="成功したSubmissionのみ（エラー除外）"
     )
 
     # 失敗した応答（記録用）
@@ -163,7 +160,7 @@ class MemberSubmissionsRecord(BaseModel):
     def from_member_results(
         cls, results: list[MemberAgentResult], round_number: int, team_id: str, team_name: str
     ) -> "MemberSubmissionsRecord":
-        """MemberAgentResultのリストから記録結果を作成 (FR-001, FR-003)
+        """MemberAgentResultのリストから記録結果を作成
 
         Args:
             results: Member Agent実行結果のリスト
@@ -177,11 +174,11 @@ class MemberSubmissionsRecord(BaseModel):
         # MemberAgentResult -> MemberSubmissionに変換
         all_submissions = [MemberSubmission.from_member_result(result) for result in results]
 
-        # 成功/失敗で分類（FR-002: エラー除外）
+        # 成功/失敗で分類（エラー除外）
         successful = [s for s in all_submissions if s.is_successful()]
         failed = [s for s in all_submissions if s.is_failed()]
 
-        # リソース使用量の集約（FR-005）
+        # リソース使用量の集約
         total_usage = cls._aggregate_usage(all_submissions)
 
         return cls(
@@ -199,7 +196,7 @@ class MemberSubmissionsRecord(BaseModel):
 
     @staticmethod
     def _aggregate_usage(submissions: list[MemberSubmission]) -> dict[str, int] | None:
-        """リソース使用量を集約 (FR-005)
+        """リソース使用量を集約
 
         Pydantic AI RunUsageと互換性のある形式で集約。
 

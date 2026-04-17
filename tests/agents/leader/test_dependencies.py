@@ -1,7 +1,5 @@
 """TeamDependencies のテスト
 
-Article 3: Test-First Imperative準拠
-
 TeamDependenciesはAgent Delegationで各Member Agentに共有される依存関係オブジェクト。
 RunContext[TeamDependencies]として使用されます。
 

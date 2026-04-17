@@ -1,4 +1,4 @@
-"""E2E tests for bitbank API integration (TASK-021).
+"""E2E tests for bitbank API integration.
 
 These tests call the actual bitbank Public API without mocking.
 Run with: pytest tests/examples/custom_agents/test_bitbank_e2e.py -m e2e -v
@@ -39,7 +39,7 @@ def real_bitbank_config() -> BitbankAPIConfig:
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_real_ticker_api_call(real_bitbank_config: BitbankAPIConfig) -> None:
-    """E2E Test: Call actual bitbank ticker API (SC-001: < 3 seconds)."""
+    """E2E Test: Call actual bitbank ticker API (< 3 seconds)."""
     start_time = datetime.now()
 
     ticker_data = await get_ticker_data("btc_jpy", real_bitbank_config)
@@ -55,14 +55,14 @@ async def test_real_ticker_api_call(real_bitbank_config: BitbankAPIConfig) -> No
     assert ticker_data.vol_float > 0
     assert ticker_data.timestamp > 0
 
-    # SC-001: Response time < 3 seconds (network normal)
+    # Response time < 3 seconds (network normal)
     assert elapsed_time < 3.0, f"Ticker API took {elapsed_time:.2f}s (expected < 3s)"
 
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_real_candlestick_api_call(real_bitbank_config: BitbankAPIConfig) -> None:
-    """E2E Test: Call actual bitbank candlestick API (SC-002: < 10 seconds)."""
+    """E2E Test: Call actual bitbank candlestick API (< 10 seconds)."""
     start_time = datetime.now()
     # Use 2024 data with 4hour intervals (verified working)
     test_year = 2024
@@ -87,14 +87,14 @@ async def test_real_candlestick_api_call(real_bitbank_config: BitbankAPIConfig) 
         assert ohlcv.volume >= 0
         assert ohlcv.timestamp > 0
 
-    # SC-002: Response time < 10 seconds (max 1000 data points)
+    # Response time < 10 seconds (max 1000 data points)
     assert elapsed_time < 10.0, f"Candlestick API took {elapsed_time:.2f}s (expected < 10s)"
 
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_real_statistical_analysis(real_bitbank_config: BitbankAPIConfig) -> None:
-    """E2E Test: Perform statistical analysis on real-time data (SC-002: < 10 seconds)."""
+    """E2E Test: Perform statistical analysis on real-time data (< 10 seconds)."""
     start_time = datetime.now()
     # Use 2024 data with 4hour intervals (verified working)
     test_year = 2024
@@ -119,14 +119,14 @@ async def test_real_statistical_analysis(real_bitbank_config: BitbankAPIConfig) 
     # Total return can be positive or negative
     assert -1.0 <= metrics.total_return <= 10.0  # -100% to +1000%
 
-    # SC-002: Total time < 10 seconds
+    # Total time < 10 seconds
     assert elapsed_time < 10.0, f"Statistical analysis took {elapsed_time:.2f}s (expected < 10s)"
 
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_rate_limit_handling_with_retry(real_bitbank_config: BitbankAPIConfig) -> None:
-    """E2E Test: Verify retry logic on consecutive requests (SC-004)."""
+    """E2E Test: Verify retry logic on consecutive requests."""
     client = BitbankAPIClient(real_bitbank_config)
 
     # Make consecutive requests (should trigger rate limiting mechanism)

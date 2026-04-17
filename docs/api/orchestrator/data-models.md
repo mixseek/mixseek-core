@@ -270,7 +270,7 @@ print(f"Timeout: {settings.timeout_per_team_seconds}s")
 print(f"Teams: {len(settings.teams)}")
 ```
 
-**Note**: `OrchestratorSettings`は`ConfigurationManager`経由で読み込まれ、トレーサビリティとバリデーションが自動適用されます。詳細は`specs/051-configuration/spec.md`を参照してください。
+**Note**: `OrchestratorSettings`は`ConfigurationManager`経由で読み込まれ、トレーサビリティとバリデーションが自動適用されます。
 
 ## FailedTeamInfo
 
@@ -401,5 +401,4 @@ except ValidationError as e:
 
 ## 参照
 
-- specs/007-orchestration/data-model.md
 - `src/mixseek/orchestrator/models.py`

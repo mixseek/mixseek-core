@@ -24,12 +24,12 @@ from mixseek.models.member_agent import (
     ResultStatus,
 )
 
-# Error recovery removed for Article 9 constitutional compliance
+# Error recovery removed
 
 
 @pytest.fixture(autouse=True)
 def setup_workspace(monkeypatch, tmp_path):
-    """Set MIXSEEK_WORKSPACE for all tests (Article 9 compliance)."""
+    """Set MIXSEEK_WORKSPACE for all tests."""
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
 
@@ -225,8 +225,8 @@ class TestAgentExecutionIntegration:
         assert result.usage_info["total_tokens"] == 40
 
 
-# TestErrorRecoveryIntegration class removed for Article 9 constitutional compliance
-# Error recovery violates constitutional mandate against implicit fallbacks
+# TestErrorRecoveryIntegration class removed
+# Error recovery violates mandate against implicit fallbacks
 
 
 class TestFormatterIntegration:

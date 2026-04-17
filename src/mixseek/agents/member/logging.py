@@ -11,7 +11,7 @@ from typing import Any
 
 
 class MemberAgentLogger:
-    """Member Agent 実行時の構造化ロギング（FR-011準拠）。
+    """Member Agent 実行時の構造化ロギング。
 
     統一ロガー "mixseek.member_agents" を使用し、extra dict 方式で構造化データを渡す。
     フォーマッタ（TextFormatter/JsonFormatter）が出力形式を決定する。

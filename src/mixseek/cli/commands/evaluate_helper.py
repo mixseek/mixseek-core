@@ -31,7 +31,7 @@ def _create_evaluator(
 ) -> Evaluator:
     """Create and initialize Evaluator with config loading.
 
-    .. note:: FR-046, FR-050準拠
+    .. note::
         ConfigurationManager.get_evaluator_settings() を使用し、
         フォールバックロジックを共通化しています。
 
@@ -56,11 +56,11 @@ def _create_evaluator(
         else:
             typer.echo(f"Using default config: {workspace_path}/configs/evaluator.toml", err=True)
 
-    # FR-050準拠: get_evaluator_settings() でフォールバックロジックを共通化
+    # get_evaluator_settings() でフォールバックロジックを共通化
     settings = manager.get_evaluator_settings(evaluate_config)
     prompt_builder_settings = manager.get_prompt_builder_settings()
 
-    # FR-046準拠: EvaluatorSettings と PromptBuilderSettings を渡して初期化
+    # EvaluatorSettings と PromptBuilderSettings を渡して初期化
     return Evaluator(settings=settings, prompt_builder_settings=prompt_builder_settings)
 
 
@@ -103,7 +103,7 @@ async def evaluate_content(
         # Evaluator の初期化（共通ヘルパー関数を使用）
         evaluator = _create_evaluator(workspace, evaluate_config, verbose)
 
-        # 評価リクエストを作成（Article 9準拠: 明示的にNoneを指定）
+        # 評価リクエストを作成（明示的にNoneを指定）
         # team_id が None の場合はデフォルト値を使用
         request = EvaluationRequest(
             user_query=user_query,

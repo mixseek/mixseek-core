@@ -1,7 +1,5 @@
 """mixseek team コマンド ユニットテスト
 
-Article 3: Test-First Imperative準拠
-
 Test Coverage:
     - チーム設定TOML読み込み
     - Leader Agent実行（Agent Delegation）
@@ -9,14 +7,6 @@ Test Coverage:
     - --save-dbオプション
     - エラーハンドリング（設定ファイル不存在、TOMLバリデーション）
     - ヘルプ表示
-
-Tests:
-    - T036: 基本機能（モック使用）
-    - Edge Cases: 設定ファイル不存在、TOMLバリデーションエラー
-
-References:
-    - Spec: specs/008-leader/spec.md (US5, FR-21〜FR-24)
-    - Contract: specs/008-leader/contracts/team_command.md
 
 Note:
     Round 2機能（--previous-round, --load-from-db）は廃止されました。
@@ -38,7 +28,7 @@ from mixseek.cli.main import app
 
 
 class TestTeamCommand:
-    """mixseek teamコマンドテスト（T036）"""
+    """mixseek teamコマンドテスト"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
@@ -102,7 +92,7 @@ max_tokens = 1024
         mock_result = MagicMock()
         mock_result.output = "Final aggregated response"
         mock_result.all_messages.return_value = []
-        mock_result.all_messages_json.return_value = b"[]"  # FR-023: message_history用
+        mock_result.all_messages_json.return_value = b"[]"  # message_history用
 
         # モック実行（非同期）
         async def mock_run(prompt: str, deps: Any) -> Any:
@@ -163,7 +153,7 @@ max_tokens = 1024
         mock_result = MagicMock()
         mock_result.output = "Loop state test"
         mock_result.all_messages.return_value = []
-        mock_result.all_messages_json.return_value = b"[]"  # FR-023: message_history用
+        mock_result.all_messages_json.return_value = b"[]"  # message_history用
 
         async def mock_run(_prompt: str, deps: Any) -> Any:
             deps.submissions.append(
@@ -212,7 +202,7 @@ max_tokens = 1024
         mock_result = MagicMock()
         mock_result.output = "JSON output test"
         mock_result.all_messages.return_value = []
-        mock_result.all_messages_json.return_value = b"[]"  # FR-023: message_history用
+        mock_result.all_messages_json.return_value = b"[]"  # message_history用
 
         async def mock_run(prompt: str, deps: Any) -> Any:
             deps.submissions.append(
@@ -286,7 +276,7 @@ max_tokens = 1024
         mock_result = MagicMock()
         mock_result.output = "All agents failed"
         mock_result.all_messages.return_value = []
-        mock_result.all_messages_json.return_value = b"[]"  # FR-023: message_history用
+        mock_result.all_messages_json.return_value = b"[]"  # message_history用
 
         async def mock_run(prompt: str, deps: Any) -> Any:
             # 失敗したsubmissionsを追加
@@ -338,7 +328,7 @@ max_tokens = 1024
     ) -> None:
         """設定ファイル不存在エラー（Edge Case）
 
-        Article 4準拠: 正確なエラーメッセージ文言を確認
+        正確なエラーメッセージ文言を確認
         """
         # Given: ワークスペースを設定（ConfigurationManager要件）
         monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))

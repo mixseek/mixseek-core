@@ -54,7 +54,7 @@ entries, total_count = fetch_history(
     status_filter=st.session_state.history_status_filter,
 )
 
-# フィルタ後データなし警告（FR-018）
+# フィルタ後データなし警告
 if total_count == 0 and st.session_state.history_status_filter:
     st.warning("該当する実行履歴が見つかりません。")
     if st.button("フィルタを解除"):
@@ -62,7 +62,7 @@ if total_count == 0 and st.session_state.history_status_filter:
         st.rerun()
     st.stop()
 
-# 履歴テーブル（FR-017: 行クリックで詳細表示）
+# 履歴テーブル（行クリックで詳細表示）
 st.caption("実行履歴の行をクリックすると詳細が表示されます")
 selected_execution_id = render_history_table(entries)
 
@@ -81,7 +81,7 @@ if total_count > 50:
             st.session_state.history_page_number += 1
             st.rerun()
 
-# 実行詳細ビュー（FR-017）
+# 実行詳細ビュー
 if selected_execution_id:
     execution = fetch_execution_detail(selected_execution_id)
     top_submission = fetch_top_submission(selected_execution_id)

@@ -1,8 +1,4 @@
-"""LeaderBoard data models
-
-Feature: 037-mixseek-core-round-controller
-Date: 2025-11-10
-"""
+"""LeaderBoard data models."""
 
 from datetime import UTC, datetime
 from typing import Any
@@ -14,7 +10,7 @@ class LeaderBoardEntry(BaseModel):
     """Leader board table record
 
     This model represents a single leaderboard entry for a team's submission.
-    It is the final return value from Round Controller to Orchestrator (FR-007).
+    It is the final return value from Round Controller to Orchestrator.
     """
 
     id: int | None = Field(default=None, description="Auto-incremented unique ID")

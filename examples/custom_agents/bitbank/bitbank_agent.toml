@@ -50,7 +50,7 @@ min_request_interval_seconds = 1
 supported_pairs = ["btc_jpy", "xrp_jpy", "eth_jpy"]
 supported_candle_types = ["4hour", "8hour", "12hour", "1day", "1week", "1month"]
 
-# Financial metrics settings (Article 9: Data Accuracy Mandate)
+# Financial metrics settings
 [agent.metadata.tool_settings.bitbank_api.financial_metrics]
 risk_free_rate = 0.001  # 年率0.1%（日本10年国債利回り）
 trading_days_per_year = 365  # 暗号通貨は365日取引

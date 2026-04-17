@@ -121,7 +121,7 @@ class ADKRunnerWrapper:
                             if hasattr(part, "text") and part.text:
                                 response_text += part.text
 
-                    # Extract grounding metadata from tool responses (FR-004)
+                    # Extract grounding metadata from tool responses
                     if hasattr(event, "grounding_metadata") and event.grounding_metadata:
                         logger.debug("Found grounding_metadata on event")
                         grounding_metadata.append(self._extract_grounding(event.grounding_metadata))

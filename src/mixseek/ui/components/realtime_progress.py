@@ -3,8 +3,8 @@
 タスク実行中にStreamlit標準コンポーネントを使用してシンプルな進捗を表示します。
 
 References:
-    - FR-004: リアルタイム進捗表示要件
-    - SC-011: ポーリング更新パフォーマンス要件（2秒間隔）
+    - リアルタイム進捗表示要件
+    - ポーリング更新パフォーマンス要件（2秒間隔）
 """
 
 import pandas as pd
@@ -27,7 +27,7 @@ def render_realtime_progress(execution_id: str) -> None:
     Note:
         - ステータスがRUNNING以外の場合は何も表示しない
         - エラー時はst.error()でエラーメッセージを表示
-        - FR-004の2秒間隔ポーリングはページ側で実装
+        - 2秒間隔ポーリングはページ側で実装
     """
     # 実行状態を取得
     state = get_execution_status(execution_id)

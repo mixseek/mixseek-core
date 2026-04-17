@@ -1,13 +1,13 @@
 """Dynamic loading utilities for custom Member Agents.
 
 This module provides functions to dynamically load custom agent classes
-from Python modules or file paths (FR-020, FR-021, FR-022).
+from Python modules or file paths.
 
 Loading Methods:
     - agent_module (recommended): Load from pip-installable Python packages
     - path (alternative): Load from standalone Python files for development
 
-Priority (FR-021):
+Priority:
     1. agent_module is tried first if specified
     2. path is used as fallback if agent_module fails or is not specified
 """
@@ -44,9 +44,9 @@ def load_agent_from_module(
         Instantiated custom agent
 
     Raises:
-        ModuleNotFoundError: Module not found (FR-022: detailed error message)
-        AttributeError: Class not found in module (FR-022)
-        TypeError: Class doesn't inherit from BaseMemberAgent (FR-022)
+        ModuleNotFoundError: Module not found
+        AttributeError: Class not found in module
+        TypeError: Class doesn't inherit from BaseMemberAgent
 
     Examples:
         >>> config = MemberAgentConfig(...)
@@ -56,11 +56,11 @@ def load_agent_from_module(
         ...     config=config
         ... )
     """
-    # Attempt module import (FR-022: explicit error handling)
+    # Attempt module import
     try:
         module = importlib.import_module(agent_module)
     except ModuleNotFoundError as e:
-        # FR-022: Detailed error message with installation hint
+        # Detailed error message with installation hint
         error_msg = (
             f"Error: Failed to load custom agent from module '{agent_module}'. "
             f"ModuleNotFoundError: {e}. "
@@ -72,7 +72,7 @@ def load_agent_from_module(
     try:
         cls: type[BaseMemberAgent] = getattr(module, agent_class)
     except AttributeError as e:
-        # FR-022: Detailed error message with configuration hint
+        # Detailed error message with configuration hint
         error_msg = (
             f"Error: Custom agent class '{agent_class}' not found in module '{agent_module}'. "
             f"Check agent_class in TOML config."
@@ -81,7 +81,7 @@ def load_agent_from_module(
 
     # Verify inheritance from BaseMemberAgent
     if not issubclass(cls, BaseMemberAgent):
-        # FR-022: Detailed error message for type mismatch
+        # Detailed error message for type mismatch
         error_msg = f"Error: Custom agent class '{agent_class}' must inherit from BaseMemberAgent."
         raise TypeError(error_msg)
 
@@ -108,10 +108,10 @@ def load_agent_from_path(
         Instantiated custom agent
 
     Raises:
-        FileNotFoundError: File not found (FR-022: detailed error message)
-        ImportError: Failed to create module spec (FR-022)
-        AttributeError: Class not found in file (FR-022)
-        TypeError: Class doesn't inherit from BaseMemberAgent (FR-022)
+        FileNotFoundError: File not found
+        ImportError: Failed to create module spec
+        AttributeError: Class not found in file
+        TypeError: Class doesn't inherit from BaseMemberAgent
 
     Examples:
         >>> config = MemberAgentConfig(...)
@@ -124,7 +124,7 @@ def load_agent_from_path(
     # Verify file exists
     path_obj = Path(path)
     if not path_obj.exists():
-        # FR-022: Detailed error message with file check hint
+        # Detailed error message with file check hint
         error_msg = (
             f"Error: Failed to load custom agent from path '{path}'. "
             f"FileNotFoundError: File not found. "
@@ -140,7 +140,7 @@ def load_agent_from_path(
     # Create module spec from file path
     spec = importlib.util.spec_from_file_location(module_name, path_obj)
     if spec is None or spec.loader is None:
-        # FR-022: Detailed error for spec creation failure
+        # Detailed error for spec creation failure
         error_msg = f"Error: Failed to create module spec from path '{path}'."
         raise ImportError(error_msg)
 
@@ -158,7 +158,7 @@ def load_agent_from_path(
     try:
         cls: type[BaseMemberAgent] = getattr(module, agent_class)
     except AttributeError as e:
-        # FR-022: Detailed error message with configuration hint
+        # Detailed error message with configuration hint
         error_msg = (
             f"Error: Custom agent class '{agent_class}' not found in file '{path}'. Check agent_class in TOML config."
         )
@@ -166,7 +166,7 @@ def load_agent_from_path(
 
     # Verify inheritance from BaseMemberAgent
     if not issubclass(cls, BaseMemberAgent):
-        # FR-022: Detailed error message for type mismatch
+        # Detailed error message for type mismatch
         error_msg = f"Error: Custom agent class '{agent_class}' must inherit from BaseMemberAgent."
         raise TypeError(error_msg)
 

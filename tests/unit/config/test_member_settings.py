@@ -49,7 +49,7 @@ class TestLoadMemberSettings:
         assert isinstance(traces, dict)
 
         # agent_nameフィールドのトレース情報を確認
-        # Phase 2-4: トレース情報が存在することを確認（ソースタイプは優先順位による）
+        # トレース情報が存在することを確認（ソースタイプは優先順位による）
         if "agent_name" in traces:
             trace = traces["agent_name"]
             assert trace.source_type in ("cli", "toml", "env"), "Valid source type"

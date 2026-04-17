@@ -9,7 +9,7 @@ from mixseek.config.sources.tracing_source import SourceTrace
 
 
 class TestTraceInfoRetrieval:
-    """Trace information retrieval tests (T023)"""
+    """Trace information retrieval tests"""
 
     def test_get_trace_info_returns_source_trace_or_none(self, tmp_path: Path) -> None:
         """Test get_trace_info() returns SourceTrace or None appropriately"""
@@ -67,7 +67,7 @@ class TestTraceInfoRetrieval:
 
 
 class TestPrintDebugInfo:
-    """print_debug_info output tests (T024)"""
+    """print_debug_info output tests"""
 
     def test_print_debug_info_includes_all_settings_fields(self, tmp_path: Path, capsys: Any) -> None:
         """Test debug info includes all settings fields"""
@@ -133,7 +133,7 @@ class TestPrintDebugInfo:
 
 
 class TestGetAllDefaults:
-    """get_all_defaults tests (T025)"""
+    """get_all_defaults tests"""
 
     def test_get_all_defaults_returns_all_default_values(self, tmp_path: Path) -> None:
         """Test returns all default values from schema"""
@@ -245,7 +245,7 @@ class TestDefaultConfigWarningUsesExtra:
 
 
 class TestCLIArgumentsIntegration:
-    """CLI arguments integration tests (T043)"""
+    """CLI arguments integration tests"""
 
     def test_cli_args_parameter_passes_to_settings(self, tmp_path: Path) -> None:
         """Test cli_args parameter is passed to settings"""

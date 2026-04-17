@@ -6,7 +6,6 @@ Functions:
     render_submission_tabs: サブミッションタブ表示
 
 References:
-    - Spec: specs/014-ui/spec.md (FR-024, FR-025, SC-013)
     - Streamlit docs: https://docs.streamlit.io/library/api-reference/layout/st.tabs
 """
 
@@ -80,7 +79,7 @@ def render_submission_tabs(execution_id: str, task_prompt: str, team_ids: list[s
             st.markdown("### サブミッション内容")
             st.markdown(submission.submission_content)
 
-            # スコア詳細（FR-025）
+            # スコア詳細
             if submission.score_details:
                 with st.expander("スコア詳細"):
                     try:

@@ -1,4 +1,4 @@
-"""Performance tests for UI components (SC-004, SC-005, SC-007)."""
+"""Performance tests for UI components."""
 
 import time
 from pathlib import Path
@@ -14,7 +14,7 @@ from mixseek.ui.services.leaderboard_service import fetch_leaderboard, fetch_top
 
 @pytest.mark.performance
 def test_sc_007_config_loading_under_1_second(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """SC-007: Config loading completes within 1 second with 10 TOML files."""
+    """Config loading completes within 1 second with 10 TOML files."""
     # Setup workspace with 10 TOML files
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
     configs_dir = tmp_path / "configs"
@@ -42,7 +42,7 @@ config = "configs/agents/team-{i}.toml"
 
 @pytest.mark.performance
 def test_sc_004_leaderboard_display_under_2_seconds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """SC-004: Leaderboard displays within 2 seconds with 100 teams."""
+    """Leaderboard displays within 2 seconds with 100 teams."""
     # Setup workspace and database
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
     (tmp_path / "configs").mkdir()
@@ -93,7 +93,7 @@ def test_sc_004_leaderboard_display_under_2_seconds(tmp_path: Path, monkeypatch:
 
 @pytest.mark.performance
 def test_sc_005_history_display_under_2_seconds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """SC-005: History page displays within 2 seconds with 500 records."""
+    """History page displays within 2 seconds with 500 records."""
     # Setup workspace and database
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
     (tmp_path / "configs").mkdir()
@@ -139,7 +139,7 @@ def test_sc_005_history_display_under_2_seconds(tmp_path: Path, monkeypatch: pyt
     assert len(entries) == 50
     assert elapsed < 2.0, f"History initial load took {elapsed:.3f}s, expected < 2.0s"
 
-    # Measure page navigation (SC-005: < 1 second)
+    # Measure page navigation (< 1 second)
     start = time.perf_counter()
     entries_page2, _ = fetch_history(page_number=2, page_size=50)
     elapsed_navigation = time.perf_counter() - start

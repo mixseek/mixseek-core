@@ -16,7 +16,7 @@ from mixseek.config import (
 
 
 class TestTomlFileLoading:
-    """TOML file loading tests (T048)"""
+    """TOML file loading tests"""
 
     def test_load_flat_toml_structure(self, tmp_path: Path) -> None:
         """Test loading flat TOML structure (OrchestratorSettings)"""
@@ -198,7 +198,7 @@ class TestTomlFileLoading:
 
 
 class TestCustomTomlFilePath:
-    """Custom TOML file path tests (T049)"""
+    """Custom TOML file path tests"""
 
     def test_toml_file_discovery_in_workspace(self, tmp_path: Path) -> None:
         """Test automatic TOML file discovery in workspace"""
@@ -329,7 +329,7 @@ class TestCustomTomlFilePath:
             manager = ConfigurationManager(workspace=tmp_path, environment="dev")
             settings = manager.load_settings(OrchestratorSettings)
 
-            # Assertion: Defaults are used when specified file doesn't exist (Article 9 compliance)
+            # Assertion: Defaults are used when specified file doesn't exist
             assert settings.timeout_per_team_seconds == 300  # default
             assert settings.max_concurrent_teams == 4  # default
         finally:

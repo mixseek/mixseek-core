@@ -41,7 +41,7 @@ class MemberAgentFactory:
 
     @classmethod
     def _load_custom_agent(cls, config: MemberAgentConfig) -> BaseMemberAgent:
-        """Load custom agent using dynamic loading (FR-021 priority handling).
+        """Load custom agent using dynamic loading (priority handling).
 
         Priority:
             1. agent_module (recommended): Try module import first
@@ -67,7 +67,7 @@ class MemberAgentFactory:
 
         plugin = config.plugin
 
-        # FR-021 Priority 1: agent_module (recommended)
+        # Priority 1: agent_module (recommended)
         if plugin.agent_module is not None:
             try:
                 agent = load_agent_from_module(
@@ -79,7 +79,7 @@ class MemberAgentFactory:
                 logger.info(f"Successfully loaded custom agent '{config.name}' from module '{plugin.agent_module}'")
                 return agent
             except (ModuleNotFoundError, AttributeError, TypeError) as e:
-                # FR-021: Fallback to path if available
+                # Fallback to path if available
                 if plugin.path is None:
                     # No fallback available, re-raise original error
                     raise
@@ -89,7 +89,7 @@ class MemberAgentFactory:
                     f"falling back to path '{plugin.path}': {e}"
                 )
 
-        # FR-021 Priority 2: path (fallback or primary if agent_module not specified)
+        # Priority 2: path (fallback or primary if agent_module not specified)
         if plugin.path is not None:
             agent = load_agent_from_path(
                 path=plugin.path,
@@ -121,9 +121,9 @@ class MemberAgentFactory:
             ModuleNotFoundError: If custom agent module not found
             FileNotFoundError: If custom agent file not found
         """
-        # Custom agent: use dynamic loading (FR-020, FR-021, FR-022) or manual registration
+        # Custom agent: use dynamic loading or manual registration
         if config.type == "custom":
-            # Plugin configuration provided: use dynamic loading (FR-020)
+            # Plugin configuration provided: use dynamic loading
             if config.plugin is not None:
                 agent = cls._load_custom_agent(config)
             else:

@@ -71,12 +71,12 @@ def ui(
         )
         raise typer.Exit(1)
 
-    # Resolve workspace and port using ConfigurationManager (Phase 12)
+    # Resolve workspace and port using ConfigurationManager
     try:
         config_manager = ConfigurationManager(workspace=workspace)
         ui_settings: UISettings = config_manager.load_settings(UISettings)
 
-        # Use CLI-provided port if given, otherwise use settings (Phase 12)
+        # Use CLI-provided port if given, otherwise use settings
         final_port = port if port is not None else ui_settings.port
 
     except Exception as e:

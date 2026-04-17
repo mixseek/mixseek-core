@@ -6,13 +6,13 @@ DEFAULT_PROJECT_NAME: str = "mixseek-project"
 # Environment variable name for workspace path
 WORKSPACE_ENV_VAR: str = "MIXSEEK_WORKSPACE"
 
-# Maximum recursion depth for config file loading (Phase 13 T107, FR-043)
+# Maximum recursion depth for config file loading
 # Prevents infinite loops and stack overflow in nested configuration references
 MAX_CONFIG_RECURSION_DEPTH: int = 10
 
-# Sensitive field patterns for security masking (Article 9: Data Accuracy Mandate)
+# Sensitive field patterns for security masking
 # Field names containing these patterns will be masked in output
-# Article 9 Compliance: Explicit list (no implicit assumptions)
+# Explicit list (no implicit assumptions)
 SENSITIVE_FIELD_PATTERNS: tuple[str, ...] = (
     "api_key",
     "password",
@@ -23,9 +23,9 @@ SENSITIVE_FIELD_PATTERNS: tuple[str, ...] = (
     "access_key",
 )
 
-# Non-sensitive field exceptions (Article 9: Data Accuracy Mandate)
+# Non-sensitive field exceptions
 # Field names that should NOT be masked even if they match sensitive patterns
-# Article 9 Compliance: Explicit list (no implicit assumptions)
+# Explicit list (no implicit assumptions)
 NON_SENSITIVE_FIELD_EXCEPTIONS: tuple[str, ...] = (
     "max_tokens",  # LLM parameter, not a security token
 )

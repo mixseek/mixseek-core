@@ -184,7 +184,7 @@ def member(
         start_time = time.time()
 
         # Load configuration based on option
-        # Load configuration: unified flow for both --agent and --config (Article 10 DRY)
+        # Load configuration: unified flow for both --agent and --config (DRY)
         try:
             if agent:
                 # --agent option: Get bundled member agent path
@@ -196,7 +196,7 @@ def member(
                 assert config is not None
                 config_path = config
 
-            # Unified loading path for both --agent and --config (Article 10 DRY)
+            # Unified loading path for both --agent and --config (DRY)
             # Use ConfigurationManager for consistent path resolution (same as team/exec commands)
             config_manager = ConfigurationManager(workspace=workspace_resolved)
             member_settings = config_manager.load_member_settings(config_path)

@@ -3,7 +3,6 @@
 ラウンド進捗表示、チーム進捗一覧、サブミッションタブを含む統合実行ページ。
 
 References:
-    - Spec: specs/014-ui/spec.md (User Story 1)
     - Develop: Existing execution service and orchestration selector
 """
 
@@ -39,7 +38,7 @@ if "polling_enabled" not in st.session_state:
 
 st.title("タスク実行")
 
-# ポーリングループ（FR-004, SC-011）
+# ポーリングループ
 if st.session_state.polling_enabled and st.session_state.current_execution_id:
     # 実行状態を取得
     state = get_execution_status(st.session_state.current_execution_id)
@@ -50,7 +49,7 @@ if st.session_state.polling_enabled and st.session_state.current_execution_id:
     # チーム別ステータス表示
     render_team_status_cards(st.session_state.current_execution_id)
 
-    # 実行ログ表示（FR-026）
+    # 実行ログ表示
     render_log_viewer(lines=100, expanded=False)
 
     if state.is_completed:
@@ -83,7 +82,7 @@ if st.session_state.polling_enabled and st.session_state.current_execution_id:
         time.sleep(2)
         st.rerun()
 
-# ラウンド進捗表示（FR-022, SC-011）- 実行完了後のみ表示
+# ラウンド進捗表示 - 実行完了後のみ表示
 if st.session_state.current_execution_id and not st.session_state.polling_enabled and not st.session_state.is_running:
     render_round_progress(st.session_state.current_execution_id)
 
@@ -142,12 +141,12 @@ if execute_button:
 
 # 詳細表示エリア（実行完了後のみ表示）
 if st.session_state.current_execution_id and not st.session_state.polling_enabled and not st.session_state.is_running:
-    # チーム進捗一覧表示（FR-023, SC-012）
+    # チーム進捗一覧表示
     st.divider()
     st.subheader("チーム進捗確認")
     render_team_progress_list(st.session_state.current_execution_id)
 
-    # 実行結果表示（FR-005）
+    # 実行結果表示
     if st.session_state.current_execution_result:
         result = st.session_state.current_execution_result
 
@@ -176,7 +175,7 @@ if st.session_state.current_execution_id and not st.session_state.polling_enable
                 with st.expander(f"❌ {failed_team.team_name}", expanded=False):
                     st.code(failed_team.error_message, language="text")
 
-    # サブミッションタブ表示（FR-024, SC-013）
+    # サブミッションタブ表示
     st.divider()
     st.subheader("サブミッション")
 

@@ -1,9 +1,9 @@
 """Unit tests for authentication module.
 
 This test suite validates the authentication module's compliance with
-Article 9 (Data Accuracy Mandate) and Article 3 (Test-First Imperative).
+Data Accuracy Mandate and Test-First Imperative.
 
-Constitutional requirements tested:
+Requirements tested:
 - NO implicit fallbacks to mock responses
 - Explicit error handling for all authentication failures
 - Clear separation between test and production environments
@@ -72,7 +72,7 @@ class TestAuthProvider:
 
 
 class TestEnvironmentDetection:
-    """Test environment detection for Article 9 compliance."""
+    """Test environment detection."""
 
     def test_validate_test_environment_with_pytest(self) -> None:
         """Test that pytest environment is correctly detected."""
@@ -92,7 +92,7 @@ class TestEnvironmentDetection:
 
 
 class TestGoogleAICredentials:
-    """Test Google AI credential validation for Article 9 compliance."""
+    """Test Google AI credential validation."""
 
     def test_validate_google_ai_credentials_success(self) -> None:
         """Test successful Google AI credential validation."""
@@ -128,7 +128,7 @@ class TestGoogleAICredentials:
 
 
 class TestVertexAICredentials:
-    """Test Vertex AI credential validation for Article 9 compliance."""
+    """Test Vertex AI credential validation."""
 
     def test_validate_vertex_ai_credentials_missing_env_var(self) -> None:
         """Test error when GOOGLE_APPLICATION_CREDENTIALS is missing."""
@@ -220,7 +220,7 @@ class TestVertexAICredentials:
 
 
 class TestGrokCredentials:
-    """Test Grok (xAI) credential validation for Article 9 compliance."""
+    """Test Grok (xAI) credential validation."""
 
     def test_validate_grok_credentials_success(self) -> None:
         """Test successful Grok credential validation."""
@@ -257,7 +257,7 @@ class TestGrokCredentials:
 
 
 class TestAuthenticatedModelCreation:
-    """Test authenticated model creation with Article 9 compliance."""
+    """Test authenticated model creation."""
 
     @patch("mixseek.core.auth.validate_test_environment")
     @patch("mixseek.core.auth.TestModel")
@@ -429,7 +429,7 @@ class TestAuthInfo:
 
 
 class TestConstitutionalCompliance:
-    """Test Article 9 constitutional compliance requirements."""
+    """Test compliance requirements."""
 
     def test_no_implicit_fallbacks_on_missing_google_api_key(self) -> None:
         """Test that missing GOOGLE_API_KEY does NOT fall back to TestModel."""

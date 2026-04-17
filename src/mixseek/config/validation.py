@@ -1,11 +1,10 @@
-"""Configuration file validation utilities (Phase 13 T103).
+"""Configuration file validation utilities.
 
 Provides validation functions for configuration files:
 - Orchestrator TOML validation
 - Section existence checks
 - TOML syntax error handling
 
-Article 9 Compliance:
 - Explicit error messages with file paths
 - No implicit defaults or assumptions
 - Proper error propagation
@@ -34,7 +33,6 @@ def validate_orchestrator_toml(file_path: Path) -> None:
         >>> validate_orchestrator_toml(Path("orchestrator.toml"))  # Valid file
         >>> validate_orchestrator_toml(Path("invalid.toml"))  # Raises ValueError
 
-    Phase 13 T103: FR-039
     """
     # Check if file exists
     if not file_path.exists():

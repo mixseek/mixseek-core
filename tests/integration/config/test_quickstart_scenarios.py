@@ -1,4 +1,4 @@
-"""Quickstart.md scenario validation tests - Phase 11 T075."""
+"""Quickstart.md scenario validation tests."""
 
 from pathlib import Path
 from typing import Any
@@ -7,7 +7,7 @@ from mixseek.config import ConfigurationManager, LeaderAgentSettings, Orchestrat
 
 
 class TestQuickstartBasicUsage:
-    """Test basic usage scenarios from quickstart.md - T075."""
+    """Test basic usage scenarios from quickstart.md."""
 
     def test_scenario_1_toml_file_creation(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test basic TOML file creation and loading."""
@@ -83,7 +83,7 @@ timeout_seconds = 180
 
 
 class TestQuickstartCLIUsage:
-    """Test CLI usage scenarios from quickstart.md - T075."""
+    """Test CLI usage scenarios from quickstart.md."""
 
     def test_config_init_command(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test config init command scenarios."""
@@ -125,7 +125,7 @@ class TestQuickstartCLIUsage:
 
 
 class TestQuickstartAcceptanceScenarios:
-    """Complete acceptance scenarios from quickstart.md - T075."""
+    """Complete acceptance scenarios from quickstart.md."""
 
     def test_acceptance_scenario_dev_environment(
         self, tmp_path: Path, monkeypatch: Any, isolate_from_project_dotenv: None

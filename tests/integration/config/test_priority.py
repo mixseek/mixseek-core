@@ -9,7 +9,7 @@ from mixseek.config import ConfigurationManager, LeaderAgentSettings, Orchestrat
 
 
 class TestPriorityOrder:
-    """設定優先順位のテスト（CLI > ENV > dotenv > TOML > defaults） (T037)"""
+    """設定優先順位のテスト（CLI > ENV > dotenv > TOML > defaults）"""
 
     def test_cli_overrides_env(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test CLI args override environment variables"""
@@ -134,11 +134,11 @@ class TestPriorityOrder:
 
 
 class TestOrchestratorSettingsEnvOverride:
-    """OrchestratorSettingsの環境変数オーバーライドテスト (T017)"""
+    """OrchestratorSettingsの環境変数オーバーライドテスト"""
 
     def test_env_overrides_toml_value(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test environment variable overrides TOML value (timeout_per_team_seconds)"""
-        # Setup: Set environment variable to override default (MIXSEEK_ prefix only, FR-010)
+        # Setup: Set environment variable to override default (MIXSEEK_ prefix only)
         monkeypatch.setenv("MIXSEEK_TIMEOUT_PER_TEAM_SECONDS", "600")
         monkeypatch.setenv("MIXSEEK_WORKSPACE_PATH", str(tmp_path))
         monkeypatch.setenv("MIXSEEK_MAX_CONCURRENT_TEAMS", "5")
@@ -152,7 +152,7 @@ class TestOrchestratorSettingsEnvOverride:
 
     def test_env_with_no_toml_file(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test environment variable with no TOML file"""
-        # Setup: Set environment variables, no TOML file (MIXSEEK_ prefix only, FR-010)
+        # Setup: Set environment variables, no TOML file (MIXSEEK_ prefix only)
         monkeypatch.setenv("MIXSEEK_TIMEOUT_PER_TEAM_SECONDS", "450")
         monkeypatch.setenv("MIXSEEK_WORKSPACE_PATH", str(tmp_path))
         monkeypatch.setenv("MIXSEEK_MAX_CONCURRENT_TEAMS", "3")
@@ -178,11 +178,11 @@ class TestOrchestratorSettingsEnvOverride:
 
 
 class TestLeaderAgentSettingsEnvOverride:
-    """LeaderAgentSettingsの環境変数オーバーライドテスト (T018)"""
+    """LeaderAgentSettingsの環境変数オーバーライドテスト"""
 
     def test_mixseek_leader_model_overrides_toml(self, monkeypatch: Any) -> None:
         """Test MIXSEEK_LEADER__MODEL overrides TOML value"""
-        # Setup: Set environment variable with double underscore for nested field (FR-010)
+        # Setup: Set environment variable with double underscore for nested field
         monkeypatch.setenv("MIXSEEK_LEADER__MODEL", "openai:gpt-5")
 
         # Create settings with ConfigurationManager
@@ -194,7 +194,7 @@ class TestLeaderAgentSettingsEnvOverride:
 
     def test_mixseek_leader_timeout_overrides_toml(self, monkeypatch: Any) -> None:
         """Test MIXSEEK_LEADER__TIMEOUT_SECONDS overrides TOML value"""
-        # Setup: Set environment variable with double underscore for nested field (FR-010)
+        # Setup: Set environment variable with double underscore for nested field
         monkeypatch.setenv("MIXSEEK_LEADER__TIMEOUT_SECONDS", "600")
 
         # Create settings
@@ -205,7 +205,7 @@ class TestLeaderAgentSettingsEnvOverride:
         assert settings.timeout_seconds == 600
 
     def test_nested_env_var_mapping(self, monkeypatch: Any) -> None:
-        """Test nested environment variable mapping with double underscore delimiter (FR-010)"""
+        """Test nested environment variable mapping with double underscore delimiter"""
         # Setup: Set multiple environment variables with double underscore for nested fields
         monkeypatch.setenv("MIXSEEK_LEADER__MODEL", "anthropic:claude-opus-4")
         monkeypatch.setenv("MIXSEEK_LEADER__TEMPERATURE", "0.8")
@@ -225,7 +225,7 @@ class TestEnvVarNaming:
     """環境変数命名規則のテスト"""
 
     def test_env_prefix_mixseek(self, monkeypatch: Any, tmp_path: Path) -> None:
-        """Test MIXSEEK_ prefix is applied (FR-010)"""
+        """Test MIXSEEK_ prefix is applied"""
         # Set environment variables with MIXSEEK_ prefix
         monkeypatch.setenv("MIXSEEK_TIMEOUT_PER_TEAM_SECONDS", "500")
         monkeypatch.setenv("MIXSEEK_WORKSPACE_PATH", str(tmp_path))
@@ -237,7 +237,7 @@ class TestEnvVarNaming:
         assert settings.timeout_per_team_seconds == 500
 
     def test_nested_delimiter_underscore(self, monkeypatch: Any) -> None:
-        """Test __ (double underscore) delimiter for nested fields (FR-013)"""
+        """Test __ (double underscore) delimiter for nested fields"""
         # Set nested environment variables with MIXSEEK_LEADER__ prefix and __ delimiter
         monkeypatch.setenv("MIXSEEK_LEADER__MODEL", "openai:gpt-5-test")
         monkeypatch.setenv("MIXSEEK_LEADER__TIMEOUT_SECONDS", "550")
@@ -322,7 +322,7 @@ class TestTraceInformation:
 
 
 class TestCLIArguments:
-    """CLI引数オーバーライドテスト (T042)"""
+    """CLI引数オーバーライドテスト"""
 
     def test_cli_args_override_env_and_toml(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Test CLI args override ENV, .env, and TOML in priority chain (Acceptance Scenario 1)"""

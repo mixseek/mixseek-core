@@ -3,8 +3,8 @@
 This test suite validates the timeout_seconds field in LeaderAgentConfig,
 including validation rules, default values, and boundary conditions.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the implementation to ensure proper HTTP timeout handling.
+These tests are written BEFORE the implementation to ensure proper HTTP
+timeout handling.
 """
 
 import pytest

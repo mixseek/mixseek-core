@@ -1,7 +1,6 @@
-"""Standard logging configuration (Article 9 compliant).
+"""Standard logging configuration.
 
 This module provides configuration management for standard Python logging integration.
-All configuration follows Constitution Article 9 (Data Accuracy Mandate):
 - No hardcoded values
 - No implicit fallbacks
 - Explicit error propagation
@@ -28,7 +27,7 @@ LogFormatType = Literal["text", "json"]
 
 
 class LoggingConfig(BaseModel):
-    """Standard logging configuration (Article 9 compliant).
+    """Standard logging configuration.
 
     Attributes:
         logfire_enabled: Enable forwarding to Logfire (requires --logfire flag)
@@ -39,7 +38,7 @@ class LoggingConfig(BaseModel):
 
     Note:
         Default values are safe defaults (console/file enabled, cloud disabled).
-        This follows Article 9 by requiring explicit opt-in for cloud features.
+        Requires explicit opt-in for cloud features.
     """
 
     logfire_enabled: bool = Field(default=False)
@@ -51,7 +50,7 @@ class LoggingConfig(BaseModel):
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
-        """Validate log_level after initialization (Article 9 compliant).
+        """Validate log_level after initialization.
 
         Raises:
             ValueError: If log_level is not a valid value
@@ -66,7 +65,7 @@ class LoggingConfig(BaseModel):
 
     @classmethod
     def from_env(cls) -> "LoggingConfig":
-        """Load configuration from environment variables (Article 9 compliant).
+        """Load configuration from environment variables.
 
         Environment Variables:
             MIXSEEK_LOG_LEVEL: Log level (debug/info/warning/error/critical, default: info)
@@ -82,7 +81,7 @@ class LoggingConfig(BaseModel):
 
         Note:
             Default values are safe defaults (console/file enabled).
-            This follows Article 9 by using explicit environment variable reading.
+            Uses explicit environment variable reading.
         """
         # Read log level with validation
         log_level_str = os.getenv("MIXSEEK_LOG_LEVEL", "info").lower()

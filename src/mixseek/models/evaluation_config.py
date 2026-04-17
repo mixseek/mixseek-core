@@ -16,13 +16,13 @@ class MetricConfig(BaseModel):
     各メトリクスは独自の重みとオプションで独自のLLMモデルを持つことができます。
 
     Attributes:
-        name: メトリクスクラス名（例："ClarityCoherence"、"Coverage"、"Relevance"）（FR-020）
-        weight: 重み付き平均計算のためのメトリクスの重み（0.0から1.0）（FR-003）
-        model: オプションのLLMモデルオーバーライド（フォーマット："provider:model-name"）（FR-015）
-        system_instruction: オプションのsystem_instruction上書き（FR-003, FR-019）
-        temperature: オプションのtemperature設定（FR-019）
-        max_tokens: オプションのmax_tokens設定（FR-019）
-        max_retries: オプションのmax_retries設定（FR-019）
+        name: メトリクスクラス名（例："ClarityCoherence"、"Coverage"、"Relevance"）
+        weight: 重み付き平均計算のためのメトリクスの重み（0.0から1.0）
+        model: オプションのLLMモデルオーバーライド（フォーマット："provider:model-name"）
+        system_instruction: オプションのsystem_instruction上書き
+        temperature: オプションのtemperature設定
+        max_tokens: オプションのmax_tokens設定
+        max_retries: オプションのmax_retries設定
         timeout_seconds: オプションのHTTPタイムアウト（秒）
         stop_sequences: オプションの生成停止シーケンス
         top_p: オプションのTop-pサンプリングパラメータ
@@ -59,7 +59,7 @@ class MetricConfig(BaseModel):
 
     Validation Rules:
         - name: 空にできない（メトリクスクラス名）
-        - weight: 0.0から1.0の間でなければならない（FR-003）
+        - weight: 0.0から1.0の間でなければならない
         - model: 提供する場合は、"provider:model-name"フォーマットでなければならない
         - temperature: 提供する場合は、0.0以上2.0以下でなければならない
         - max_tokens: 提供する場合は、正の整数でなければならない
@@ -72,7 +72,7 @@ class MetricConfig(BaseModel):
 
     name: str = Field(
         ...,
-        description="メトリクスクラス名（例：'ClarityCoherence'、'Coverage'、'Relevance'）（FR-020）",
+        description="メトリクスクラス名（例：'ClarityCoherence'、'Coverage'、'Relevance'）",
         examples=["ClarityCoherence", "Coverage", "Relevance"],
     )
 
@@ -80,13 +80,13 @@ class MetricConfig(BaseModel):
         None,
         ge=0.0,
         le=1.0,
-        description="重み付き平均のためのメトリクスの重み（0.0から1.0）。Noneの場合、均等な重みが割り当てられます（FR-003、FR-008）",
+        description="重み付き平均のためのメトリクスの重み（0.0から1.0）。Noneの場合、均等な重みが割り当てられます",
         examples=[0.4, 0.3, 0.3],
     )
 
     model: str | None = Field(
         None,
-        description="オプションのLLMモデルオーバーライド（フォーマット：'provider:model-name'）（FR-015）",
+        description="オプションのLLMモデルオーバーライド（フォーマット：'provider:model-name'）",
         examples=["anthropic:claude-sonnet-4-5-20250929", "openai:gpt-5"],
     )
 
@@ -99,21 +99,21 @@ class MetricConfig(BaseModel):
     temperature: float | None = Field(
         None,
         ge=0.0,
-        description="オプションのLLM temperature設定（FR-019）",
+        description="オプションのLLM temperature設定",
         examples=[0.0, 0.5, 1.0],
     )
 
     max_tokens: int | None = Field(
         None,
         gt=0,
-        description="オプションのLLM max_tokens設定（FR-019）",
+        description="オプションのLLM max_tokens設定",
         examples=[1000, 2000, 4000],
     )
 
     max_retries: int | None = Field(
         None,
         ge=0,
-        description="オプションのLLM API呼び出しの最大リトライ試行回数（FR-019）",
+        description="オプションのLLM API呼び出しの最大リトライ試行回数",
         examples=[3, 5, 10],
     )
 
@@ -207,13 +207,13 @@ class LLMDefaultConfig(BaseModel):
     各パラメータは、メトリクスレベルで指定されていない場合のデフォルト値として使用されます。
 
     全てのフィールドにハードコードされたデフォルト値が設定されており、
-    TOMLファイルで明示的に指定しない場合はこれらの値が使用されます（FR-019）。
+    TOMLファイルで明示的に指定しない場合はこれらの値が使用されます。
 
     Attributes:
-        model: デフォルトLLMモデル（デフォルト: "google-gla:gemini-2.5-flash"）（FR-019）
-        temperature: デフォルトtemperature設定（デフォルト: 0.0）（FR-019）
-        max_tokens: デフォルトmax_tokens設定（デフォルト: None=制限なし）（FR-019）
-        max_retries: デフォルトmax_retries設定（デフォルト: 3）（FR-019）
+        model: デフォルトLLMモデル（デフォルト: "google-gla:gemini-2.5-flash"）
+        temperature: デフォルトtemperature設定（デフォルト: 0.0）
+        max_tokens: デフォルトmax_tokens設定（デフォルト: None=制限なし）
+        max_retries: デフォルトmax_retries設定（デフォルト: 3）
         timeout_seconds: デフォルトHTTPタイムアウト（秒）（デフォルト: 300）
         stop_sequences: デフォルト生成停止シーケンス（デフォルト: None）
         top_p: デフォルトTop-pサンプリングパラメータ（デフォルト: None）
@@ -259,28 +259,28 @@ class LLMDefaultConfig(BaseModel):
 
     model: str = Field(
         default="google-gla:gemini-2.5-flash",
-        description="デフォルトLLMモデル（フォーマット：'provider:model-name'）（FR-019）",
+        description="デフォルトLLMモデル（フォーマット：'provider:model-name'）",
         examples=["anthropic:claude-sonnet-4-5-20250929", "openai:gpt-5"],
     )
 
     temperature: float = Field(
         default=0.0,
         ge=0.0,
-        description="デフォルトLLM temperature設定（FR-019）",
+        description="デフォルトLLM temperature設定",
         examples=[0.0, 0.5, 1.0],
     )
 
     max_tokens: int | None = Field(
         default=None,
         gt=0,
-        description="デフォルトLLM max_tokens設定（FR-019）",
+        description="デフォルトLLM max_tokens設定",
         examples=[1000, 2000, 4000],
     )
 
     max_retries: int = Field(
         default=3,
         ge=0,
-        description="デフォルトLLM API呼び出しの最大リトライ試行回数（FR-019）",
+        description="デフォルトLLM API呼び出しの最大リトライ試行回数",
         examples=[3, 5, 10],
     )
 
@@ -357,7 +357,7 @@ class EvaluationConfig(BaseModel):
     含む完全な評価器設定を表します。
 
     Attributes:
-        llm_default: [llm_default]セクションのデフォルトLLM設定（FR-019）
+        llm_default: [llm_default]セクションのデフォルトLLM設定
         metrics: メトリクス設定のリスト
         metric_weights: メトリクス名を重みにマッピングする辞書（メトリクスリストから派生）
         enabled_metrics: 有効なメトリクス名のリスト（メトリクスリストから派生）
@@ -401,16 +401,16 @@ class EvaluationConfig(BaseModel):
 
     Validation Rules:
         - metrics: 少なくとも1つのメトリクスを含む必要がある
-        - metric weights: 均等な重みフォールバック後、1.0（±0.001許容範囲）に合計する必要がある（FR-008、FR-009）
+        - metric weights: 均等な重みフォールバック後、1.0（±0.001許容範囲）に合計する必要がある
         - metric names: 一意でなければならない
     """
 
     llm_default: LLMDefaultConfig = Field(
         default_factory=LLMDefaultConfig,
-        description="[llm_default]セクションのデフォルトLLM設定（FR-019）",
+        description="[llm_default]セクションのデフォルトLLM設定",
     )
 
-    metrics: list[MetricConfig] = Field(..., description="メトリクス設定のリスト（FR-003）", min_length=1)
+    metrics: list[MetricConfig] = Field(..., description="メトリクス設定のリスト", min_length=1)
 
     # 検証中に設定される派生フィールド
     metric_weights: dict[str, float] = Field(
@@ -425,12 +425,12 @@ class EvaluationConfig(BaseModel):
 
     custom_metrics: dict[str, dict[str, Any]] | None = Field(
         None,
-        description="カスタムメトリクス設定のオプションの辞書（FR-007）",
+        description="カスタムメトリクス設定のオプションの辞書",
     )
 
     @model_validator(mode="after")
     def apply_equal_weights_if_needed(self) -> "EvaluationConfig":
-        """重みが指定されていない場合、メトリクスに均等な重みを適用します（FR-008）。
+        """重みが指定されていない場合、メトリクスに均等な重みを適用します。
 
         すべてのメトリクスの重みがNoneの場合、均等な重みを割り当てます。
         一部の重みがNoneで一部が設定されている場合、エラーを発生させます。
@@ -443,7 +443,7 @@ class EvaluationConfig(BaseModel):
         none_count = sum(1 for m in self.metrics if m.weight is None)
 
         if none_count == len(self.metrics):
-            # すべての重みがNone → 均等な重みを適用（FR-008）
+            # すべての重みがNone → 均等な重みを適用
             equal_weight = 1.0 / len(self.metrics)
             for metric in self.metrics:
                 metric.weight = equal_weight
@@ -457,7 +457,7 @@ class EvaluationConfig(BaseModel):
                 f"重みが設定済み: {', '.join(set_metrics)}。"
             )
 
-        # すべての重みが1.0に合計することを検証（FR-009）
+        # すべての重みが1.0に合計することを検証
         # この時点で、すべての重みは非Noneであるべき
         total_weight = sum(metric.weight for metric in self.metrics)  # type: ignore
 
@@ -496,10 +496,6 @@ class EvaluationConfig(BaseModel):
     def from_toml_file(cls, workspace_path: Path) -> "EvaluationConfig":
         """TOMLファイルから設定を読み込みます。
 
-        .. note:: T080移行完了
-            内部実装は新しいConfigurationManager.load_evaluation_settings()を使用しています。
-            外部APIは完全に後方互換性を維持しています。
-
         Args:
             workspace_path: ワークスペースルートディレクトリへのパス
 
@@ -516,7 +512,7 @@ class EvaluationConfig(BaseModel):
             config = EvaluationConfig.from_toml_file(Path("/workspace"))
             ```
         """
-        # T080移行: 新しいConfigurationManagerを使用
+        # 新しいConfigurationManagerを使用
         from mixseek.config.manager import ConfigurationManager
 
         config_file = workspace_path / "configs" / "evaluator.toml"
@@ -556,7 +552,7 @@ class EvaluationConfig(BaseModel):
         )
 
     def get_model_for_metric(self, metric_name: str) -> str:
-        """特定のメトリクスのLLMモデルを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのLLMモデルを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのmodel設定
@@ -579,12 +575,12 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         # メトリクスレベルで設定されていればそれを使用、なければllm_defaultの値を使用
         return metric.model if metric.model is not None else self.llm_default.model
 
     def get_temperature_for_metric(self, metric_name: str) -> float:
-        """特定のメトリクスのtemperatureを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのtemperatureを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのtemperature設定
@@ -601,11 +597,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.temperature if metric.temperature is not None else self.llm_default.temperature
 
     def get_max_tokens_for_metric(self, metric_name: str) -> int | None:
-        """特定のメトリクスのmax_tokensを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのmax_tokensを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのmax_tokens設定
@@ -622,11 +618,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.max_tokens if metric.max_tokens is not None else self.llm_default.max_tokens
 
     def get_max_retries_for_metric(self, metric_name: str) -> int:
-        """特定のメトリクスのmax_retriesを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのmax_retriesを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのmax_retries設定
@@ -643,11 +639,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.max_retries if metric.max_retries is not None else self.llm_default.max_retries
 
     def get_system_instruction_for_metric(self, metric_name: str) -> str | None:
-        """特定のメトリクスのsystem_instructionを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのsystem_instructionを取得します（フォールバックロジック）。
 
         注意: system_instructionは、メトリクスレベルでのみ設定可能です。
         [llm_default]セクションにはsystem_instructionフィールドはありません。
@@ -664,11 +660,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # system_instructionはメトリクスレベルでのみ設定可能（FR-019）
+        # system_instructionはメトリクスレベルでのみ設定可能
         return metric.system_instruction
 
     def get_timeout_seconds_for_metric(self, metric_name: str) -> int | None:
-        """特定のメトリクスのtimeout_secondsを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのtimeout_secondsを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのtimeout_seconds設定
@@ -685,11 +681,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.timeout_seconds if metric.timeout_seconds is not None else self.llm_default.timeout_seconds
 
     def get_stop_sequences_for_metric(self, metric_name: str) -> list[str] | None:
-        """特定のメトリクスのstop_sequencesを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのstop_sequencesを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのstop_sequences設定
@@ -706,11 +702,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.stop_sequences if metric.stop_sequences is not None else self.llm_default.stop_sequences
 
     def get_top_p_for_metric(self, metric_name: str) -> float | None:
-        """特定のメトリクスのtop_pを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのtop_pを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのtop_p設定
@@ -727,11 +723,11 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.top_p if metric.top_p is not None else self.llm_default.top_p
 
     def get_seed_for_metric(self, metric_name: str) -> int | None:
-        """特定のメトリクスのseedを取得します（FR-019のフォールバックロジック）。
+        """特定のメトリクスのseedを取得します（フォールバックロジック）。
 
         フォールバック階層:
         1. メトリクスレベルのseed設定
@@ -748,7 +744,7 @@ class EvaluationConfig(BaseModel):
         """
         metric = self._get_metric_config(metric_name)
 
-        # フォールバック階層（FR-019）
+        # フォールバック階層
         return metric.seed if metric.seed is not None else self.llm_default.seed
 
     model_config = {
@@ -779,13 +775,13 @@ class EvaluationConfig(BaseModel):
 def evaluator_settings_to_evaluation_config(
     evaluator_settings: "EvaluatorSettings",
 ) -> EvaluationConfig:
-    """EvaluatorSettings（新）をEvaluationConfig（旧）に変換（T080移行ヘルパー）。
+    """EvaluatorSettings（新）をEvaluationConfig（旧）に変換（移行ヘルパー）。
 
     この関数は新しい設定システム（EvaluatorSettings）から
     既存のAPIとの互換性のために旧形式（EvaluationConfig）に変換します。
 
     Args:
-        evaluator_settings: EvaluatorSettingsインスタンス（T080拡張版）
+        evaluator_settings: EvaluatorSettingsインスタンス
 
     Returns:
         EvaluationConfigインスタンス（完全な検証済み）

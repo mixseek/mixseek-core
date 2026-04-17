@@ -72,7 +72,7 @@ class MemberAgentResult(BaseModel):
     # Additional context
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional result metadata")
 
-    # Message history (FR-016: Complete message history from Pydantic AI)
+    # Message history
     all_messages: list[ModelMessage] | None = Field(
         default=None,
         description="Complete message history from Pydantic AI including tool calls and intermediate reasoning",
@@ -247,13 +247,13 @@ class ToolSettings(BaseModel):
 
 
 class PluginMetadata(BaseModel):
-    """Plugin configuration for custom Member Agents (FR-020).
+    """Plugin configuration for custom Member Agents.
 
     Supports two loading methods:
     - agent_module (recommended): Python module path for pip-installable packages
     - path (alternative): File path for standalone development files
 
-    Priority (FR-021):
+    Priority:
     1. agent_module is tried first if specified
     2. path is used as fallback if agent_module fails or is not specified
     """
@@ -316,7 +316,7 @@ class MemberAgentConfig(BaseModel):
     # Tool-specific configuration
     tool_settings: ToolSettings | None = Field(default=None, description="Tool-specific configuration settings")
 
-    # Plugin configuration for custom agents (FR-020)
+    # Plugin configuration for custom agents
     plugin: PluginMetadata | None = Field(default=None, description="Plugin configuration for custom agent loading")
 
     # Additional configuration

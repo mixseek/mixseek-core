@@ -1,9 +1,4 @@
-"""Unit tests for UserPromptBuilder.build_judgment_prompt method.
-
-Feature: 140-user-prompt-builder-evaluator-judgement
-Task: T024
-Date: 2025-11-25
-"""
+"""Unit tests for UserPromptBuilder.build_judgment_prompt method."""
 
 from datetime import datetime
 from pathlib import Path
@@ -155,7 +150,7 @@ DateTime: {{ current_datetime }}"""
         assert "90.00/100" in prompt
 
     async def test_build_judgment_prompt_with_ranking_table(self, tmp_path: Path) -> None:
-        """Test formatter integration: format_ranking_table called with correct signature (FR-010)."""
+        """Test formatter integration: format_ranking_table called with correct signature."""
         # Create mock store
         mock_store = MagicMock()
         mock_store.get_leader_board_ranking = AsyncMock(return_value=[])
@@ -359,7 +354,7 @@ Position: {{ team_position_message }}"""
             await builder.build_judgment_prompt(context)
 
     async def test_build_judgment_prompt_formatter_integration_completeness(self, tmp_path: Path) -> None:
-        """Test complete formatter integration: all formatters called with correct signatures (FR-010)."""
+        """Test complete formatter integration: all formatters called with correct signatures."""
         mock_store = MagicMock()
         mock_store.get_leader_board_ranking = AsyncMock(return_value=[])
         settings = PromptBuilderSettings()

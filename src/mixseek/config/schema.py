@@ -19,7 +19,7 @@ from .sources.toml_source import CustomTomlConfigSettingsSource
 from .sources.tracing_source import SourceTrace
 from .validators_common import validate_model_format
 
-# Phase 2: トレースストレージをcontext varsで管理（スレッド安全性確保）
+# トレースストレージをcontext varsで管理（スレッド安全性確保）
 _trace_storage_context: contextvars.ContextVar[dict[str, SourceTrace] | None] = contextvars.ContextVar(
     "_trace_storage_context", default=None
 )
@@ -48,8 +48,8 @@ class MappedEnvSettingsSource(EnvSettingsSource):
     def __call__(self) -> dict[str, Any]:
         """すべてのフィールド値を取得（マッピング適用）。
 
-        Article 10（DRY原則）準拠：条件分岐をStrategy Patternで置き換え。
-        Article 11（Refactoring Policy）準拠：既存クラスを直接改善。
+        DRY原則準拠：条件分岐をStrategy Patternで置き換え。
+        Refactoring Policy準拠：既存クラスを直接改善。
 
         Returns:
             環境変数から読み込んだ値の辞書
@@ -162,7 +162,7 @@ class MixSeekBaseSettings(BaseSettings):
     Note:
         トレース情報はインスタンス属性 __source_traces__ として保存されます。
         ConfigurationManager.load_settings() および _load_settings_with_tracing()
-        メソッドで自動的に添付されます（Phase 2: 選択肢B実装）。
+        メソッドで自動的に添付されます。
     """
 
     model_config = SettingsConfigDict(
@@ -190,7 +190,7 @@ class MixSeekBaseSettings(BaseSettings):
         dotenv_settings: Any,
         file_secret_settings: Any,
     ) -> tuple[Any, ...]:
-        """設定ソースのカスタマイズ（Phase 2: 選択肢B実装 + トレーシング復活）。
+        """設定ソースのカスタマイズ。
 
         優先順位: init (CLI) > ENV > dotenv > TOML > secrets > default
 
@@ -208,7 +208,7 @@ class MixSeekBaseSettings(BaseSettings):
         Returns:
             ソースのタプル
         """
-        # T097: config_fileパス決定（Article 9準拠）
+        # config_fileパス決定
         # 優先順位: ConfigurationManager渡し値 > MIXSEEK_CONFIG_FILE環境変数
         # contextvarsを使用し、並行処理・ネストされた呼び出しでも安全
         from mixseek.config.manager import _config_file_context
@@ -222,7 +222,7 @@ class MixSeekBaseSettings(BaseSettings):
             config_file_path = Path(config_file_env) if config_file_env else None
 
         # トレースストレージを初期化（context varsで管理）
-        # Phase 2-4修正: 既存のtrace_storageがある場合は再利用（_load_settings_with_tracing()との整合性）
+        # 既存のtrace_storageがある場合は再利用（_load_settings_with_tracing()との整合性）
         trace_storage = _trace_storage_context.get()
         if trace_storage is None:
             trace_storage = {}
@@ -298,7 +298,7 @@ class MixSeekBaseSettings(BaseSettings):
     def model_post_init(self, __context: Any) -> None:
         """Pydantic初期化後の処理（トレースストレージをインスタンス属性にコピー）。
 
-        Phase 2: context varsからトレースストレージを取得し、インスタンス属性として保存。
+        context varsからトレースストレージを取得し、インスタンス属性として保存。
         これによりスレッド安全性を確保します。
 
         Args:
@@ -312,7 +312,7 @@ class MixSeekBaseSettings(BaseSettings):
             object.__setattr__(self, "__source_traces__", trace_storage)
 
     def get_trace_info(self, field_name: str) -> SourceTrace | None:
-        """フィールドのトレース情報を取得（Phase 2: インスタンスメソッド）。
+        """フィールドのトレース情報を取得。
 
         Args:
             field_name: フィールド名
@@ -329,11 +329,11 @@ class MixSeekBaseSettings(BaseSettings):
 
 
 class LeaderAgentSettings(MixSeekBaseSettings):
-    """Leader Agent用の設定スキーマ（T092完全実装版）。
+    """Leader Agent用の設定スキーマ。
 
     LLMモデル、タイムアウト、温度パラメータ、システムプロンプトなどを管理します。
     レガシーのLeaderAgentConfigの全機能を継承します。
-    すべての環境（dev/staging/prod）でデフォルト値は同一です（FR-007準拠）。
+    すべての環境（dev/staging/prod）でデフォルト値は同一です。
     """
 
     model_config = SettingsConfigDict(
@@ -437,10 +437,10 @@ class LeaderAgentSettings(MixSeekBaseSettings):
     @field_validator("model")
     @classmethod
     def validate_model(cls, v: str) -> str:
-        """モデル形式のバリデーション（FR-007準拠：環境別分岐なし）。
+        """モデル形式のバリデーション（環境別分岐なし）。
 
         Note:
-            共通関数 validate_model_format() を使用（Article 10: DRY原則準拠）
+            共通関数 validate_model_format() を使用
 
         Args:
             v: モデル形式文字列
@@ -455,7 +455,7 @@ class LeaderAgentSettings(MixSeekBaseSettings):
 
 
 class MemberAgentSettings(MixSeekBaseSettings):
-    """Member Agent用の設定スキーマ（T093完全実装版）。
+    """Member Agent用の設定スキーマ。
 
     複数のMember AgentのLLM設定とAgent固有の設定を管理します。
     レガシーのTeamMemberAgentConfigの全機能を継承します。
@@ -588,7 +588,7 @@ class MemberAgentSettings(MixSeekBaseSettings):
         """モデル形式のバリデーション。
 
         Note:
-            共通関数 validate_model_format() を使用（Article 10: DRY原則準拠）
+            共通関数 validate_model_format() を使用
             空文字列を許容（allow_empty=True）
 
         Args:
@@ -612,7 +612,7 @@ class MemberAgentSettings(MixSeekBaseSettings):
 
 
 class EvaluatorSettings(MixSeekBaseSettings):
-    """Evaluator用の設定スキーマ（T080完全版 - 動的配列対応）。
+    """Evaluator用の設定スキーマ（動的配列対応）。
 
     EvaluationConfig互換の完全な評価設定を管理します。
     TeamSettingsと同じパターンで動的配列（metrics）に対応しています。
@@ -704,7 +704,7 @@ class EvaluatorSettings(MixSeekBaseSettings):
         """デフォルトモデル形式のバリデーション。
 
         Note:
-            共通関数 validate_model_format() を使用（Article 10: DRY原則準拠）
+            共通関数 validate_model_format() を使用
 
         Args:
             v: モデル形式文字列
@@ -722,7 +722,7 @@ class JudgmentSettings(MixSeekBaseSettings):
     """Judgment用の設定スキーマ。
 
     LLM-as-a-Judgeによるラウンド継続判定の設定を管理します。
-    すべての環境（dev/staging/prod）でデフォルト値は同一です（FR-007準拠）。
+    すべての環境（dev/staging/prod）でデフォルト値は同一です。
     """
 
     model_config = SettingsConfigDict(
@@ -795,7 +795,7 @@ class JudgmentSettings(MixSeekBaseSettings):
         """モデル形式のバリデーション。
 
         Note:
-            共通関数 validate_model_format() を使用（Article 10: DRY原則準拠）
+            共通関数 validate_model_format() を使用
 
         Args:
             v: モデル形式文字列
@@ -813,11 +813,10 @@ class OrchestratorSettings(WorkspaceValidatorMixin, MixSeekBaseSettings):
     """Orchestrator用の設定スキーマ。
 
     オーケストレーション全体の設定を管理します。
-    すべての環境（dev/staging/prod）でデフォルト値は同一です（FR-007準拠）。
+    すべての環境（dev/staging/prod）でデフォルト値は同一です。
 
     Note:
         WorkspaceValidatorMixinによりworkspace_pathのバリデーションを継承
-        （Article 10: DRY原則準拠）
     """
 
     model_config = SettingsConfigDict(
@@ -927,12 +926,11 @@ class OrchestratorSettings(WorkspaceValidatorMixin, MixSeekBaseSettings):
 class UISettings(WorkspaceValidatorMixin, MixSeekBaseSettings):
     """UI（Streamlit）用の設定スキーマ。
 
-    WebUI実行時の設定を管理します（Phase 12追加）。
-    すべての環境（dev/staging/prod）でデフォルト値は同一です（FR-007準拠）。
+    WebUI実行時の設定を管理します。
+    すべての環境（dev/staging/prod）でデフォルト値は同一です。
 
     Note:
         WorkspaceValidatorMixinによりworkspace_pathのバリデーションを継承
-        （Article 10: DRY原則準拠）
     """
 
     model_config = SettingsConfigDict(
@@ -1074,13 +1072,13 @@ class PromptBuilderSettings(MixSeekBaseSettings):
 
 
 class TeamSettings(MixSeekBaseSettings):
-    """Team設定スキーマ（T089完全移行版）。
+    """Team設定スキーマ。
 
     Leader Agent + 可変数のMember Agent設定を管理します。
     既存のteam.toml形式（参照形式を含む）と完全互換です。
 
     NOTE: このクラスはPydantic Settingsベースですが、可変数のMember Agent設定を
-    扱うため、カスタムvalidatorと参照解決ロジックを使用します（T090で実装）。
+    扱うため、カスタムvalidatorと参照解決ロジックを使用します。
     """
 
     model_config = SettingsConfigDict(

@@ -1,24 +1,12 @@
-"""Configuration CLI commands unit tests (Phase 9-10 - User Stories 3.5 & 7)
+"""Configuration CLI commands unit tests
 
 Tests for:
-- `mixseek config show` and `mixseek config list` commands (Phase 9)
-- `mixseek config init` command (Phase 10)
+- `mixseek config show` and `mixseek config list` commands
+- `mixseek config init` command
 
-Article 3: Test-First Imperative準拠
+Test-First Imperative準拠
 - Tests written BEFORE implementation
 - RED phase: All tests should FAIL initially
-- Test goals defined in phase9-test-plan.md and phase10-test-plan.md
-
-Test Coverage:
-- T056: config show command tests
-- T057: config list command tests
-- T062: integration tests with real ConfigurationManager
-- T064: config init command tests (Phase 10 - RED phase)
-
-References:
-- Spec: specs/051-configuration/spec.md (User Story 3.5 & 7)
-- Plan: specs/051-configuration/phase9-test-plan.md and phase10-test-plan.md
-- Fixtures: tests/fixtures/config/
 
 Note:
     RED PHASE TESTS - Expected to FAIL until implementation is complete
@@ -98,18 +86,16 @@ def _suppress_loggers():
 
 
 class TestConfigShowCommand:
-    """Tests for `mixseek config show` command (T056)"""
+    """Tests for `mixseek config show` command"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T056.1: Display All Settings ==========
-
     def test_config_show_all_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.1: Test `mixseek config show` displays all current settings
+        Test `mixseek config show` displays all current settings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -143,7 +129,7 @@ teams = []
 
     def test_config_show_specific_key(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.3: Test `mixseek config show TIMEOUT_PER_TEAM_SECONDS` displays specific key
+        Test `mixseek config show TIMEOUT_PER_TEAM_SECONDS` displays specific key
 
         **Acceptance Criteria**:
         - Shows specific key (case-insensitive matching)
@@ -190,7 +176,7 @@ teams = []
 
     def test_config_show_invalid_key(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.4: Test `mixseek config show` with invalid key raises error
+        Test `mixseek config show` with invalid key raises error
 
         **Acceptance Criteria**:
         - Non-zero exit code for invalid key
@@ -228,11 +214,9 @@ teams = []
         # Exit code 1 indicates error (not crash/exception)
         assert result.exit_code == 1
 
-    # ========== T056.4: JSON Format Output ==========
-
     def test_config_show_json_format(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.4: Test `mixseek config show --output-format json`
+        Test `mixseek config show --output-format json`
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -287,11 +271,9 @@ teams = []
         assert "timeout_per_team_seconds" in orchestrator_settings
         assert orchestrator_settings["timeout_per_team_seconds"] == 600
 
-    # ========== T056.4b: JSON Format with Teams Key ==========
-
     def test_config_show_json_format_with_teams(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.4b: Test `mixseek config show --output-format json` includes teams key
+        Test `mixseek config show --output-format json` includes teams key
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -346,11 +328,9 @@ teams = []
         assert "settings" in data["orchestrator"], "orchestrator should have settings"
         assert "source_file" in data["orchestrator"], "orchestrator should have source_file"
 
-    # ========== T056.5: JSON Format for Specific Key ==========
-
     def test_config_show_specific_key_json_format(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T056.5: Test `mixseek config show <key> --output-format json`
+        Test `mixseek config show <key> --output-format json`
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -422,11 +402,9 @@ evaluator_config = "configs/evaluator.toml"
         assert data["current_value"] == "configs/evaluator.toml"
         assert data["overridden"] is True
 
-    # ========== T179: Standalone Settings Display ==========
-
     def test_config_show_with_evaluator_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.1: Test `mixseek config show` displays EvaluatorSettings
+        Test `mixseek config show` displays EvaluatorSettings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -434,8 +412,6 @@ evaluator_config = "configs/evaluator.toml"
         - Shows evaluator settings fields
         - Shows source file path
 
-        **References**:
-        - Issue #179: Display standalone settings in config show
         """
         # Setup: Create orchestrator TOML with evaluator_config reference
         configs_dir = tmp_path / "configs"
@@ -482,7 +458,7 @@ evaluator_config = "configs/evaluator.toml"
 
     def test_config_show_with_judgment_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.2: Test `mixseek config show` displays JudgmentSettings
+        Test `mixseek config show` displays JudgmentSettings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -490,8 +466,6 @@ evaluator_config = "configs/evaluator.toml"
         - Shows judgment settings fields
         - Shows source file path
 
-        **References**:
-        - Issue #179: Display standalone settings in config show
         """
         # Setup: Create orchestrator TOML with judgment_config reference
         configs_dir = tmp_path / "configs"
@@ -534,7 +508,7 @@ judgment_config = "configs/judgment.toml"
 
     def test_config_show_with_prompt_builder_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.3: Test `mixseek config show` displays PromptBuilderSettings
+        Test `mixseek config show` displays PromptBuilderSettings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -542,8 +516,6 @@ judgment_config = "configs/judgment.toml"
         - Shows prompt_builder settings fields
         - Shows source file path
 
-        **References**:
-        - Issue #179: Display standalone settings in config show
         """
         # Setup: Create prompt_builder.toml at default location
         configs_dir = tmp_path / "configs"
@@ -585,7 +557,7 @@ teams = []
 
     def test_config_show_with_default_standalone_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.4: Test `mixseek config show` displays default standalone settings
+        Test `mixseek config show` displays default standalone settings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -594,8 +566,6 @@ teams = []
         - Output contains [prompt_builder] section (with defaults)
         - Shows that these are defaults (source_file is None or not specified)
 
-        **References**:
-        - Issue #179: Always display standalone settings (even defaults)
         """
         # Setup: Create orchestrator WITHOUT evaluator_config, judgment_config
         # No prompt_builder.toml created either
@@ -629,7 +599,7 @@ teams = []
 
     def test_config_show_json_with_standalone_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.4: Test `mixseek config show --output-format json` includes standalone settings
+        Test `mixseek config show --output-format json` includes standalone settings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -638,8 +608,6 @@ teams = []
         - standalone_settings includes evaluator, judgment, and prompt_builder
         - Each setting has settings and source_file
 
-        **References**:
-        - Issue #179: Display standalone settings in config show
         """
         import json
 
@@ -726,7 +694,7 @@ judgment_config = "configs/judgment.toml"
 
     def test_config_show_json_with_default_standalone_settings(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T179.5: Test `mixseek config show --output-format json` includes default standalone settings
+        Test `mixseek config show --output-format json` includes default standalone settings
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -735,8 +703,6 @@ judgment_config = "configs/judgment.toml"
         - source_file is null for default settings
         - settings object contains default values
 
-        **References**:
-        - Issue #179: Always display standalone settings (even defaults)
         """
         import json
 
@@ -797,18 +763,16 @@ teams = []
 
 
 class TestConfigListCommand:
-    """Tests for `mixseek config list` command (T057)"""
+    """Tests for `mixseek config list` command"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T057.1: Display All Items ==========
-
     def test_config_list_all_items(self, runner: CliRunner) -> None:
         """
-        T057.1: Test `mixseek config list` displays all configuration items
+        Test `mixseek config list` displays all configuration items
 
         **Acceptance Criteria**:
         - Displays all configuration items from all settings classes
@@ -828,7 +792,7 @@ class TestConfigListCommand:
 
     def test_config_list_with_defaults(self, runner: CliRunner) -> None:
         """
-        T057.2: Test `mixseek config list` includes default values
+        Test `mixseek config list` includes default values
 
         **Acceptance Criteria**:
         - Each item shows its default value
@@ -850,7 +814,7 @@ class TestConfigListCommand:
 
     def test_config_list_with_descriptions(self, runner: CliRunner) -> None:
         """
-        T057.3: Test `mixseek config list` includes field descriptions
+        Test `mixseek config list` includes field descriptions
 
         **Acceptance Criteria**:
         - Each configuration item has a description/help text
@@ -871,7 +835,7 @@ class TestConfigListCommand:
 
     def test_config_list_output_format(self, runner: CliRunner) -> None:
         """
-        T057.4: Test `mixseek config list` output format
+        Test `mixseek config list` output format
 
         **Acceptance Criteria**:
         - Supports multiple output formats (table, json, etc.)
@@ -892,7 +856,7 @@ class TestConfigListCommand:
 
     def test_config_list_json_format(self, runner: CliRunner) -> None:
         """
-        T057.5: Test `mixseek config list --output-format json`
+        Test `mixseek config list --output-format json`
 
         **Acceptance Criteria**:
         - Outputs valid JSON array
@@ -930,18 +894,16 @@ class TestConfigListCommand:
 
 
 class TestConfigShowIntegration:
-    """Integration tests for `mixseek config show` with real ConfigurationManager (T062)"""
+    """Integration tests for `mixseek config show` with real ConfigurationManager"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T062.1: E2E with real configuration ==========
-
     def test_e2e_config_show_command(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T062.1: E2E test of config show with real ConfigurationManager
+        E2E test of config show with real ConfigurationManager
 
         **Acceptance Criteria**:
         - Reads actual configuration
@@ -973,7 +935,7 @@ teams = []
 
     def test_e2e_config_show_with_env_override(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T062.2: E2E test with environment variable override
+        E2E test with environment variable override
 
         **Acceptance Criteria**:
         - Command executes successfully
@@ -1005,7 +967,7 @@ teams = []
 
     def test_e2e_config_show_with_toml(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T062.3: E2E test reads configuration correctly
+        E2E test reads configuration correctly
 
         **Acceptance Criteria**:
         - Shows values from all settings classes
@@ -1038,7 +1000,7 @@ teams = []
 
     def test_e2e_config_show_with_multiple_sources(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T062.4: E2E test with values from different sources
+        E2E test with values from different sources
 
         **Acceptance Criteria**:
         - Different settings can be displayed
@@ -1120,18 +1082,16 @@ class TestConfigListIntegration:
 
 
 class TestConfigInitCommand:
-    """Tests for `mixseek config init` command (T064 - Phase 10)"""
+    """Tests for `mixseek config init` command"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T064.1: Generate Default Template ==========
-
     def test_config_init_default_template(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T064.1: Test `mixseek config init` generates default config.toml in workspace/configs/
+        Test `mixseek config init` generates default config.toml in workspace/configs/
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -1165,11 +1125,9 @@ class TestConfigInitCommand:
             ]
         ), "Template should contain settings"
 
-    # ========== T064.2: Generate Team Component Template ==========
-
     def test_config_init_team_component(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T064.2: Test `mixseek config init --component team` generates team.toml in workspace/configs/
+        Test `mixseek config init --component team` generates team.toml in workspace/configs/
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -1192,11 +1150,9 @@ class TestConfigInitCommand:
         assert "[leader]" in content, "Should have [leader] section"
         assert "[member]" in content, "Should have [member] section"
 
-    # ========== T064.3: Generate Orchestrator Component Template ==========
-
     def test_config_init_orchestrator_component(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T064.3: Test `mixseek config init --component orchestrator` generates orchestrator.toml in workspace/configs/
+        Test `mixseek config init --component orchestrator` generates orchestrator.toml in workspace/configs/
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -1213,11 +1169,9 @@ class TestConfigInitCommand:
         orch_file = tmp_path / "configs" / "orchestrator.toml"
         assert orch_file.exists(), f"orchestrator.toml should be created at {orch_file}"
 
-    # ========== T064.4: Force Overwrite Existing File ==========
-
     def test_config_init_force_overwrite(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T064.4: Test `mixseek config init --force` overwrites existing template
+        Test `mixseek config init --force` overwrites existing template
 
         **Acceptance Criteria**:
         - First execution creates file
@@ -1242,11 +1196,9 @@ class TestConfigInitCommand:
         # Content should be consistent (not duplicated)
         assert len(new_content) > 0, "File should have content after force overwrite"
 
-    # ========== T064.5: Error When File Exists Without Force ==========
-
     def test_config_init_file_exists_error(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T064.5: Test `mixseek config init` fails if file exists and --force not used
+        Test `mixseek config init` fails if file exists and --force not used
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1270,11 +1222,9 @@ class TestConfigInitCommand:
             assert config_file.read_text() == original_content
         # Both outcomes are acceptable for RED phase
 
-    # ========== T064.6: Invalid Component Option ==========
-
     def test_config_init_invalid_component(self, runner: CliRunner) -> None:
         """
-        T064.6: Test `mixseek config init --component invalid` raises error
+        Test `mixseek config init --component invalid` raises error
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1295,12 +1245,10 @@ class TestConfigInitCommand:
 
 
 class TestConfigFileOption:
-    """Tests for `--config` option (Phase 13 T109)
+    """Tests for `--config` option
 
     Tests validation, recursive loading, circular reference detection,
     max depth limit, and hierarchical display.
-
-    Phase 13 T109: FR-038 through FR-043
     """
 
     @pytest.fixture
@@ -1308,11 +1256,9 @@ class TestConfigFileOption:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T109.1: File Validation ==========
-
     def test_config_file_not_found(self, runner: CliRunner) -> None:
         """
-        T109.1: Test --config with non-existent file raises error
+        Test --config with non-existent file raises error
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1327,7 +1273,7 @@ class TestConfigFileOption:
 
     def test_config_file_invalid_toml_syntax(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.2: Test --config with invalid TOML syntax raises error
+        Test --config with invalid TOML syntax raises error
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1346,7 +1292,7 @@ class TestConfigFileOption:
 
     def test_config_file_missing_orchestrator_section(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.3: Test --config without [orchestrator] section raises error
+        Test --config without [orchestrator] section raises error
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1363,11 +1309,9 @@ class TestConfigFileOption:
         # Check result.output which includes both stdout and stderr
         assert "orchestrator" in result.output.lower()
 
-    # ========== T109.2: Recursive Loading ==========
-
     def test_config_file_hierarchical_display(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.4: Test --config displays hierarchical structure
+        Test --config displays hierarchical structure
 
         **Acceptance Criteria**:
         - Shows orchestrator configuration (no indent)
@@ -1399,7 +1343,7 @@ teams = []
 
     def test_config_file_with_workspace(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.5: Test --config with --workspace option
+        Test --config with --workspace option
 
         **Acceptance Criteria**:
         - Both options work together
@@ -1425,11 +1369,9 @@ teams = []
 
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
-    # ========== T109.3: Circular Reference Detection ==========
-
     def test_config_file_circular_reference(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.6: Test --config detects circular references
+        Test --config detects circular references
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1455,11 +1397,9 @@ teams = []
         # Should succeed for simple case (no circular reference)
         assert result.exit_code == 0, f"Command failed: {result.stdout}"
 
-    # ========== T109.4: Maximum Recursion Depth ==========
-
     def test_config_file_max_depth(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T109.7: Test --config enforces maximum recursion depth
+        Test --config enforces maximum recursion depth
 
         **Acceptance Criteria**:
         - Loads up to 10 levels successfully
@@ -1594,30 +1534,24 @@ class TestConfigInitOutputPath:
 
 
 class TestConfigInitPromptBuilder:
-    """Tests for `mixseek config init --component prompt_builder` command (T023, T024 - Feature 092)"""
+    """Tests for `mixseek config init --component prompt_builder` command"""
 
     @pytest.fixture
     def runner(self) -> CliRunner:
         """CLI test runner"""
         return CliRunner()
 
-    # ========== T023: config init command test ==========
-
     def test_config_init_prompt_builder_generates_file(
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T023: Test `mixseek config init --component prompt_builder` generates prompt_builder.toml
+        Test `mixseek config init --component prompt_builder` generates prompt_builder.toml
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
         - File created: $MIXSEEK_WORKSPACE/configs/prompt_builder.toml
         - Command outputs success message with file location
         - File contains valid TOML syntax
-
-        **References**:
-        - specs/092-user-prompt-builder-team/spec.md (User Story 3)
-        - specs/092-user-prompt-builder-team/tasks.md (T023)
         """
         # Setup: Set MIXSEEK_WORKSPACE
         workspace = tmp_path / "workspace"
@@ -1643,7 +1577,7 @@ class TestConfigInitPromptBuilder:
 
     def test_config_init_prompt_builder_with_workspace_option(self, runner: CliRunner, tmp_path: Path) -> None:
         """
-        T023.2: Test `mixseek config init --component prompt_builder --workspace` uses explicit workspace
+        Test `mixseek config init --component prompt_builder --workspace` uses explicit workspace
 
         **Acceptance Criteria**:
         - Exit code is 0 (success)
@@ -1666,7 +1600,7 @@ class TestConfigInitPromptBuilder:
 
     def test_config_init_prompt_builder_no_workspace_error(self, runner: CliRunner, monkeypatch: Any) -> None:
         """
-        T023.3: Test `mixseek config init --component prompt_builder` fails without workspace
+        Test `mixseek config init --component prompt_builder` fails without workspace
 
         **Acceptance Criteria**:
         - Exit code is non-zero (error)
@@ -1688,7 +1622,7 @@ class TestConfigInitPromptBuilder:
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T023.4: Test `mixseek config init --component prompt_builder --force` overwrites existing file
+        Test `mixseek config init --component prompt_builder --force` overwrites existing file
 
         **Acceptance Criteria**:
         - First execution creates file
@@ -1717,22 +1651,16 @@ class TestConfigInitPromptBuilder:
         assert result3.exit_code == 0, f"Force overwrite failed: {result3.stdout}"
         assert prompt_builder_file.exists(), "File should still exist after force overwrite"
 
-    # ========== T024: generated config file content validation ==========
-
     def test_config_init_prompt_builder_content_has_team_user_prompt(
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T024.1: Test generated prompt_builder.toml contains team_user_prompt definition
+        Test generated prompt_builder.toml contains team_user_prompt definition
 
         **Acceptance Criteria**:
         - File contains [prompt_builder] section
         - File contains team_user_prompt field
         - team_user_prompt has Jinja2 placeholder variables
-
-        **References**:
-        - specs/092-user-prompt-builder-team/spec.md (User Story 2)
-        - specs/092-user-prompt-builder-team/data-model.md (Section 4.1)
         """
         # Setup
         workspace = tmp_path / "workspace"
@@ -1755,17 +1683,13 @@ class TestConfigInitPromptBuilder:
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T024.2: Test generated prompt_builder.toml includes all placeholder variable comments
+        Test generated prompt_builder.toml includes all placeholder variable comments
 
         **Acceptance Criteria**:
         - File contains comments for {{ user_prompt }} placeholder
         - File contains comments for {{ submission_history }} placeholder
         - File contains comments for {{ ranking_table }} placeholder
         - File contains comments for {{ current_datetime }} placeholder
-
-        **References**:
-        - specs/092-user-prompt-builder-team/spec.md (User Story 2)
-        - specs/092-user-prompt-builder-team/contracts/prompt-builder-api.md (Section 3)
         """
         # Setup
         workspace = tmp_path / "workspace"
@@ -1790,7 +1714,7 @@ class TestConfigInitPromptBuilder:
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T024.3: Test generated prompt_builder.toml is valid TOML syntax
+        Test generated prompt_builder.toml is valid TOML syntax
 
         **Acceptance Criteria**:
         - File can be parsed by tomllib without errors
@@ -1822,22 +1746,16 @@ class TestConfigInitPromptBuilder:
         except Exception as e:
             pytest.fail(f"Generated TOML is invalid: {e}\n\nContent:\n{content}")
 
-    # ========== T030: Feature 140 - Evaluator/JudgementClient prompt templates ==========
-
     def test_config_init_prompt_builder_content_has_evaluator_user_prompt(
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T030.1: Test generated prompt_builder.toml contains evaluator_user_prompt definition
+        Test generated prompt_builder.toml contains evaluator_user_prompt definition
 
         **Acceptance Criteria**:
         - File contains evaluator_user_prompt field
         - evaluator_user_prompt has Jinja2 placeholder variables (user_query, submission, current_datetime)
         - Comments document available placeholder variables
-
-        **References**:
-        - specs/140-user-prompt-builder-evaluator-judgement/spec.md (User Story 3)
-        - specs/140-user-prompt-builder-evaluator-judgement/data-model.md (Section 4.1)
         """
         # Setup
         workspace = tmp_path / "workspace"
@@ -1866,16 +1784,12 @@ class TestConfigInitPromptBuilder:
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T030.2: Test generated prompt_builder.toml contains judgment_user_prompt definition
+        Test generated prompt_builder.toml contains judgment_user_prompt definition
 
         **Acceptance Criteria**:
         - File contains judgment_user_prompt field
         - judgment_user_prompt has Jinja2 placeholder variables
         - Comments document available placeholder variables
-
-        **References**:
-        - specs/140-user-prompt-builder-evaluator-judgement/spec.md (User Story 3)
-        - specs/140-user-prompt-builder-evaluator-judgement/data-model.md (Section 4.2)
         """
         # Setup
         workspace = tmp_path / "workspace"
@@ -1904,7 +1818,7 @@ class TestConfigInitPromptBuilder:
         self, runner: CliRunner, tmp_path: Path, monkeypatch: Any
     ) -> None:
         """
-        T030.3: Test generated prompt_builder.toml with all three prompts is valid TOML
+        Test generated prompt_builder.toml with all three prompts is valid TOML
 
         **Acceptance Criteria**:
         - File can be parsed by tomllib without errors

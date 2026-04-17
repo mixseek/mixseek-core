@@ -1,4 +1,4 @@
-"""TeeWriter for multi-destination output (Article 9 compliant).
+"""TeeWriter for multi-destination output.
 
 This module provides a TextIO-like writer that simultaneously writes
 to multiple output destinations (console, file, etc.).
@@ -41,7 +41,7 @@ class TeeWriter:
             ValueError: If writers list is empty
 
         Note:
-            Following Article 9, we explicitly validate input rather than
+            We explicitly validate input rather than
             silently accepting empty configurations.
         """
         if not writers:

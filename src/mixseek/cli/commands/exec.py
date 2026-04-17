@@ -142,7 +142,7 @@ def exec_command(
             # 1. Logfireフラグの排他的チェック
             validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
-            # 2. ワークスペースパス解決（Phase 12 T085: ConfigurationManager経由）
+            # 2. ワークスペースパス解決（ConfigurationManager経由）
             # Note: workspace_pathはLogfire初期化にのみ使用（オプショナル機能）
             workspace_path: Path | None = None
             try:
@@ -189,7 +189,7 @@ def exec_command(
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
 
-            # 7. Orchestrator初期化（FR-011: OrchestratorSettings直接受け取り）
+            # 7. Orchestrator初期化
             # Note: exec コマンドではリーダーボード機能のため常に DB 保存
             orchestrator = Orchestrator(settings=orchestrator_settings, save_db=True)
 

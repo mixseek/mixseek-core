@@ -46,7 +46,7 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.output import cli_echo, cli_secho
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
@@ -95,6 +95,9 @@ def team(
 
         mixseek team "Question" --config team.toml --logfire-http
     """
+    # setup_logging() 前の cli_echo でも JSON モードが反映されるように env var を確定。
+    ensure_log_format_env(log_format)
+
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 

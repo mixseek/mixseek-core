@@ -21,7 +21,7 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.output import cli_echo
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
@@ -137,6 +137,9 @@ def exec_command(
         no_log_console: コンソールログ出力無効化
         no_log_file: ファイルログ出力無効化
     """
+    # setup_logging() 前の cli_echo (validate_logfire_flags 等) でも
+    # JSON モードが反映されるように、env var を最初に確定する。
+    ensure_log_format_env(log_format)
 
     async def _execute() -> None:
         try:

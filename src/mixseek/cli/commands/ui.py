@@ -17,6 +17,7 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.output import cli_echo
+from mixseek.cli.utils import ensure_log_format_env
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
@@ -66,8 +67,7 @@ def ui(
     # log_format を最初に解決し、環境変数へ設定する。
     # これにより、以降の cli_echo が JSON モードを正しく判定できる
     # (ui コマンドは setup_logging を自プロセスで呼ばず Streamlit サブプロセスに委ねるため)。
-    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
-    os.environ["MIXSEEK_LOG_FORMAT"] = effective_log_format
+    ensure_log_format_env(log_format)
 
     # 排他的チェック（複数のlogfireフラグは指定できない）
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])

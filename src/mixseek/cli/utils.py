@@ -284,6 +284,25 @@ def setup_logging_from_cli(
             )
 
 
+def ensure_log_format_env(cli_log_format: str | None) -> str:
+    """CLI引数の log_format を解決し、環境変数 MIXSEEK_LOG_FORMAT に反映する。
+
+    ``setup_logging()`` 呼び出し前の cli_echo/cli_secho (例: ``validate_logfire_flags``)
+    が ``get_log_format()`` の env var fallback を通じて JSON モードを検出できるように、
+    CLI コマンドの先頭で呼ぶ。
+
+    Args:
+        cli_log_format: CLI ``--log-format`` の値。None の場合は既存の環境変数または
+            "text" を fallback に採用する。
+
+    Returns:
+        実効的に採用した log_format ("text" または "json")。
+    """
+    effective = cli_log_format if cli_log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    os.environ["MIXSEEK_LOG_FORMAT"] = effective
+    return effective
+
+
 def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
     """Logfireフラグの排他的チェック。
 

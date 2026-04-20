@@ -6,7 +6,8 @@ text / json の両モードに対応した CLI 向けメッセージ出力関数
 - json モード: 構造化 JSON を 1 行で stderr / stdout に出力する。
 
 モード判定は ``mixseek.observability.get_log_format()`` に委ねる。
-``setup_logging()`` 呼び出し前は ``"text"`` 扱い。
+``setup_logging()`` 呼び出し前は環境変数 ``MIXSEEK_LOG_FORMAT`` を参照し、
+未設定時は ``"text"`` 扱い。
 """
 
 import json

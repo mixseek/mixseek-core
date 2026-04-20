@@ -11,7 +11,6 @@ text / json の両モードに対応した CLI 向けメッセージ出力関数
 """
 
 import json
-import sys
 from datetime import UTC, datetime
 from typing import Any
 
@@ -88,6 +87,10 @@ def _emit_json(
     ``fields`` の中に ``timestamp`` / ``type`` / ``event`` / ``message``
     と衝突するキーがあっても、スキーマ不変キーは上書きされない
     (衝突した ``fields`` 側のエントリは破棄される)。
+
+    出力は ``typer.echo`` (内部的に ``click.echo``) 経由で書き込む。
+    text モードと同じ出力経路に揃えることで、click の encoding 正規化
+    (Unicode → stream エンコーディングのマッチング) の恩恵を受けられる。
     """
     payload: dict[str, Any] = {
         "timestamp": datetime.now(tz=UTC).isoformat(),
@@ -99,5 +102,4 @@ def _emit_json(
     # スキーマ不変キー (timestamp/type/event/message) の上書きを防ぐため、
     # 既存キーは保持し fields 側の衝突エントリを捨てる。
     payload.update({k: v for k, v in fields.items() if k not in payload})
-    stream = sys.stderr if err else sys.stdout
-    stream.write(json.dumps(payload, ensure_ascii=False, default=str) + "\n")
+    typer.echo(json.dumps(payload, ensure_ascii=False, default=str), err=err)

@@ -83,7 +83,12 @@ def _emit_json(
     event: str | None,
     fields: dict[str, Any],
 ) -> None:
-    """JSON モード用の出力処理。"""
+    """JSON モード用の出力処理。
+
+    ``fields`` の中に ``timestamp`` / ``type`` / ``event`` / ``message``
+    と衝突するキーがあっても、スキーマ不変キーは上書きされない
+    (衝突した ``fields`` 側のエントリは破棄される)。
+    """
     payload: dict[str, Any] = {
         "timestamp": datetime.now(tz=UTC).isoformat(),
         "type": "cli",
@@ -91,6 +96,8 @@ def _emit_json(
     if event is not None:
         payload["event"] = event
     payload["message"] = message
-    payload.update(fields)
+    # スキーマ不変キー (timestamp/type/event/message) の上書きを防ぐため、
+    # 既存キーは保持し fields 側の衝突エントリを捨てる。
+    payload.update({k: v for k, v in fields.items() if k not in payload})
     stream = sys.stderr if err else sys.stdout
     stream.write(json.dumps(payload, ensure_ascii=False, default=str) + "\n")

@@ -294,6 +294,36 @@ class TestJsonModeOutput:
         # Path は default=str で文字列化される
         assert payload["workspace_path"] == str(custom_path)
 
+    @pytest.mark.parametrize("reserved_key", ["timestamp", "type"])
+    def test_reserved_keys_are_not_overwritten_by_fields(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reserved_key: str
+    ) -> None:
+        """fields に schema 不変キーと同名 entry があっても正規キーは上書きされない。
+
+        ``event`` / ``message`` は cli_echo の named arg 扱いなので Python の呼び出し
+        セマンティクスが衝突を防ぐ。**fields から混入可能なのは ``timestamp`` / ``type``。
+        """
+        _enable_json_mode(tmp_path)
+
+        out, err = _capture_std(
+            monkeypatch,
+            lambda: cli_echo(
+                "正規 message",
+                err=True,
+                event="legit.event",
+                **{reserved_key: "USER_SUPPLIED_VALUE"},
+            ),
+        )
+        assert out == ""
+        payload = json.loads(err.rstrip("\n"))
+
+        # schema 不変キーは正規値のまま
+        assert payload[reserved_key] != "USER_SUPPLIED_VALUE"
+        assert payload["type"] == "cli"
+        assert payload["event"] == "legit.event"
+        assert payload["message"] == "正規 message"
+        datetime.fromisoformat(payload["timestamp"])
+
 
 # ---------------------------------------------------------------------------
 # モード検出の fallback テスト

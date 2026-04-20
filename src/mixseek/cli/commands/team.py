@@ -51,6 +51,7 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
+from mixseek.observability import get_log_format
 from mixseek.storage.aggregation_store import AggregationStore
 
 
@@ -149,7 +150,10 @@ def team(
         err=True,
         event="team.dev_warning",
     )
-    cli_echo("", err=True, event="team.dev_warning_blank")
+    # 空行は text モード視認性のための区切り。JSON モードでは空 message の
+    # ログエントリがノイズになるためスキップ。
+    if get_log_format() != "json":
+        cli_echo("", err=True)
 
     try:
         asyncio.run(

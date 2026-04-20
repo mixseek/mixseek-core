@@ -294,6 +294,43 @@ class TestJsonModeOutput:
         # Path は default=str で文字列化される
         assert payload["workspace_path"] == str(custom_path)
 
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("\n⚠️  Interrupted by user", "⚠️  Interrupted by user"),
+            ("\nSaving to database...", "Saving to database..."),
+            ("hello", "hello"),
+            ("   spaced   ", "spaced"),
+            # 内部の改行は保持される (strip は leading/trailing のみ)
+            ("Available keys:\nfoo, bar, baz", "Available keys:\nfoo, bar, baz"),
+            # ANSI エスケープ (誤って装飾済み文字列を渡された場合) は除去される
+            ("\x1b[31mred msg\x1b[0m", "red msg"),
+        ],
+    )
+    def test_json_message_is_cleaned(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, raw: str, expected: str
+    ) -> None:
+        """JSON モードでは message を click.unstyle() + strip() で整形する。"""
+        payload, _ = _capture_cli_echo_json(
+            tmp_path,
+            raw,
+            err=True,
+            event="x.y",
+            monkeypatch=monkeypatch,
+        )
+        assert payload["message"] == expected
+
+    def test_json_empty_message_stays_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """blank line 用の空文字列は json モードでも空のまま保持される。"""
+        payload, _ = _capture_cli_echo_json(
+            tmp_path,
+            "",
+            err=True,
+            event="team.dev_warning_blank",
+            monkeypatch=monkeypatch,
+        )
+        assert payload["message"] == ""
+
     @pytest.mark.parametrize("reserved_key", ["timestamp", "type"])
     def test_reserved_keys_are_not_overwritten_by_fields(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reserved_key: str

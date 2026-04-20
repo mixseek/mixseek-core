@@ -14,6 +14,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+import click
 import typer
 
 from mixseek.observability import get_log_format
@@ -91,14 +92,20 @@ def _emit_json(
     出力は ``typer.echo`` (内部的に ``click.echo``) 経由で書き込む。
     text モードと同じ出力経路に揃えることで、click の encoding 正規化
     (Unicode → stream エンコーディングのマッチング) の恩恵を受けられる。
+
+    message は ``click.unstyle()`` で ANSI エスケープ除去、``strip()`` で
+    前後の空白・改行を除去してから JSON へ格納する。text モード向けに付加された
+    装飾 (例: 先頭の ``\\n``) が JSON ログ解析時のノイズにならないようにするため。
     """
+    clean_message = click.unstyle(message).strip()
+
     payload: dict[str, Any] = {
         "timestamp": datetime.now(tz=UTC).isoformat(),
         "type": "cli",
     }
     if event is not None:
         payload["event"] = event
-    payload["message"] = message
+    payload["message"] = clean_message
     # スキーマ不変キー (timestamp/type/event/message) の上書きを防ぐため、
     # 既存キーは保持し fields 側の衝突エントリを捨てる。
     payload.update({k: v for k, v in fields.items() if k not in payload})

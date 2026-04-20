@@ -7,6 +7,7 @@ from pathlib import Path
 import typer
 
 from mixseek.cli.common_options import WORKSPACE_OPTION
+from mixseek.cli.output import cli_echo
 from mixseek.config.templates import generate_sample_config
 from mixseek.exceptions import (
     ParentDirectoryNotFoundError,
@@ -61,7 +62,12 @@ def init(
                 f"Workspace already exists at {workspace_structure.root}. Overwrite?",
                 default=False,
             ):
-                typer.echo("Workspace initialization aborted.", err=True)
+                cli_echo(
+                    "Workspace initialization aborted.",
+                    err=True,
+                    event="init.aborted",
+                    workspace_path=str(workspace_structure.root),
+                )
                 sys.exit(1)
 
         # Create directories
@@ -109,7 +115,11 @@ def init(
     ) as e:
         handle_error(e, workspace_path_input or Path("."))
     except KeyboardInterrupt:
-        typer.echo("\nInitialization cancelled by user.", err=True)
+        cli_echo(
+            "\nInitialization cancelled by user.",
+            err=True,
+            event="init.cancelled_by_user",
+        )
         sys.exit(130)  # Standard exit code for SIGINT
 
 
@@ -125,19 +135,28 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
 
     # Add solution hints based on error type
     if isinstance(error, WorkspacePermissionError):
-        typer.echo(
+        cli_echo(
             f"Error: {error}\nSolution: Check directory permissions or choose a different path.",
             err=True,
+            event="init.error_permission",
+            error=str(error),
+            error_type=type(error).__name__,
         )
     elif isinstance(error, ParentDirectoryNotFoundError):
-        typer.echo(
+        cli_echo(
             f"Error: {error}\nSolution: Create the parent directory first or choose an existing location.",
             err=True,
+            event="init.error_parent_not_found",
+            error=str(error),
+            error_type=type(error).__name__,
         )
     elif isinstance(error, WorkspacePathNotSpecifiedError):
-        typer.echo(
+        cli_echo(
             f"Error: {error}",
             err=True,
+            event="init.error_path_not_specified",
+            error=str(error),
+            error_type=type(error).__name__,
         )
     else:
         result.print_result()

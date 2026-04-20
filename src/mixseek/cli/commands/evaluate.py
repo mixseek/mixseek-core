@@ -19,6 +19,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
+from mixseek.cli.output import cli_echo
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.utils.env import get_workspace_path
 
@@ -110,5 +111,9 @@ def evaluate(
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        typer.echo("\n⚠️  Interrupted by user", err=True)
+        cli_echo(
+            "\n⚠️  Interrupted by user",
+            err=True,
+            event="evaluate.interrupted_by_user",
+        )
         sys.exit(130)

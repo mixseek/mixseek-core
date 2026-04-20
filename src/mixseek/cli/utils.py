@@ -12,6 +12,7 @@ from typing import Any, NoReturn, TypeVar, cast
 import typer
 from pydantic import ValidationError
 
+from mixseek.cli.output import cli_echo, cli_secho
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
 from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
 from mixseek.observability import setup_logfire, setup_logging
@@ -31,8 +32,11 @@ def show_development_warning() -> None:
     This warning is displayed for all development/testing commands to remind
     users that these commands are not intended for production use.
     """
-    warning_message = "⚠️  Development/Testing only - Not for production use\n"
-    print(warning_message, file=sys.stderr, end="")
+    cli_echo(
+        "⚠️  Development/Testing only - Not for production use",
+        err=True,
+        event="cli.dev_warning",
+    )
 
 
 def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
@@ -45,7 +49,13 @@ def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
     Raises:
         SystemExit: Always raises to exit the program
     """
-    print(f"Error: {message}", file=sys.stderr)
+    cli_echo(
+        f"Error: {message}",
+        err=True,
+        event="cli.exit_with_error",
+        error=message,
+        exit_code=code,
+    )
     sys.exit(code)
 
 
@@ -183,15 +193,27 @@ def setup_logfire_from_cli(
                 file_enabled=file_enabled,
             )
             if verbose:
-                typer.secho("✓ Logfire observability enabled", fg=typer.colors.GREEN, err=True)
+                cli_secho(
+                    "✓ Logfire observability enabled",
+                    fg=typer.colors.GREEN,
+                    err=True,
+                    event="logfire.enabled",
+                )
         except Exception as e:
-            typer.secho(
+            cli_secho(
                 f"WARNING: Logfire initialization failed: {e}",
                 fg=typer.colors.YELLOW,
                 err=True,
+                event="logfire.init_failed",
+                error=str(e),
+                error_type=type(e).__name__,
             )
             if verbose:
-                typer.echo(traceback.format_exc(), err=True)
+                cli_echo(
+                    traceback.format_exc(),
+                    err=True,
+                    event="logfire.init_failed_traceback",
+                )
 
 
 def setup_logging_from_cli(
@@ -223,26 +245,43 @@ def setup_logging_from_cli(
             log_format=cast(LogFormatType, log_format),
         )
     except ValidationError as e:
-        typer.echo(f"Error: ログ設定が不正です: {e}", err=True)
+        cli_echo(
+            f"Error: ログ設定が不正です: {e}",
+            err=True,
+            event="logging.config_invalid",
+            error=str(e),
+        )
         raise typer.Exit(code=2)
 
     try:
         setup_logging(config, workspace)
         if verbose:
-            typer.secho(
+            cli_secho(
                 f"✓ Logging configured (level={log_level}, format={log_format}, "
                 f"console={not no_log_console}, file={not no_log_file})",
                 fg=typer.colors.GREEN,
                 err=True,
+                event="logging.configured",
+                log_level=log_level,
+                log_format=log_format,
+                console_enabled=not no_log_console,
+                file_enabled=not no_log_file,
             )
     except Exception as e:
-        typer.secho(
+        cli_secho(
             f"WARNING: Logging setup failed: {e}",
             fg=typer.colors.YELLOW,
             err=True,
+            event="logging.setup_failed",
+            error=str(e),
+            error_type=type(e).__name__,
         )
         if verbose:
-            typer.echo(traceback.format_exc(), err=True)
+            cli_echo(
+                traceback.format_exc(),
+                err=True,
+                event="logging.setup_failed_traceback",
+            )
 
 
 def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
@@ -258,10 +297,14 @@ def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: 
     """
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:
-        typer.secho(
+        cli_secho(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
             fg=typer.colors.RED,
             err=True,
+            event="logfire.flags_exclusive_violation",
+            logfire=logfire,
+            logfire_metadata=logfire_metadata,
+            logfire_http=logfire_http,
         )
         raise typer.Exit(1)
 

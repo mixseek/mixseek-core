@@ -45,6 +45,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
+from mixseek.cli.output import cli_echo, cli_secho
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
@@ -105,15 +106,19 @@ def team(
             orchestrator_settings: OrchestratorSettings = config_manager.load_settings(OrchestratorSettings)
             workspace_resolved = orchestrator_settings.workspace_path
         except Exception as e:
-            typer.secho(
+            cli_secho(
                 f"ERROR: Failed to resolve workspace path: {e}",
                 fg=typer.colors.RED,
                 err=True,
+                event="team.workspace_resolve_failed",
+                error=str(e),
+                error_type=type(e).__name__,
             )
-            typer.secho(
+            cli_secho(
                 "Please specify workspace via --workspace option or MIXSEEK_WORKSPACE environment variable",
                 fg=typer.colors.YELLOW,
                 err=True,
+                event="team.workspace_resolve_hint",
             )
             raise typer.Exit(code=1)
 
@@ -135,12 +140,13 @@ def team(
     )
 
     # 開発・テスト専用警告表示
-    typer.secho(
+    cli_secho(
         "⚠️  Development/Testing only - Not for production use",
         fg=typer.colors.YELLOW,
         err=True,
+        event="team.dev_warning",
     )
-    typer.echo("", err=True)
+    cli_echo("", err=True, event="team.dev_warning_blank")
 
     try:
         asyncio.run(
@@ -159,9 +165,20 @@ def team(
         # typer.Exitは再raiseして、元のexit codeを保持
         raise
     except Exception as e:
-        typer.secho(f"ERROR: {e}", fg=typer.colors.RED, err=True)
+        cli_secho(
+            f"ERROR: {e}",
+            fg=typer.colors.RED,
+            err=True,
+            event="team.unexpected_error",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         if verbose:
-            typer.echo(traceback.format_exc(), err=True)
+            cli_echo(
+                traceback.format_exc(),
+                err=True,
+                event="team.unexpected_error_traceback",
+            )
         raise typer.Exit(code=1)
 
 
@@ -183,8 +200,19 @@ async def _execute_team_command(
     team_settings = config_manager.load_team_settings(config)
 
     if verbose:
-        typer.echo(f"Team: {team_settings.team_name} ({team_settings.team_id})", err=True)
-        typer.echo(f"Members: {len(team_settings.members)} agents", err=True)
+        cli_echo(
+            f"Team: {team_settings.team_name} ({team_settings.team_id})",
+            err=True,
+            event="team.info_loaded",
+            team_name=team_settings.team_name,
+            team_id=team_settings.team_id,
+        )
+        cli_echo(
+            f"Members: {len(team_settings.members)} agents",
+            err=True,
+            event="team.members_info",
+            member_count=len(team_settings.members),
+        )
 
     member_agents: dict[str, BaseMemberAgent] = {}
 
@@ -211,7 +239,13 @@ async def _execute_team_command(
     )
 
     if verbose:
-        typer.echo("\n=== Executing Leader Agent (Agent Delegation) ===", err=True)
+        cli_echo(
+            "\n=== Executing Leader Agent (Agent Delegation) ===",
+            err=True,
+            event="team.leader_execution_start",
+            team_id=team_config.team_id,
+            execution_id=execution_id,
+        )
 
     result = await leader_agent.run(prompt, deps=deps)
 
@@ -307,25 +341,39 @@ async def _execute_team_command(
 
     if save_db:
         if verbose:
-            typer.echo("\nSaving to database...", err=True)
+            cli_echo(
+                "\nSaving to database...",
+                err=True,
+                event="team.saving_to_db",
+                execution_id=execution_id,
+                team_id=team_config.team_id,
+            )
 
         store = AggregationStore(workspace=workspace)
         messages = result.all_messages()
         await store.save_aggregation(execution_id, record, messages)
 
         if verbose:
-            typer.echo(
+            cli_echo(
                 f"✓ Saved to database: execution_id={execution_id}, "
                 f"team_id={team_config.team_id}, round={record.round_number}",
                 err=True,
+                event="team.saved_to_db",
+                execution_id=execution_id,
+                team_id=team_config.team_id,
+                round_number=record.round_number,
             )
 
     # Member Agent 0件の場合は正常終了
     if record.total_count > 0 and record.failure_count == record.total_count:
-        typer.secho(
+        cli_secho(
             "ERROR: All member agents failed. No successful submissions.",
             fg=typer.colors.RED,
             err=True,
+            event="team.all_members_failed",
+            team_id=team_config.team_id,
+            total_count=record.total_count,
+            failure_count=record.failure_count,
         )
         raise typer.Exit(code=2)
 

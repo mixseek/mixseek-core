@@ -23,6 +23,7 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.formatters import ResultFormatter
+from mixseek.cli.output import cli_echo, cli_secho
 from mixseek.cli.utils import (
     initialize_observability,
     mutually_exclusive_group,
@@ -47,7 +48,14 @@ def display_result(result: MemberAgentResult, execution_time_ms: int, output_for
             formatter = ResultFormatter.get_formatter(output_format)
             formatter(result, execution_time_ms, verbose)
     except ValueError as e:
-        typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
+        cli_secho(
+            f"Error: {e}",
+            fg=typer.colors.RED,
+            err=True,
+            event="member.display_formatter_invalid",
+            error=str(e),
+            output_format=output_format,
+        )
         # Fallback to structured format
         ResultFormatter.format_structured(result, execution_time_ms, verbose)
 
@@ -71,9 +79,25 @@ async def execute_agent_from_config(
     """
     try:
         if verbose:
-            typer.echo(f"Loaded configuration: {config.name} ({config.type})", err=True)
-            typer.echo(f"Model: {config.model}", err=True)
-            typer.echo(f"Timeout: {timeout}s", err=True)
+            cli_echo(
+                f"Loaded configuration: {config.name} ({config.type})",
+                err=True,
+                event="member.config_loaded",
+                agent_name=config.name,
+                agent_type=config.type,
+            )
+            cli_echo(
+                f"Model: {config.model}",
+                err=True,
+                event="member.config_model",
+                model=config.model,
+            )
+            cli_echo(
+                f"Timeout: {timeout}s",
+                err=True,
+                event="member.config_timeout",
+                timeout_seconds=timeout,
+            )
 
         # Create and execute agent
         agent = MemberAgentFactory.create_agent(config)
@@ -176,7 +200,11 @@ def member(
 
     # Validate at least one option is provided
     if not config and not agent:
-        typer.echo("Error: Either --config or --agent must be specified", err=True)
+        cli_echo(
+            "Error: Either --config or --agent must be specified",
+            err=True,
+            event="member.missing_required_option",
+        )
         raise typer.Exit(1)
 
     # Execute agent
@@ -216,7 +244,13 @@ def member(
             effective_timeout = timeout if timeout is not None else (loaded_config.timeout_seconds or 30)
             result = asyncio.run(execute_agent_from_config(loaded_config, prompt, verbose, effective_timeout))
         except BundledMemberAgentError as e:
-            typer.echo(f"Error: {e}", err=True)
+            cli_echo(
+                f"Error: {e}",
+                err=True,
+                event="member.bundled_agent_error",
+                error=str(e),
+                agent_name=agent,
+            )
             raise typer.Exit(1)
 
         execution_time_ms = int((time.time() - start_time) * 1000)
@@ -231,8 +265,18 @@ def member(
         # Re-raise typer.Exit to preserve intended exit code
         raise
     except KeyboardInterrupt:
-        typer.echo("\n⚠️  Interrupted by user", err=True)
+        cli_echo(
+            "\n⚠️  Interrupted by user",
+            err=True,
+            event="member.interrupted_by_user",
+        )
         raise typer.Exit(130)
     except Exception as e:
-        typer.echo(f"Unexpected error: {e}", err=True)
+        cli_echo(
+            f"Unexpected error: {e}",
+            err=True,
+            event="member.unexpected_error",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         raise typer.Exit(1)

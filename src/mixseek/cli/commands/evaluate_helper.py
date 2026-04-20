@@ -8,6 +8,7 @@ from pathlib import Path
 
 import typer
 
+from mixseek.cli.output import cli_echo, cli_secho
 from mixseek.config.manager import ConfigurationManager
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.evaluator import Evaluator
@@ -52,9 +53,20 @@ def _create_evaluator(
 
     if verbose:
         if evaluate_config:
-            typer.echo(f"Loading custom config: {evaluate_config}", err=True)
+            cli_echo(
+                f"Loading custom config: {evaluate_config}",
+                err=True,
+                event="evaluate.config_custom_loaded",
+                config_path=str(evaluate_config),
+            )
         else:
-            typer.echo(f"Using default config: {workspace_path}/configs/evaluator.toml", err=True)
+            default_config_path = f"{workspace_path}/configs/evaluator.toml"
+            cli_echo(
+                f"Using default config: {default_config_path}",
+                err=True,
+                event="evaluate.config_default_loaded",
+                config_path=default_config_path,
+            )
 
     # get_evaluator_settings() でフォールバックロジックを共通化
     settings = manager.get_evaluator_settings(evaluate_config)
@@ -96,9 +108,24 @@ async def evaluate_content(
     """
     try:
         if verbose:
-            typer.echo("\n=== Evaluating Response ===", err=True)
-            typer.echo(f"Query: {user_query}", err=True)
-            typer.echo(f"Submission: {submission}", err=True)
+            cli_echo(
+                "\n=== Evaluating Response ===",
+                err=True,
+                event="evaluate.start",
+                team_id=team_id,
+            )
+            cli_echo(
+                f"Query: {user_query}",
+                err=True,
+                event="evaluate.query",
+                query=user_query,
+            )
+            cli_echo(
+                f"Submission: {submission}",
+                err=True,
+                event="evaluate.submission",
+                submission=submission,
+            )
 
         # Evaluator の初期化（共通ヘルパー関数を使用）
         evaluator = _create_evaluator(workspace, evaluate_config, verbose)
@@ -118,21 +145,47 @@ async def evaluate_content(
         result = await evaluator.evaluate(request)
 
         if verbose:
-            typer.echo(f"✓ Evaluation completed: {result.overall_score}", err=True)
+            cli_echo(
+                f"✓ Evaluation completed: {result.overall_score}",
+                err=True,
+                event="evaluate.completed",
+                overall_score=result.overall_score,
+            )
 
         return result
 
     except FileNotFoundError as e:
-        typer.secho(f"⚠️  Evaluation config file not found: {e}", fg=typer.colors.YELLOW, err=True)
+        cli_secho(
+            f"⚠️  Evaluation config file not found: {e}",
+            fg=typer.colors.YELLOW,
+            err=True,
+            event="evaluate.config_not_found",
+            error=str(e),
+        )
         if verbose:
-            typer.echo("Hint: Use --evaluate-config to specify a custom config file", err=True)
+            cli_echo(
+                "Hint: Use --evaluate-config to specify a custom config file",
+                err=True,
+                event="evaluate.config_not_found_hint",
+            )
         return None
     except Exception as e:
-        typer.secho(f"⚠️  Evaluation failed: {e}", fg=typer.colors.YELLOW, err=True)
+        cli_secho(
+            f"⚠️  Evaluation failed: {e}",
+            fg=typer.colors.YELLOW,
+            err=True,
+            event="evaluate.failed",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         if verbose:
             import traceback
 
-            typer.echo(traceback.format_exc(), err=True)
+            cli_echo(
+                traceback.format_exc(),
+                err=True,
+                event="evaluate.failed_traceback",
+            )
         return None
     finally:
         # Cleanup: Close all HTTP clients in the same event loop

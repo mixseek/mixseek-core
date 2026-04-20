@@ -20,6 +20,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
+from mixseek.cli.output import cli_echo
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
@@ -172,7 +173,11 @@ def exec_command(
 
             # 4. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
-                typer.echo("Error: --config オプションは必須です", err=True)
+                cli_echo(
+                    "Error: --config オプションは必須です",
+                    err=True,
+                    event="exec.config_required",
+                )
                 raise typer.Exit(code=2)
 
             # 5. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
@@ -185,7 +190,11 @@ def exec_command(
 
             # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
-                typer.echo("Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです", err=True)
+                cli_echo(
+                    "Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
+                    err=True,
+                    event="exec.preflight_inconsistent",
+                )
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
 
@@ -217,7 +226,13 @@ def exec_command(
         except typer.Exit:
             raise
         except Exception as e:
-            typer.echo(f"Error: {e}", err=True)
+            cli_echo(
+                f"Error: {e}",
+                err=True,
+                event="exec.unexpected_error",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             raise typer.Exit(code=2) from e
         finally:
             # Cleanup: Close all HTTP clients

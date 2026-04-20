@@ -15,7 +15,7 @@
 """
 
 from mixseek.observability.logfire import setup_logfire
-from mixseek.observability.logging_setup import setup_logging
+from mixseek.observability.logging_setup import get_log_format, setup_logging
 from mixseek.observability.tee_writer import TeeWriter
 
-__all__ = ["setup_logfire", "setup_logging", "TeeWriter"]
+__all__ = ["get_log_format", "setup_logfire", "setup_logging", "TeeWriter"]

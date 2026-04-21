@@ -97,7 +97,9 @@ def _output_results(summary: ExecutionSummary, output_format: str) -> None:
         output_format: 出力フォーマット(text/json)
     """
     if output_format == "json":
-        print(summary.model_dump_json(indent=2))
+        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
+        # 対話的に整形表示したい場合は `| jq` を利用する。
+        typer.echo(summary.model_dump_json())
     else:
         _print_text_summary(summary)
 
@@ -255,7 +257,8 @@ def _output_preflight_result(result: PreflightResult, output_format: str) -> Non
         output_format: 出力フォーマット(text/json)
     """
     if output_format == "json":
-        print(result.model_dump_json(indent=2))
+        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
+        typer.echo(result.model_dump_json())
     else:
         status_icons = {"ok": "✅", "error": "❌", "skipped": "⏭️"}
 

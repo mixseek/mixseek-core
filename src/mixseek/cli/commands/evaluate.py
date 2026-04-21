@@ -108,7 +108,8 @@ def evaluate(
 
         # 結果を出力
         if output_format == "json":
-            print(json.dumps(result.model_dump(mode="json"), indent=2, ensure_ascii=False))
+            # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
+            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False))
         else:
             # Structured format (default) - 共通ヘルパー関数を使用
             display_evaluation_text(result, verbose=verbose)

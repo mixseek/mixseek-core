@@ -272,7 +272,9 @@ class ResultFormatter:
         if result.all_messages:
             output["all_messages"] = result.all_messages
 
-        typer.echo(json.dumps(output, indent=2, ensure_ascii=False, default=_json_encoder))
+        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
+        # 対話的に整形表示したい場合は `| jq` を利用する。
+        typer.echo(json.dumps(output, ensure_ascii=False, default=_json_encoder))
 
     @staticmethod
     def format_text(result: MemberAgentResult, execution_time_ms: int, verbose: bool = False) -> None:

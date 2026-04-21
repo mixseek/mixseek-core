@@ -314,7 +314,9 @@ async def _execute_team_command(
         if evaluation_result:
             output_data["evaluation"] = display_evaluation_json(evaluation_result)
 
-        typer.echo(json.dumps(output_data, ensure_ascii=False, indent=2))
+        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
+        # 対話的に整形表示したい場合は `| jq` を利用する。
+        typer.echo(json.dumps(output_data, ensure_ascii=False))
     else:
         typer.echo("\n=== Leader Agent Execution ===")
         typer.echo(f"Team: {record.team_name} ({record.team_id})")

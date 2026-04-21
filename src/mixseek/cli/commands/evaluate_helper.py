@@ -160,6 +160,7 @@ async def evaluate_content(
             fg=typer.colors.YELLOW,
             err=True,
             event="evaluate.config_not_found",
+            level="warning",
             error=str(e),
         )
         if verbose:
@@ -175,6 +176,7 @@ async def evaluate_content(
             fg=typer.colors.YELLOW,
             err=True,
             event="evaluate.failed",
+            level="warning",
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -185,6 +187,7 @@ async def evaluate_content(
                 traceback.format_exc(),
                 err=True,
                 event="evaluate.failed_traceback",
+                level="warning",
             )
         return None
     finally:

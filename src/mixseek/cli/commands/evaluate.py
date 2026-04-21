@@ -118,5 +118,6 @@ def evaluate(
             "\n⚠️  Interrupted by user",
             err=True,
             event="evaluate.interrupted_by_user",
+            level="warning",
         )
         sys.exit(130)

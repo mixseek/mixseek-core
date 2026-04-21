@@ -115,6 +115,7 @@ def team(
                 fg=typer.colors.RED,
                 err=True,
                 event="team.workspace_resolve_failed",
+                level="error",
                 error=str(e),
                 error_type=type(e).__name__,
             )
@@ -123,6 +124,7 @@ def team(
                 fg=typer.colors.YELLOW,
                 err=True,
                 event="team.workspace_resolve_hint",
+                level="warning",
             )
             raise typer.Exit(code=1)
 
@@ -149,6 +151,7 @@ def team(
         fg=typer.colors.YELLOW,
         err=True,
         event="team.dev_warning",
+        level="warning",
     )
     # 空行は text モード視認性のための区切り。JSON モードでは空 message の
     # ログエントリがノイズになるためスキップ。
@@ -177,6 +180,7 @@ def team(
             fg=typer.colors.RED,
             err=True,
             event="team.unexpected_error",
+            level="error",
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -185,6 +189,7 @@ def team(
                 traceback.format_exc(),
                 err=True,
                 event="team.unexpected_error_traceback",
+                level="error",
             )
         raise typer.Exit(code=1)
 
@@ -378,6 +383,7 @@ async def _execute_team_command(
             fg=typer.colors.RED,
             err=True,
             event="team.all_members_failed",
+            level="error",
             team_id=team_config.team_id,
             total_count=record.total_count,
             failure_count=record.failure_count,

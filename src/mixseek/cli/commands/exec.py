@@ -180,6 +180,7 @@ def exec_command(
                     "Error: --config オプションは必須です",
                     err=True,
                     event="exec.config_required",
+                    level="error",
                 )
                 raise typer.Exit(code=2)
 
@@ -197,6 +198,7 @@ def exec_command(
                     "Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
                     err=True,
                     event="exec.preflight_inconsistent",
+                    level="error",
                 )
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
@@ -233,6 +235,7 @@ def exec_command(
                 f"Error: {e}",
                 err=True,
                 event="exec.unexpected_error",
+                level="error",
                 error=str(e),
                 error_type=type(e).__name__,
             )

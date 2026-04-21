@@ -36,6 +36,7 @@ def show_development_warning() -> None:
         "⚠️  Development/Testing only - Not for production use",
         err=True,
         event="cli.dev_warning",
+        level="warning",
     )
 
 
@@ -53,6 +54,7 @@ def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
         f"Error: {message}",
         err=True,
         event="cli.exit_with_error",
+        level="error",
         error=message,
         exit_code=code,
     )
@@ -205,6 +207,7 @@ def setup_logfire_from_cli(
                 fg=typer.colors.YELLOW,
                 err=True,
                 event="logfire.init_failed",
+                level="warning",
                 error=str(e),
                 error_type=type(e).__name__,
             )
@@ -249,6 +252,7 @@ def setup_logging_from_cli(
             f"Error: ログ設定が不正です: {e}",
             err=True,
             event="logging.config_invalid",
+            level="error",
             error=str(e),
         )
         raise typer.Exit(code=2)
@@ -273,6 +277,7 @@ def setup_logging_from_cli(
             fg=typer.colors.YELLOW,
             err=True,
             event="logging.setup_failed",
+            level="warning",
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -321,6 +326,7 @@ def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: 
             fg=typer.colors.RED,
             err=True,
             event="logfire.flags_exclusive_violation",
+            level="error",
             logfire=logfire,
             logfire_metadata=logfire_metadata,
             logfire_http=logfire_http,

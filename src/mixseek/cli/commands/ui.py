@@ -76,6 +76,7 @@ def ui(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
             err=True,
             event="ui.logfire_flags_exclusive_violation",
+            level="error",
             logfire=logfire,
             logfire_metadata=logfire_metadata,
             logfire_http=logfire_http,
@@ -95,6 +96,7 @@ def ui(
             f"Error: Failed to load configuration: {e}",
             err=True,
             event="ui.config_load_failed",
+            level="error",
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -149,6 +151,7 @@ def ui(
             f"Error: Streamlit app not found at {app_path}",
             err=True,
             event="ui.app_not_found",
+            level="error",
             app_path=str(app_path),
         )
         raise typer.Exit(1)
@@ -156,7 +159,7 @@ def ui(
     try:
         stcli.main_run([str(app_path), "--server.port", str(final_port)], standalone_mode=False)
     except KeyboardInterrupt:
-        cli_echo("\nStreamlit server stopped.", event="ui.server_stopped")
+        cli_echo("\nStreamlit server stopped.", event="ui.server_stopped", level="warning")
     except SystemExit as e:
         # Streamlit may raise SystemExit(0) or SystemExit(None) on normal termination
         if e.code:
@@ -164,6 +167,7 @@ def ui(
                 f"Error: Streamlit exited with code {e.code}",
                 err=True,
                 event="ui.streamlit_exit_error",
+                level="error",
                 exit_code=e.code,
             )
             raise typer.Exit(1)
@@ -172,6 +176,7 @@ def ui(
             f"Error: Streamlit failed to start: {e}",
             err=True,
             event="ui.streamlit_start_failed",
+            level="error",
             error=str(e),
             error_type=type(e).__name__,
         )

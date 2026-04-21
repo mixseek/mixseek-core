@@ -66,6 +66,7 @@ def init(
                     "Workspace initialization aborted.",
                     err=True,
                     event="init.aborted",
+                    level="warning",
                     workspace_path=str(workspace_structure.root),
                 )
                 sys.exit(1)
@@ -119,6 +120,7 @@ def init(
             "\nInitialization cancelled by user.",
             err=True,
             event="init.cancelled_by_user",
+            level="warning",
         )
         sys.exit(130)  # Standard exit code for SIGINT
 
@@ -139,6 +141,7 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
             f"Error: {error}\nSolution: Check directory permissions or choose a different path.",
             err=True,
             event="init.error_permission",
+            level="error",
             error=str(error),
             error_type=type(error).__name__,
         )
@@ -147,6 +150,7 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
             f"Error: {error}\nSolution: Create the parent directory first or choose an existing location.",
             err=True,
             event="init.error_parent_not_found",
+            level="error",
             error=str(error),
             error_type=type(error).__name__,
         )
@@ -155,6 +159,7 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
             f"Error: {error}",
             err=True,
             event="init.error_path_not_specified",
+            level="error",
             error=str(error),
             error_type=type(error).__name__,
         )

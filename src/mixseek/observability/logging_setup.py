@@ -45,6 +45,16 @@ def get_log_format() -> LogFormatType:
     return "json" if env_value == "json" else "text"
 
 
+def is_logger_initialized() -> bool:
+    """setup_logging() が呼ばれ、"mixseek" logger が使用可能かを返す。
+
+    cli_echo/cli_secho の json モードで、通常イベントは logger 経由、
+    setup_logging() 前の早期エラーは ``_emit_json`` fallback に振り分ける
+    判定に使用する。
+    """
+    return _setup_logging_called
+
+
 # テキストフォーマット文字列
 TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 

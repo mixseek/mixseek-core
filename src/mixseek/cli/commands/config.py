@@ -92,6 +92,7 @@ def config_show(
                 f"Error: Invalid format '{output_format}'. Must be 'text' or 'json'.",
                 err=True,
                 event="config.show_invalid_output_format",
+                level="error",
                 output_format=output_format,
             )
             raise typer.Exit(code=1)
@@ -108,6 +109,7 @@ def config_show(
                 f"Error: {e}",
                 err=True,
                 event="config.show_workspace_resolve_failed",
+                level="error",
                 error=str(e),
                 error_type=type(e).__name__,
             )
@@ -128,6 +130,7 @@ def config_show(
                 f"Error: {e}",
                 err=True,
                 event="config.show_toml_invalid",
+                level="error",
                 error=str(e),
                 error_type=type(e).__name__,
                 config_path=str(config_abs),
@@ -143,6 +146,7 @@ def config_show(
                 f"Error loading configuration: {e}",
                 err=True,
                 event="config.show_load_failed",
+                level="error",
                 error=str(e),
                 error_type=type(e).__name__,
                 config_path=str(config_abs),
@@ -170,6 +174,7 @@ def config_show(
                     f"Error: Configuration key '{key}' not found.",
                     err=True,
                     event="config.show_key_not_found",
+                    level="error",
                     key=key,
                 )
                 available_keys = ", ".join(sorted(service.get_all_settings().keys()))
@@ -205,6 +210,7 @@ def config_show(
             f"Error: {error_msg}",
             err=True,
             event="config.show_unexpected_error",
+            level="error",
             error=error_msg,
             error_type=type(e).__name__,
         )
@@ -243,6 +249,7 @@ def config_list(
                 f"Error: Invalid format '{output_format}'. Must be 'table', 'text', or 'json'.",
                 err=True,
                 event="config.list_invalid_output_format",
+                level="error",
                 output_format=output_format,
             )
             raise typer.Exit(code=1)
@@ -276,6 +283,7 @@ def config_list(
             f"Error: {error_msg}",
             err=True,
             event="config.list_unexpected_error",
+            level="error",
             error=error_msg,
             error_type=type(e).__name__,
         )
@@ -350,6 +358,7 @@ def config_init(
                         "Error: Workspace path must be specified via --workspace or MIXSEEK_WORKSPACE env var.",
                         err=True,
                         event="config.init_workspace_required",
+                        level="error",
                     )
                     cli_echo(
                         "Example: mixseek config init --component orchestrator --workspace /path/to/workspace",
@@ -377,6 +386,7 @@ def config_init(
                         "Error: Workspace is required for relative output path.",
                         err=True,
                         event="config.init_workspace_required_for_relative",
+                        level="error",
                         output_path=str(output_path),
                     )
                     raise typer.Exit(code=1)
@@ -397,6 +407,7 @@ def config_init(
                 f"Error: {final_output_path} already exists. Use --force to overwrite.",
                 err=True,
                 event="config.init_file_exists",
+                level="error",
                 output_path=str(final_output_path),
             )
             raise typer.Exit(code=1)
@@ -437,6 +448,7 @@ def config_init(
                     f"Error: {str(e)}",
                     err=True,
                     event="config.init_template_generation_failed",
+                    level="error",
                     error=str(e),
                     component=component_lower,
                 )
@@ -482,6 +494,7 @@ def config_init(
             f"Error: {error_msg}",
             err=True,
             event="config.init_unexpected_error",
+            level="error",
             error=error_msg,
             error_type=type(e).__name__,
         )

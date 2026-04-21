@@ -54,6 +54,7 @@ def display_result(result: MemberAgentResult, execution_time_ms: int, output_for
             fg=typer.colors.RED,
             err=True,
             event="member.display_formatter_invalid",
+            level="error",
             error=str(e),
             output_format=output_format,
         )
@@ -208,6 +209,7 @@ def member(
             "Error: Either --config or --agent must be specified",
             err=True,
             event="member.missing_required_option",
+            level="error",
         )
         raise typer.Exit(1)
 
@@ -252,6 +254,7 @@ def member(
                 f"Error: {e}",
                 err=True,
                 event="member.bundled_agent_error",
+                level="error",
                 error=str(e),
                 agent_name=agent,
             )
@@ -273,6 +276,7 @@ def member(
             "\n⚠️  Interrupted by user",
             err=True,
             event="member.interrupted_by_user",
+            level="warning",
         )
         raise typer.Exit(130)
     except Exception as e:
@@ -280,6 +284,7 @@ def member(
             f"Unexpected error: {e}",
             err=True,
             event="member.unexpected_error",
+            level="error",
             error=str(e),
             error_type=type(e).__name__,
         )

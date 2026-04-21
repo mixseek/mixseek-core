@@ -75,6 +75,7 @@ class InitResult(BaseModel):
                 self.message,
                 err=True,
                 event="init.result_error",
+                level="error",
                 workspace_path=str(self.workspace_path),
                 error=self.error,
             )

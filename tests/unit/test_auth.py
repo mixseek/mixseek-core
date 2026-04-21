@@ -585,7 +585,6 @@ class TestQwenProvider:
     def test_create_qwen_model_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """正常系: OpenAIChatModel が OpenAIProvider 付きで生成される."""
         from pydantic_ai.models.openai import OpenAIChatModel
-        from pydantic_ai.providers.openai import OpenAIProvider
 
         monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
         monkeypatch.setenv("MODEL_API_KEY", "test-key")
@@ -596,8 +595,8 @@ class TestQwenProvider:
 
         assert isinstance(model, OpenAIChatModel)
         assert model.model_name == "qwen3.5-35b-a3b"
-        # provider が OpenAIProvider で、base_url / api_key が反映されている
-        assert isinstance(model._provider, OpenAIProvider)  # type: ignore[attr-defined]
+        # base_url の反映確認（pydantic-ai の public API のみ使用、
+        # private な _provider 属性には依存しない）
         assert "example.com" in model.base_url
 
     def test_create_qwen_model_env_name_override(self, monkeypatch: pytest.MonkeyPatch) -> None:

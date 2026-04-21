@@ -98,6 +98,19 @@ class TestMemberAgentConfig:
             config = MemberAgentConfig(**config_data)
             assert config.model == model
 
+        # Valid Qwen models (OpenAI-compatible endpoint; 暫定対応)
+        # モデル名に '/' が含まれても受理する（OpenRouter 等で qwen/qwen3.5-... の形式を使うため）
+        valid_qwen_models = [
+            "qwen:qwen3.5-35b-a3b",
+            "qwen:qwen/qwen3.5-35b-a3b",
+            "qwen:qwen-plus",
+        ]
+
+        for model in valid_qwen_models:
+            config_data["model"] = model
+            config = MemberAgentConfig(**config_data)
+            assert config.model == model
+
         # Invalid models
         invalid_models = [
             "gpt-4",  # Missing prefix

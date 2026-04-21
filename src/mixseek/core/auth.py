@@ -551,11 +551,13 @@ def get_auth_info(model_id: str) -> dict[str, str]:
         elif auth_provider == AuthProvider.QWEN:
             url = os.getenv("MODEL_API_URL", "")
             api_key = os.getenv("MODEL_API_KEY", "")
+            # validate_qwen_credentials と整合: 空白のみも missing 扱い
+            has_creds = bool(url.strip()) and bool(api_key.strip())
             return {
                 "provider": "qwen",
                 "environment": "production",
                 "model_id": model_id,
-                "credentials_status": "present" if (url and api_key) else "missing",
+                "credentials_status": "present" if has_creds else "missing",
             }
 
     except AuthenticationError:

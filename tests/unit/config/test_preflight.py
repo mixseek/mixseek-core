@@ -415,6 +415,27 @@ class TestValidateAuth:
         # テストモデルはスキップされるのでエラーにならない
         assert not cat.has_errors
 
+    def test_qwen_credentials_validated(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """qwen: プロバイダが preflight で検証される（サイレントスキップ禁止）."""
+        from mixseek.config.preflight import _validate_auth
+        from mixseek.config.schema import TeamSettings
+
+        team = MagicMock(spec=TeamSettings)
+        team.leader = {"model": "qwen:qwen3.5-35b-a3b"}
+        team.members = []
+
+        # MODEL_API_URL/KEY 不在 → ERROR となるはず（サイレントスキップしない）
+        monkeypatch.delenv("MODEL_API_URL", raising=False)
+        monkeypatch.delenv("MODEL_API_KEY", raising=False)
+        cat = _validate_auth([team], None, None)
+        assert cat.has_errors
+
+        # 必要な env を設定 → OK
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        cat = _validate_auth([team], None, None)
+        assert not cat.has_errors
+
 
 # ---------------------------------------------------------------------------
 # _validate_custom_metrics テスト

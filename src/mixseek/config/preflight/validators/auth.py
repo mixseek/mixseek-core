@@ -18,6 +18,7 @@ from mixseek.core.auth import (
     validate_google_ai_credentials,
     validate_grok_credentials,
     validate_openai_credentials,
+    validate_qwen_credentials,
     validate_vertex_ai_credentials,
 )
 
@@ -29,6 +30,7 @@ _AUTH_VALIDATORS: dict[AuthProvider, Callable[[], None]] = {
     AuthProvider.ANTHROPIC: validate_anthropic_credentials,
     AuthProvider.GROK: validate_grok_credentials,
     AuthProvider.GROK_RESPONSES: validate_grok_credentials,
+    AuthProvider.QWEN: validate_qwen_credentials,
 }
 
 # テスト専用モデルIDフィルタ（detect_auth_provider()で解決不可）

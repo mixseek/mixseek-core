@@ -29,6 +29,7 @@ from mixseek.core.auth import (
     get_auth_info,
     validate_google_ai_credentials,
     validate_grok_credentials,
+    validate_qwen_credentials,
     validate_test_environment,
     validate_vertex_ai_credentials,
 )
@@ -545,3 +546,97 @@ class TestClearAuthCaches:
         cache_info = _create_google_model_cached.cache_info()
         assert cache_info.currsize == 0
         assert len(_managed_http_clients) == 0
+
+
+class TestQwenProvider:
+    """qwen: プレフィックス（OpenAI 互換エンドポイント）のユニットテスト.
+
+    暫定対応 (draft/qwen-provider.md) の仕様に基づく:
+    - MODEL_API_URL / MODEL_API_KEY が必須
+    - MODEL_NAME は任意の override (ENV > TOML)
+    - フォールバック禁止、検証失敗時は AuthenticationError を送出
+    """
+
+    def test_detect_auth_provider_qwen(self) -> None:
+        """`qwen:` プレフィックスから AuthProvider.QWEN を検出する."""
+        assert detect_auth_provider("qwen:qwen3.5-35b-a3b") == AuthProvider.QWEN
+
+    def test_validate_qwen_credentials_missing_url(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """MODEL_API_URL 未設定で AuthenticationError を送出する."""
+        monkeypatch.delenv("MODEL_API_URL", raising=False)
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        with pytest.raises(AuthenticationError, match="MODEL_API_URL"):
+            validate_qwen_credentials()
+
+    def test_validate_qwen_credentials_missing_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """MODEL_API_KEY 未設定で AuthenticationError を送出する."""
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.delenv("MODEL_API_KEY", raising=False)
+        with pytest.raises(AuthenticationError, match="MODEL_API_KEY"):
+            validate_qwen_credentials()
+
+    def test_validate_qwen_credentials_invalid_url_scheme(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """MODEL_API_URL が http(s) 以外で AuthenticationError を送出する."""
+        monkeypatch.setenv("MODEL_API_URL", "ftp://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        with pytest.raises(AuthenticationError, match="http"):
+            validate_qwen_credentials()
+
+    def test_create_qwen_model_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """正常系: OpenAIChatModel が OpenAIProvider 付きで生成される."""
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.openai import OpenAIProvider
+
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        monkeypatch.delenv("MODEL_NAME", raising=False)
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+        model = create_authenticated_model("qwen:qwen3.5-35b-a3b")
+
+        assert isinstance(model, OpenAIChatModel)
+        assert model.model_name == "qwen3.5-35b-a3b"
+        # provider が OpenAIProvider で、base_url / api_key が反映されている
+        assert isinstance(model._provider, OpenAIProvider)  # type: ignore[attr-defined]
+        assert "example.com" in model.base_url
+
+    def test_create_qwen_model_env_name_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """MODEL_NAME env が非空なら TOML の値を override する (ENV > TOML)."""
+        from pydantic_ai.models.openai import OpenAIChatModel
+
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        monkeypatch.setenv("MODEL_NAME", "qwen3.5-plus")
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+        model = create_authenticated_model("qwen:qwen3.5-35b-a3b")
+
+        assert isinstance(model, OpenAIChatModel)
+        assert model.model_name == "qwen3.5-plus"
+
+    def test_create_qwen_model_empty_env_name_uses_toml(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """MODEL_NAME が空白のみの場合、TOML 値が使用される (override しない)."""
+        from pydantic_ai.models.openai import OpenAIChatModel
+
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "test-key")
+        monkeypatch.setenv("MODEL_NAME", "   ")
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+        model = create_authenticated_model("qwen:qwen3.5-35b-a3b")
+
+        assert isinstance(model, OpenAIChatModel)
+        assert model.model_name == "qwen3.5-35b-a3b"
+
+    def test_get_auth_info_qwen_masks_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """get_auth_info の戻り値に API キーの値が含まれない."""
+        monkeypatch.setenv("MODEL_API_URL", "https://example.com/v1")
+        monkeypatch.setenv("MODEL_API_KEY", "secret-key-value")
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+        info = get_auth_info("qwen:qwen3.5-35b-a3b")
+
+        assert info["provider"] == "qwen"
+        # 値文字列にも、キー名にも秘密情報が混入していないことを確認
+        for value in info.values():
+            assert "secret-key-value" not in value

@@ -22,6 +22,7 @@ from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 from pydantic_ai.models.test import TestModel
 from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.providers.grok import GrokProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 
 # Managed HTTP clients for cleanup
 _managed_http_clients: list[httpx.AsyncClient] = []
@@ -36,6 +37,7 @@ class AuthProvider(Enum):
     ANTHROPIC = "anthropic"
     GROK = "grok"
     GROK_RESPONSES = "grok_responses"
+    QWEN = "qwen"
     TEST_MODEL = "test_model"
 
 
@@ -81,6 +83,9 @@ def detect_auth_provider(model_id: str) -> AuthProvider:
     elif model_id.startswith("grok-responses:"):
         return AuthProvider.GROK_RESPONSES
 
+    elif model_id.startswith("qwen:"):
+        return AuthProvider.QWEN
+
     raise AuthenticationError(
         f"Unsupported model ID format: {model_id}",
         AuthProvider.GOOGLE_AI,
@@ -88,8 +93,9 @@ def detect_auth_provider(model_id: str) -> AuthProvider:
         "'google-vertex:model-name' for Vertex AI models, "
         "'openai:model-name' for OpenAI models, "
         "'anthropic:model-name' for Anthropic Claude models, "
-        "'grok:model-name' for Grok models, or "
-        "'grok-responses:model-name' for Grok with web search tools",
+        "'grok:model-name' for Grok models, "
+        "'grok-responses:model-name' for Grok with web search tools, or "
+        "'qwen:model-name' for Qwen via OpenAI-compatible endpoint",
     )
 
 
@@ -342,6 +348,41 @@ def validate_grok_credentials() -> None:
         )
 
 
+def validate_qwen_credentials() -> None:
+    """Validate Qwen OpenAI-compatible endpoint credentials.
+
+    暫定対応 (draft/qwen-provider.md): MODEL_API_URL と MODEL_API_KEY のみ必須。
+    MODEL_NAME は任意の override（schema.py の ENV > TOML 優先順位に整合）。
+    URL の末尾スラッシュは正規化せず、OpenAI SDK 側の挙動に委ねる。
+
+    Raises:
+        AuthenticationError: MODEL_API_URL が未設定/空/空白、または http(s)
+            以外のスキーマの場合、もしくは MODEL_API_KEY が未設定/空/空白の場合
+    """
+    url = os.getenv("MODEL_API_URL")
+    if not url or not url.strip():
+        raise AuthenticationError(
+            "MODEL_API_URL environment variable not found or empty",
+            AuthProvider.QWEN,
+            "Set the OpenAI-compatible endpoint URL: export MODEL_API_URL=https://...",
+        )
+
+    if not url.strip().startswith(("http://", "https://")):
+        raise AuthenticationError(
+            "MODEL_API_URL must start with http:// or https://",
+            AuthProvider.QWEN,
+            "Set a valid HTTP(S) URL for MODEL_API_URL",
+        )
+
+    key = os.getenv("MODEL_API_KEY")
+    if not key or not key.strip():
+        raise AuthenticationError(
+            "MODEL_API_KEY environment variable not found or empty",
+            AuthProvider.QWEN,
+            "Set the API key: export MODEL_API_KEY=<bearer_token>",
+        )
+
+
 def create_authenticated_model(
     model_id: str,
 ) -> GoogleModel | OpenAIChatModel | OpenAIResponsesModel | AnthropicModel | TestModel:
@@ -417,6 +458,21 @@ def create_authenticated_model(
         # Uses OpenAIResponsesModel with provider='grok'
         return OpenAIResponsesModel(base_model_name, provider="grok")
 
+    elif auth_provider == AuthProvider.QWEN:
+        validate_qwen_credentials()
+        # TOML 既定値（dev 用）
+        base_model_name = model_id.replace("qwen:", "")
+        # ENV override（schema.py の ENV > TOML 優先順位に整合）
+        # MODEL_NAME は QWEN プロバイダ固有の override であり、他プロバイダには影響しない
+        model_name_env = os.getenv("MODEL_NAME", "").strip()
+        if model_name_env:
+            base_model_name = model_name_env
+        # validate 済み
+        base_url = os.environ["MODEL_API_URL"].strip()
+        api_key = os.environ["MODEL_API_KEY"].strip()
+        qwen_provider = OpenAIProvider(base_url=base_url, api_key=api_key)
+        return OpenAIChatModel(base_model_name, provider=qwen_provider)
+
     else:
         # This should never be reached due to detect_auth_provider validation
         raise AuthenticationError(
@@ -490,6 +546,16 @@ def get_auth_info(model_id: str) -> dict[str, str]:
                 "environment": "production",
                 "model_id": model_id,
                 "credentials_status": "present" if api_key else "missing",
+            }
+
+        elif auth_provider == AuthProvider.QWEN:
+            url = os.getenv("MODEL_API_URL", "")
+            api_key = os.getenv("MODEL_API_KEY", "")
+            return {
+                "provider": "qwen",
+                "environment": "production",
+                "model_id": model_id,
+                "credentials_status": "present" if (url and api_key) else "missing",
             }
 
     except AuthenticationError:

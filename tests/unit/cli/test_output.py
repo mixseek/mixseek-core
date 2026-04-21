@@ -18,7 +18,7 @@ import sys
 from collections.abc import Callable, Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import typer
@@ -235,7 +235,7 @@ def _capture_logger_json(
     assert raw.endswith("\n"), "JSON 出力は改行で終わるべき"
     # 1 行目を読む (setup_logging 自体は出力しない想定)
     first_line = raw.split("\n", 1)[0]
-    return json.loads(first_line)
+    return cast(dict[str, Any], json.loads(first_line))
 
 
 class TestJsonModeLoggerPath:
@@ -527,12 +527,15 @@ class TestJsonModeFallback:
         self, monkeypatch: pytest.MonkeyPatch, reserved_key: str
     ) -> None:
         """fields に schema 不変キーと同名 entry があっても正規キーは上書きされない。"""
+        # mypy: ``**{reserved_key: ...}`` は dict[str, str] として推論されるため、
+        # ``use_secho``/``bold`` 等の既存 kwarg と衝突する可能性があるとして警告される。
+        # reserved_key は "timestamp"/"type" に限定されており衝突しない。
         payload, _ = _capture_fallback_json(
             monkeypatch,
             "正規 message",
             err=True,
             event="legit.event",
-            **{reserved_key: "USER_SUPPLIED_VALUE"},
+            **{reserved_key: "USER_SUPPLIED_VALUE"},  # type: ignore[arg-type]
         )
         assert payload[reserved_key] != "USER_SUPPLIED_VALUE"
         assert payload["type"] == "cli"

@@ -1,15 +1,23 @@
 """Main CLI application entry point for MixSeek."""
 
-import typer
+# 他の import より前に早期 stderr フックを設置する。
+# MIXSEEK_LOG_FORMAT=json のとき warnings.showwarning を JSON 版に差し替え、
+# setup_logging() 前 (import 段階) に発火する warning もスキーマ化する。
+# 他の mixseek.* を import する前に実行する必要があるため、最上段に配置。
+from mixseek.cli._early_init import install_early_stderr_hooks
 
-from mixseek import __version__
-from mixseek.cli.commands import config as config_module
-from mixseek.cli.commands import evaluate as evaluate_module
-from mixseek.cli.commands import exec as exec_module
-from mixseek.cli.commands import init as init_module
-from mixseek.cli.commands import member as member_module
-from mixseek.cli.commands import team as team_module
-from mixseek.cli.commands import ui as ui_module
+install_early_stderr_hooks()
+
+import typer  # noqa: E402
+
+from mixseek import __version__  # noqa: E402
+from mixseek.cli.commands import config as config_module  # noqa: E402
+from mixseek.cli.commands import evaluate as evaluate_module  # noqa: E402
+from mixseek.cli.commands import exec as exec_module  # noqa: E402
+from mixseek.cli.commands import init as init_module  # noqa: E402
+from mixseek.cli.commands import member as member_module  # noqa: E402
+from mixseek.cli.commands import team as team_module  # noqa: E402
+from mixseek.cli.commands import ui as ui_module  # noqa: E402
 
 app = typer.Typer(
     name="mixseek",

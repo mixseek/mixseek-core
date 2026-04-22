@@ -185,9 +185,9 @@ def _force_reset_cli_loggers() -> None:
         logger.addHandler(logging.NullHandler())
 
 
+# __all__ は公開 API のみ。underscore prefixed (``_early_setup_cli_loggers`` /
+# ``_force_reset_cli_loggers``) は internal/test 用途で、直接 import で使う。
 __all__ = [
-    "_early_setup_cli_loggers",
-    "_force_reset_cli_loggers",
     "get_cli_logger",
     "get_data_logger",
     "setup_cli_logger",

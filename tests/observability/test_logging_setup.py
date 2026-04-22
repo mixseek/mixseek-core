@@ -453,6 +453,36 @@ class TestJsonFormatter:
         data = json.loads(output)
         assert data["type"] == "log"
 
+    def test_schema_keys_not_overwritten_by_extra(self) -> None:
+        """extra がスキーマ不変キー (type/timestamp/level/logger/message) を上書きしない"""
+        fmt = JsonFormatter()
+        record = logging.LogRecord(
+            name="mixseek",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Test message",
+            args=(),
+            exc_info=None,
+        )
+        # スキーマ予約キーと同名の extra を付与（logger.info(msg, extra={...}) 相当）
+        record.type = "user_event"
+        record.timestamp = "overwritten"
+        record.level = "FATAL"
+        record.logger = "other.logger"
+
+        output = fmt.format(record)
+        data = json.loads(output)
+
+        # スキーマは安定
+        assert data["type"] == "log"
+        assert data["level"] == "INFO"
+        assert data["logger"] == "mixseek"
+        assert data["message"] == "Test message"
+        # timestamp は ISO 形式 (上書きされていない)
+        assert data["timestamp"] != "overwritten"
+        assert "T" in data["timestamp"]
+
 
 class TestSkipTracesFilter:
     """SkipTracesFilter のユニットテスト"""

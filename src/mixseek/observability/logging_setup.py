@@ -87,6 +87,10 @@ class JsonFormatter(logging.Formatter):
     """stdlib のみで実装する JSON フォーマッタ。
 
     extra fields をトップレベルキーとして出力。type: "log" で標準ログを識別。
+    スキーマ不変キー (``timestamp`` / ``type`` / ``level`` / ``logger`` / ``message``)
+    は extra で上書きさせず、衝突する extra キーは破棄する (``_emit_json`` と同じポリシー)。
+    これにより ``logger.info(msg, extra={"type": "foo"})`` のような呼び出しでも
+    ``type: "log"`` 等のスキーマが常に安定する。
     """
 
     def format(self, record: logging.LogRecord) -> str:
@@ -100,9 +104,9 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": message,
         }
-        # extra fields をトップレベルに追加
+        # extra fields をトップレベルに追加。スキーマ不変キーの上書きは防ぐ。
         extra = {k: v for k, v in record.__dict__.items() if k not in _STANDARD_FIELDS and not k.startswith("_")}
-        log_entry.update(extra)
+        log_entry.update({k: v for k, v in extra.items() if k not in log_entry})
         return json.dumps(log_entry, ensure_ascii=False, default=str)
 
 

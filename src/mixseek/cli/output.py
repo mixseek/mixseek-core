@@ -25,18 +25,12 @@ import click
 import typer
 
 from mixseek.observability import get_log_format, is_logger_initialized
+from mixseek.observability.logging_setup import _STANDARD_FIELDS
 
 _LOGGER_NAME = "mixseek"
 
 # 許容する log level 名 (標準 logging の小文字メソッド名)
 _VALID_LEVELS: frozenset[str] = frozenset({"debug", "info", "warning", "error", "critical"})
-
-# ``_emit_via_logger`` で ``extra`` から除外する予約キー (LogRecord 標準属性)。
-# logging モジュールは extra に標準属性と同名のキーを渡すと KeyError を投げる。
-_RESERVED_EXTRA_KEYS: frozenset[str] = frozenset(logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys()) | {
-    "message",
-    "asctime",
-}
 
 
 def cli_echo(
@@ -146,7 +140,7 @@ def _emit_via_logger(
         extra["event"] = event
     # logging の LogRecord 標準属性と衝突する extra キーは ValueError になるので除外。
     for k, v in fields.items():
-        if k not in _RESERVED_EXTRA_KEYS:
+        if k not in _STANDARD_FIELDS:
             extra[k] = v
 
     logger = logging.getLogger(_LOGGER_NAME)

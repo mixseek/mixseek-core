@@ -296,6 +296,9 @@ def ensure_log_format_env(cli_log_format: str | None) -> str:
     が ``get_log_format()`` の env var fallback を通じて JSON モードを検出できるように、
     CLI コマンドの先頭で呼ぶ。
 
+    値は小文字に正規化し、``{"json", "text"}`` 以外は ``"text"`` に fallback する。
+    これにより "JSON"/"Json" 等の表記揺れや不正値が env と戻り値に伝搬しないようにする。
+
     Args:
         cli_log_format: CLI ``--log-format`` の値。None の場合は既存の環境変数または
             "text" を fallback に採用する。
@@ -304,6 +307,9 @@ def ensure_log_format_env(cli_log_format: str | None) -> str:
         実効的に採用した log_format ("text" または "json")。
     """
     effective = cli_log_format if cli_log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    effective = effective.lower()
+    if effective not in {"json", "text"}:
+        effective = "text"
     os.environ["MIXSEEK_LOG_FORMAT"] = effective
     return effective
 

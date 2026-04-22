@@ -111,6 +111,16 @@ def cli_secho(
         typer.secho(message, err=err, fg=fg, bold=bold)
 
 
+def _clean_message(message: str) -> str:
+    """JSON 出力用にメッセージから ANSI エスケープと前後の空白・改行を除去する。
+
+    ``click.unstyle()`` で text モード向け装飾 (色コード等) を除去し、
+    ``strip()`` で先頭末尾の空白・改行を除去する。text モード向けに付加された
+    装飾 (例: 先頭の ``\\n``) が JSON ログ解析時のノイズになるのを防ぐ。
+    """
+    return click.unstyle(message).strip()
+
+
 def _emit_via_logger(
     message: str,
     *,
@@ -124,16 +134,14 @@ def _emit_via_logger(
     <fields>}`` 形式の 1 行 JSON になり、同時に FileHandler / LogfireLoggingHandler
     にも自動的に流れる。
 
-    message は ``click.unstyle()`` で ANSI エスケープ除去、``strip()`` で
-    前後の空白・改行を除去してから渡す。text モード向け装飾が JSON ログの
-    メッセージ本文に残らないようにするため。
+    message は ``_clean_message()`` で正規化してから logger に渡す。
 
     ``fields`` の中に logger 側で生成される標準属性 (``message`` / ``level`` 等)
     と衝突するキーがあっても、``logging`` 標準の挙動を壊さないよう ``_STANDARD_FIELDS``
     と衝突するものは ``extra`` から除外する。
     """
     normalized_level = level if level in _VALID_LEVELS else "info"
-    clean_message = click.unstyle(message).strip()
+    clean_message = _clean_message(message)
 
     extra: dict[str, Any] = {}
     if event is not None:
@@ -165,11 +173,9 @@ def _emit_json(
     text モードと同じ出力経路に揃えることで、click の encoding 正規化
     (Unicode → stream エンコーディングのマッチング) の恩恵を受けられる。
 
-    message は ``click.unstyle()`` で ANSI エスケープ除去、``strip()`` で
-    前後の空白・改行を除去してから JSON へ格納する。text モード向けに付加された
-    装飾 (例: 先頭の ``\\n``) が JSON ログ解析時のノイズにならないようにするため。
+    message は ``_clean_message()`` で正規化してから JSON へ格納する。
     """
-    clean_message = click.unstyle(message).strip()
+    clean_message = _clean_message(message)
 
     payload: dict[str, Any] = {
         "timestamp": datetime.now(tz=UTC).isoformat(),

@@ -789,6 +789,15 @@ class JudgmentSettings(MixSeekBaseSettings):
         description="システム指示（Noneの場合はデフォルト指示を使用）",
     )
 
+    # 最終ラウンド時のJudgement実行フラグ
+    judge_on_final_round: bool = Field(
+        default=True,
+        description=(
+            "最終ラウンド（current_round >= max_rounds）でLLM Judgementを実行するかどうか。"
+            "Falseの場合、最終ラウンドではLLM呼び出しをスキップし、継続判定を直接Falseにする。"
+        ),
+    )
+
     @field_validator("model")
     @classmethod
     def validate_model(cls, v: str) -> str:

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import typer
 from pydantic import BaseModel, Field
 
 
@@ -47,35 +48,21 @@ class InitResult(BaseModel):
 
     def print_result(self) -> None:
         """Print result to stdout/stderr."""
-        # Why: cli.output は observability 経由で config/models を再帰的に import するため、
-        # module-level import にすると mixseek.models.__init__ → result → cli.output の循環になる。
-        # 呼び出し時 import で循環を回避する。
-        from mixseek.cli.output import cli_echo
-
         if self.success:
-            cli_echo(
-                self.message,
-                event="init.result_success",
-                workspace_path=str(self.workspace_path),
-                created_dir_count=len(self.created_dirs),
-                created_file_count=len(self.created_files),
-            )
-            cli_echo(
-                f"Created directories: {len(self.created_dirs)}",
-                event="init.result_dirs",
-                created_dir_count=len(self.created_dirs),
-            )
-            cli_echo(
-                f"Created files: {len(self.created_files)}",
-                event="init.result_files",
-                created_file_count=len(self.created_files),
-            )
+            typer.echo(self.message)
+            typer.echo(f"Created directories: {len(self.created_dirs)}")
+            typer.echo(f"Created files: {len(self.created_files)}")
         else:
-            cli_echo(
+            # エラーは mixseek.cli logger 経由で stderr 出力 + JSON モード構造化。
+            # Why: cli_logger の遅延 import で mixseek.models → mixseek.cli の
+            # 循環 import を回避する。
+            from mixseek.cli.output_logger import get_cli_logger
+
+            get_cli_logger().error(
                 self.message,
-                err=True,
-                event="init.result_error",
-                level="error",
-                workspace_path=str(self.workspace_path),
-                error=self.error,
+                extra={
+                    "event": "init.result_error",
+                    "workspace_path": str(self.workspace_path),
+                    "error": self.error,
+                },
             )

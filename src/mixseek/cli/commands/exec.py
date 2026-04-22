@@ -20,7 +20,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output import cli_echo
+from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
@@ -97,9 +97,7 @@ def _output_results(summary: ExecutionSummary, output_format: str) -> None:
         output_format: 出力フォーマット(text/json)
     """
     if output_format == "json":
-        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
-        # 対話的に整形表示したい場合は `| jq` を利用する。
-        typer.echo(summary.model_dump_json())
+        print(summary.model_dump_json(indent=2))
     else:
         _print_text_summary(summary)
 
@@ -139,9 +137,9 @@ def exec_command(
         no_log_console: コンソールログ出力無効化
         no_log_file: ファイルログ出力無効化
     """
-    # setup_logging() 前の cli_echo (validate_logfire_flags 等) でも
-    # JSON モードが反映されるように、env var を最初に確定する。
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
     ensure_log_format_env(log_format)
+    cli_logger = get_cli_logger()
 
     async def _execute() -> None:
         try:
@@ -178,11 +176,9 @@ def exec_command(
 
             # 4. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
-                cli_echo(
+                cli_logger.error(
                     "Error: --config オプションは必須です",
-                    err=True,
-                    event="exec.config_required",
-                    level="error",
+                    extra={"event": "exec.config_required"},
                 )
                 raise typer.Exit(code=2)
 
@@ -196,11 +192,9 @@ def exec_command(
 
             # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
-                cli_echo(
+                cli_logger.error(
                     "Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
-                    err=True,
-                    event="exec.preflight_inconsistent",
-                    level="error",
+                    extra={"event": "exec.preflight_inconsistent"},
                 )
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
@@ -233,13 +227,13 @@ def exec_command(
         except typer.Exit:
             raise
         except Exception as e:
-            cli_echo(
+            cli_logger.error(
                 f"Error: {e}",
-                err=True,
-                event="exec.unexpected_error",
-                level="error",
-                error=str(e),
-                error_type=type(e).__name__,
+                extra={
+                    "event": "exec.unexpected_error",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
             )
             raise typer.Exit(code=2) from e
         finally:
@@ -257,8 +251,7 @@ def _output_preflight_result(result: PreflightResult, output_format: str) -> Non
         output_format: 出力フォーマット(text/json)
     """
     if output_format == "json":
-        # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
-        typer.echo(result.model_dump_json())
+        print(result.model_dump_json(indent=2))
     else:
         status_icons = {"ok": "✅", "error": "❌", "skipped": "⏭️"}
 

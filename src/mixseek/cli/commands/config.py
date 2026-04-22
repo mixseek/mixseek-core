@@ -17,7 +17,7 @@ from pathlib import Path
 import typer
 
 from mixseek.cli.common_options import WORKSPACE_OPTION
-from mixseek.cli.output import cli_echo
+from mixseek.cli.output_logger import _early_setup_cli_loggers, get_cli_logger
 from mixseek.config import ConfigurationManager
 from mixseek.config.views import ConfigViewService
 
@@ -85,15 +85,19 @@ def config_show(
         # Show for specific environment
         mixseek config show --config orchestrator.toml --workspace /path/to/workspace --environment prod
     """
+    # config コマンドは setup_logging を呼ばないため、CLI logger を env var ベースで早期初期化する。
+    _early_setup_cli_loggers()
+    cli_logger = get_cli_logger()
+
     try:
         # Validate output format
         if output_format not in ["text", "json"]:
-            cli_echo(
+            cli_logger.error(
                 f"Error: Invalid format '{output_format}'. Must be 'text' or 'json'.",
-                err=True,
-                event="config.show_invalid_output_format",
-                level="error",
-                output_format=output_format,
+                extra={
+                    "event": "config.show_invalid_output_format",
+                    "output_format": output_format,
+                },
             )
             raise typer.Exit(code=1)
 
@@ -105,13 +109,13 @@ def config_show(
         try:
             resolved_workspace = get_workspace_path(workspace)
         except Exception as e:
-            cli_echo(
+            cli_logger.error(
                 f"Error: {e}",
-                err=True,
-                event="config.show_workspace_resolve_failed",
-                level="error",
-                error=str(e),
-                error_type=type(e).__name__,
+                extra={
+                    "event": "config.show_workspace_resolve_failed",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
             )
             raise typer.Exit(code=1)
 
@@ -126,14 +130,14 @@ def config_show(
         try:
             validate_orchestrator_toml(config_abs)
         except (FileNotFoundError, ValueError) as e:
-            cli_echo(
+            cli_logger.error(
                 f"Error: {e}",
-                err=True,
-                event="config.show_toml_invalid",
-                level="error",
-                error=str(e),
-                error_type=type(e).__name__,
-                config_path=str(config_abs),
+                extra={
+                    "event": "config.show_toml_invalid",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "config_path": str(config_abs),
+                },
             )
             raise typer.Exit(code=1)
 
@@ -142,14 +146,14 @@ def config_show(
         try:
             config_data = loader.load_orchestrator_with_references(config_abs)
         except (FileNotFoundError, ValueError) as e:
-            cli_echo(
+            cli_logger.error(
                 f"Error loading configuration: {e}",
-                err=True,
-                event="config.show_load_failed",
-                level="error",
-                error=str(e),
-                error_type=type(e).__name__,
-                config_path=str(config_abs),
+                extra={
+                    "event": "config.show_load_failed",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "config_path": str(config_abs),
+                },
             )
             raise typer.Exit(code=1)
 
@@ -170,19 +174,17 @@ def config_show(
         if key:
             setting = service.get_setting(key)
             if setting is None:
-                cli_echo(
+                cli_logger.error(
                     f"Error: Configuration key '{key}' not found.",
-                    err=True,
-                    event="config.show_key_not_found",
-                    level="error",
-                    key=key,
+                    extra={"event": "config.show_key_not_found", "key": key},
                 )
                 available_keys = ", ".join(sorted(service.get_all_settings().keys()))
-                cli_echo(
+                cli_logger.info(
                     f"\nAvailable keys:\n{available_keys}",
-                    err=True,
-                    event="config.show_available_keys",
-                    available_keys=available_keys,
+                    extra={
+                        "event": "config.show_available_keys",
+                        "available_keys": available_keys,
+                    },
                 )
                 raise typer.Exit(code=1)
 
@@ -206,13 +208,13 @@ def config_show(
 
     except Exception as e:
         error_msg = str(e)
-        cli_echo(
+        cli_logger.error(
             f"Error: {error_msg}",
-            err=True,
-            event="config.show_unexpected_error",
-            level="error",
-            error=error_msg,
-            error_type=type(e).__name__,
+            extra={
+                "event": "config.show_unexpected_error",
+                "error": error_msg,
+                "error_type": type(e).__name__,
+            },
         )
         raise typer.Exit(code=1)
 
@@ -242,15 +244,18 @@ def config_list(
         # Show in JSON format (for programmatic use)
         mixseek config list --output-format json
     """
+    _early_setup_cli_loggers()
+    cli_logger = get_cli_logger()
+
     try:
         # Validate format option
         if output_format not in ["table", "text", "json"]:
-            cli_echo(
+            cli_logger.error(
                 f"Error: Invalid format '{output_format}'. Must be 'table', 'text', or 'json'.",
-                err=True,
-                event="config.list_invalid_output_format",
-                level="error",
-                output_format=output_format,
+                extra={
+                    "event": "config.list_invalid_output_format",
+                    "output_format": output_format,
+                },
             )
             raise typer.Exit(code=1)
 
@@ -279,13 +284,13 @@ def config_list(
 
     except Exception as e:
         error_msg = str(e)
-        cli_echo(
+        cli_logger.error(
             f"Error: {error_msg}",
-            err=True,
-            event="config.list_unexpected_error",
-            level="error",
-            error=error_msg,
-            error_type=type(e).__name__,
+            extra={
+                "event": "config.list_unexpected_error",
+                "error": error_msg,
+                "error_type": type(e).__name__,
+            },
         )
         raise typer.Exit(code=1)
 
@@ -339,6 +344,9 @@ def config_init(
         # Overwrite existing template
         mixseek config init --component orchestrator --force
     """
+    _early_setup_cli_loggers()
+    cli_logger = get_cli_logger()
+
     try:
         from mixseek.config.template import TemplateGenerator
         from mixseek.utils.env import get_workspace_from_env
@@ -354,16 +362,13 @@ def config_init(
                     workspace = None
                 else:
                     # 相対パスまたはデフォルトパスの場合は workspace が必要
-                    cli_echo(
+                    cli_logger.error(
                         "Error: Workspace path must be specified via --workspace or MIXSEEK_WORKSPACE env var.",
-                        err=True,
-                        event="config.init_workspace_required",
-                        level="error",
+                        extra={"event": "config.init_workspace_required"},
                     )
-                    cli_echo(
+                    cli_logger.info(
                         "Example: mixseek config init --component orchestrator --workspace /path/to/workspace",
-                        err=True,
-                        event="config.init_workspace_required_hint",
+                        extra={"event": "config.init_workspace_required_hint"},
                     )
                     raise typer.Exit(code=1)
 
@@ -382,12 +387,12 @@ def config_init(
             else:
                 # 相対パス: workspace からの相対パスとして解釈
                 if workspace is None:
-                    cli_echo(
+                    cli_logger.error(
                         "Error: Workspace is required for relative output path.",
-                        err=True,
-                        event="config.init_workspace_required_for_relative",
-                        level="error",
-                        output_path=str(output_path),
+                        extra={
+                            "event": "config.init_workspace_required_for_relative",
+                            "output_path": str(output_path),
+                        },
                     )
                     raise typer.Exit(code=1)
                 final_output_path = workspace / output_path
@@ -403,12 +408,12 @@ def config_init(
 
         # === Step 4: Check if file exists ===
         if final_output_path.exists() and not force:
-            cli_echo(
+            cli_logger.error(
                 f"Error: {final_output_path} already exists. Use --force to overwrite.",
-                err=True,
-                event="config.init_file_exists",
-                level="error",
-                output_path=str(final_output_path),
+                extra={
+                    "event": "config.init_file_exists",
+                    "output_path": str(final_output_path),
+                },
             )
             raise typer.Exit(code=1)
 
@@ -444,13 +449,13 @@ def config_init(
             try:
                 template = generator.generate_template(component_lower)
             except ValueError as e:
-                cli_echo(
+                cli_logger.error(
                     f"Error: {str(e)}",
-                    err=True,
-                    event="config.init_template_generation_failed",
-                    level="error",
-                    error=str(e),
-                    component=component_lower,
+                    extra={
+                        "event": "config.init_template_generation_failed",
+                        "error": str(e),
+                        "component": component_lower,
+                    },
                 )
                 raise typer.Exit(code=1)
 
@@ -461,41 +466,22 @@ def config_init(
             final_output_path.write_text(template)
 
         # === Step 6: Success message ===
-        cli_echo(
-            f"✓ Generated template: {final_output_path.name}",
-            event="config.init_template_generated",
-            component=component_lower,
-            output_path=str(final_output_path.absolute()),
-            output_name=final_output_path.name,
-        )
-        cli_echo(
-            f"  Location: {final_output_path.absolute()}",
-            event="config.init_template_location",
-            output_path=str(final_output_path.absolute()),
-        )
+        typer.echo(f"✓ Generated template: {final_output_path.name}")
+        typer.echo(f"  Location: {final_output_path.absolute()}")
 
         if component_lower == "prompt_builder":
-            cli_echo(
-                "\nEdit prompt_builder.toml to customize Team user prompt template.",
-                event="config.init_edit_hint",
-                component=component_lower,
-            )
+            typer.echo("\nEdit prompt_builder.toml to customize Team user prompt template.")
         else:
-            cli_echo(
-                f'\nEdit {final_output_path.name} and set required fields (marked with empty = "")',
-                event="config.init_edit_hint",
-                component=component_lower,
-                output_name=final_output_path.name,
-            )
+            typer.echo(f'\nEdit {final_output_path.name} and set required fields (marked with empty = "")')
 
     except Exception as e:
         error_msg = str(e)
-        cli_echo(
+        cli_logger.error(
             f"Error: {error_msg}",
-            err=True,
-            event="config.init_unexpected_error",
-            level="error",
-            error=error_msg,
-            error_type=type(e).__name__,
+            extra={
+                "event": "config.init_unexpected_error",
+                "error": error_msg,
+                "error_type": type(e).__name__,
+            },
         )
         raise typer.Exit(code=1)

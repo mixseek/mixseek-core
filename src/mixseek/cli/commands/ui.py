@@ -16,7 +16,7 @@ from mixseek.cli.common_options import (
     NO_LOG_FILE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output import cli_echo
+from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
@@ -64,22 +64,23 @@ def ui(
 
         mixseek ui --no-log-console
     """
-    # log_format を最初に解決し、環境変数へ設定する。
-    # これにより、以降の cli_echo が JSON モードを正しく判定できる
+    # log_format を最初に解決し、環境変数 + CLI logger を早期初期化する。
+    # これにより、以降の cli_logger が JSON モードを正しく判定できる
     # (ui コマンドは setup_logging を自プロセスで呼ばず Streamlit サブプロセスに委ねるため)。
     ensure_log_format_env(log_format)
+    cli_logger = get_cli_logger()
 
     # 排他的チェック（複数のlogfireフラグは指定できない）
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:
-        cli_echo(
+        cli_logger.error(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            err=True,
-            event="ui.logfire_flags_exclusive_violation",
-            level="error",
-            logfire=logfire,
-            logfire_metadata=logfire_metadata,
-            logfire_http=logfire_http,
+            extra={
+                "event": "ui.logfire_flags_exclusive_violation",
+                "logfire": logfire,
+                "logfire_metadata": logfire_metadata,
+                "logfire_http": logfire_http,
+            },
         )
         raise typer.Exit(1)
 
@@ -92,13 +93,13 @@ def ui(
         final_port = port if port is not None else ui_settings.port
 
     except Exception as e:
-        cli_echo(
+        cli_logger.error(
             f"Error: Failed to load configuration: {e}",
-            err=True,
-            event="ui.config_load_failed",
-            level="error",
-            error=str(e),
-            error_type=type(e).__name__,
+            extra={
+                "event": "ui.config_load_failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         raise typer.Exit(1)
 
@@ -147,37 +148,31 @@ def ui(
     app_path = Path(__file__).parent.parent.parent / "ui" / "app.py"
 
     if not app_path.exists():
-        cli_echo(
+        cli_logger.error(
             f"Error: Streamlit app not found at {app_path}",
-            err=True,
-            event="ui.app_not_found",
-            level="error",
-            app_path=str(app_path),
+            extra={"event": "ui.app_not_found", "app_path": str(app_path)},
         )
         raise typer.Exit(1)
 
     try:
         stcli.main_run([str(app_path), "--server.port", str(final_port)], standalone_mode=False)
     except KeyboardInterrupt:
-        cli_echo("\nStreamlit server stopped.", event="ui.server_stopped", level="warning")
+        typer.echo("\nStreamlit server stopped.")
     except SystemExit as e:
         # Streamlit may raise SystemExit(0) or SystemExit(None) on normal termination
         if e.code:
-            cli_echo(
+            cli_logger.error(
                 f"Error: Streamlit exited with code {e.code}",
-                err=True,
-                event="ui.streamlit_exit_error",
-                level="error",
-                exit_code=e.code,
+                extra={"event": "ui.streamlit_exit_error", "exit_code": e.code},
             )
             raise typer.Exit(1)
     except Exception as e:
-        cli_echo(
+        cli_logger.error(
             f"Error: Streamlit failed to start: {e}",
-            err=True,
-            event="ui.streamlit_start_failed",
-            level="error",
-            error=str(e),
-            error_type=type(e).__name__,
+            extra={
+                "event": "ui.streamlit_start_failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         raise typer.Exit(1)

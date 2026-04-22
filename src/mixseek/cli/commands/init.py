@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 
 from mixseek.cli.common_options import WORKSPACE_OPTION
-from mixseek.cli.output import cli_echo
+from mixseek.cli.output_logger import _early_setup_cli_loggers, get_cli_logger
 from mixseek.config.templates import generate_sample_config
 from mixseek.exceptions import (
     ParentDirectoryNotFoundError,
@@ -39,6 +39,10 @@ def init(
         mixseek init -w ./my-workspace
         export MIXSEEK_WORKSPACE=/path/to/workspace && mixseek init
     """
+    # init コマンドは setup_logging() を呼ばない (ワークスペース自体を作る側) が、
+    # CLI logger は env var ベースで早期初期化する必要がある。
+    _early_setup_cli_loggers()
+
     # Initialize workspace_path_input to None for safe error handling
     workspace_path_input: Path | None = None
 
@@ -62,12 +66,12 @@ def init(
                 f"Workspace already exists at {workspace_structure.root}. Overwrite?",
                 default=False,
             ):
-                cli_echo(
+                get_cli_logger().warning(
                     "Workspace initialization aborted.",
-                    err=True,
-                    event="init.aborted",
-                    level="warning",
-                    workspace_path=str(workspace_structure.root),
+                    extra={
+                        "event": "init.aborted",
+                        "workspace_path": str(workspace_structure.root),
+                    },
                 )
                 sys.exit(1)
 
@@ -116,11 +120,9 @@ def init(
     ) as e:
         handle_error(e, workspace_path_input or Path("."))
     except KeyboardInterrupt:
-        cli_echo(
+        get_cli_logger().warning(
             "\nInitialization cancelled by user.",
-            err=True,
-            event="init.cancelled_by_user",
-            level="warning",
+            extra={"event": "init.cancelled_by_user"},
         )
         sys.exit(130)  # Standard exit code for SIGINT
 
@@ -134,34 +136,35 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
         workspace_path: The workspace path that was being processed
     """
     result = InitResult.error_result(workspace_path=workspace_path, error=str(error))
+    cli_logger = get_cli_logger()
 
     # Add solution hints based on error type
     if isinstance(error, WorkspacePermissionError):
-        cli_echo(
+        cli_logger.error(
             f"Error: {error}\nSolution: Check directory permissions or choose a different path.",
-            err=True,
-            event="init.error_permission",
-            level="error",
-            error=str(error),
-            error_type=type(error).__name__,
+            extra={
+                "event": "init.error_permission",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     elif isinstance(error, ParentDirectoryNotFoundError):
-        cli_echo(
+        cli_logger.error(
             f"Error: {error}\nSolution: Create the parent directory first or choose an existing location.",
-            err=True,
-            event="init.error_parent_not_found",
-            level="error",
-            error=str(error),
-            error_type=type(error).__name__,
+            extra={
+                "event": "init.error_parent_not_found",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     elif isinstance(error, WorkspacePathNotSpecifiedError):
-        cli_echo(
+        cli_logger.error(
             f"Error: {error}",
-            err=True,
-            event="init.error_path_not_specified",
-            level="error",
-            error=str(error),
-            error_type=type(error).__name__,
+            extra={
+                "event": "init.error_path_not_specified",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     else:
         result.print_result()

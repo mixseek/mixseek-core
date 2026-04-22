@@ -19,7 +19,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output import cli_echo
+from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.utils.env import get_workspace_path
 
@@ -66,7 +66,7 @@ def evaluate(
 
         mixseek evaluate "質問" "回答" --log-level debug --verbose
     """
-    # setup_logging() 前の cli_echo でも JSON モードが反映されるように env var を確定。
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
     ensure_log_format_env(log_format)
 
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
@@ -108,17 +108,14 @@ def evaluate(
 
         # 結果を出力
         if output_format == "json":
-            # 構造化ログ基盤 (JSONL) との親和性のため、indent なしの 1 行 JSON。
-            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False))
+            print(json.dumps(result.model_dump(mode="json"), indent=2, ensure_ascii=False))
         else:
             # Structured format (default) - 共通ヘルパー関数を使用
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        cli_echo(
+        get_cli_logger().warning(
             "\n⚠️  Interrupted by user",
-            err=True,
-            event="evaluate.interrupted_by_user",
-            level="warning",
+            extra={"event": "evaluate.interrupted_by_user"},
         )
         sys.exit(130)

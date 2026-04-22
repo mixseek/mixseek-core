@@ -36,8 +36,8 @@ def get_log_format() -> LogFormatType:
 
     setup_logging() 呼び出し後は config の値を返す。呼び出し前は
     環境変数 ``MIXSEEK_LOG_FORMAT`` (``"json"`` / ``"text"``) を参照し、
-    未設定時は ``"text"``。
-    CLI の cli_echo/cli_secho ヘルパーが json/text の出力切り替えに使用する。
+    未設定時は ``"text"``。``team`` コマンドが空行の視認性区切りを JSON モードで
+    抑止する判定などに使用する。
     """
     if _setup_logging_called:
         return _current_log_format
@@ -48,9 +48,8 @@ def get_log_format() -> LogFormatType:
 def is_logger_initialized() -> bool:
     """setup_logging() が呼ばれ、"mixseek" logger が使用可能かを返す。
 
-    cli_echo/cli_secho の json モードで、通常イベントは logger 経由、
-    setup_logging() 前の早期エラーは ``_emit_json`` fallback に振り分ける
-    判定に使用する。
+    現状は後方互換のために残しているが、CLI 出力は ``mixseek.cli`` 専用 logger
+    (``cli/output_logger.py``) で早期初期化されているため、通常は参照されない。
     """
     return _setup_logging_called
 
@@ -205,8 +204,7 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
 
     # 全ハンドラ設定完了後に初期化フラグを立てる。
     # 途中で例外 (FileHandler 作成失敗など) が発生した場合に
-    # is_logger_initialized() が True にならず、cli_echo/cli_secho が
-    # _emit_json fallback 経路を選べるようにするため。
+    # is_logger_initialized() が誤って True にならないようにするため、最後に立てる。
     _current_log_format = config.log_format
     _setup_logging_called = True
 

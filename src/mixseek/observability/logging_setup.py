@@ -132,8 +132,6 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
         設定済みの "mixseek" ロガー
     """
     global _current_log_format, _setup_logging_called
-    _current_log_format = config.log_format
-    _setup_logging_called = True
 
     logger = logging.getLogger("mixseek")
 
@@ -200,5 +198,12 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     # ハンドラなしの場合は NullHandler（サイレントモード）
     if not logger.handlers:
         logger.addHandler(logging.NullHandler())
+
+    # 全ハンドラ設定完了後に初期化フラグを立てる。
+    # 途中で例外 (FileHandler 作成失敗など) が発生した場合に
+    # is_logger_initialized() が True にならず、cli_echo/cli_secho が
+    # _emit_json fallback 経路を選べるようにするため。
+    _current_log_format = config.log_format
+    _setup_logging_called = True
 
     return logger

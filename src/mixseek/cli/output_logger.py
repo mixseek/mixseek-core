@@ -113,20 +113,43 @@ def setup_data_logger() -> logging.Logger:
     return logger
 
 
+def _ensure_safe_default(logger: logging.Logger) -> None:
+    """handler 未設定の logger を「propagate=False + NullHandler」の安全な既定値に揃える。
+
+    ``logging.getLogger`` の既定 (``propagate=True`` + handler 無し) のままだと、
+    ``setup_cli_logger()`` 前のアクセスや ``_force_reset_cli_loggers()`` 直後に
+    root logger / ``lastResort`` handler (stderr, WARNING 以上) へ leak してしまう。
+    すでに handler が付いている (= ``setup_cli_logger`` 等で初期化済み) 場合は
+    何もしないため、setup 済みのフォーマッタ / 出力先を壊さない。
+    """
+    if not logger.handlers:
+        logger.propagate = False
+        logger.addHandler(logging.NullHandler())
+
+
 def get_cli_logger() -> logging.Logger:
     """``mixseek.cli`` logger を取得する。
 
-    ``setup_cli_logger()`` による初期化前であっても NullHandler で安全に動作する
-    ``logging.getLogger`` の既定挙動に任せる (メッセージは単に破棄される)。
+    ``setup_cli_logger()`` による初期化前であっても安全な既定値として
+    ``propagate=False`` + ``NullHandler`` を付与する。これにより未初期化時の
+    メッセージは root / ``lastResort`` に leak せず破棄される。
     通常は ``_early_setup_cli_loggers()`` が ``ensure_log_format_env()`` 経由で
     先に呼ばれているので、初期化済みの logger が返る。
     """
-    return logging.getLogger(_CLI_LOGGER_NAME)
+    logger = logging.getLogger(_CLI_LOGGER_NAME)
+    _ensure_safe_default(logger)
+    return logger
 
 
 def get_data_logger() -> logging.Logger:
-    """``mixseek.cli.data`` logger を取得する。"""
-    return logging.getLogger(_DATA_LOGGER_NAME)
+    """``mixseek.cli.data`` logger を取得する。
+
+    ``get_cli_logger()`` と同様、未初期化時も ``propagate=False`` + ``NullHandler``
+    の安全な既定値を保証する。
+    """
+    logger = logging.getLogger(_DATA_LOGGER_NAME)
+    _ensure_safe_default(logger)
+    return logger
 
 
 def _early_setup_cli_loggers() -> None:
@@ -149,12 +172,17 @@ def _force_reset_cli_loggers() -> None:
 
     pytest fixture から呼び、テスト間で handler が持ち越されてアサーションが
     汚染されるのを防ぐ。本番コードからは呼ばれない。
+
+    ``propagate=False`` + ``NullHandler`` の安全な既定値にリセットすることで、
+    ``setup_cli_logger()`` を呼び忘れた後続テストからの偶発的な log 呼び出しが
+    root / ``lastResort`` (stderr, WARNING 以上) に leak しないようにする。
     """
     for name in (_CLI_LOGGER_NAME, _DATA_LOGGER_NAME):
         logger = logging.getLogger(name)
         _clear_handlers(logger)
         logger.propagate = False
         logger.setLevel(logging.NOTSET)
+        logger.addHandler(logging.NullHandler())
 
 
 __all__ = [

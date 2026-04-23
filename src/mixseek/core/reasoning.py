@@ -7,7 +7,7 @@
 - その他   → ValueError（フォールバック禁止）
 """
 
-from typing import Any, Literal, cast
+from typing import Literal, cast
 
 from pydantic_ai.settings import ModelSettings
 
@@ -40,16 +40,18 @@ def apply_reasoning_effort(
         return settings
 
     if model_id.startswith(_OPENAI_PREFIXES):
-        # ModelSettings は TypedDict（実体は dict）。OpenAIChatModelSettings 固有キーを直接追加
-        cast(dict[str, Any], settings)["openai_reasoning_effort"] = effort
+        # ModelSettings は TypedDict（実体は dict）。OpenAIChatModelSettings 固有キー
+        # openai_reasoning_effort は ModelSettings 側に未定義なため、dict にキャストして追加する。
+        # 値は ReasoningEffort 文字列のみのため Any ではなく object で十分。
+        cast(dict[str, object], settings)["openai_reasoning_effort"] = effort
         return settings
 
     if model_id.startswith(_OPENROUTER_PREFIXES):
         # OpenRouter は extra_body.reasoning.effort を受け取る
         existing_extra = settings.get("extra_body")
-        extra_body: dict[str, Any] = dict(existing_extra) if isinstance(existing_extra, dict) else {}
+        extra_body: dict[str, object] = dict(existing_extra) if isinstance(existing_extra, dict) else {}
         reasoning_raw = extra_body.get("reasoning")
-        reasoning: dict[str, Any] = dict(reasoning_raw) if isinstance(reasoning_raw, dict) else {}
+        reasoning: dict[str, object] = dict(reasoning_raw) if isinstance(reasoning_raw, dict) else {}
         reasoning["effort"] = effort
         extra_body["reasoning"] = reasoning
         settings["extra_body"] = extra_body

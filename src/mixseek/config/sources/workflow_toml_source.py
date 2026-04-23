@@ -9,12 +9,13 @@ Pydantic default を活かすため、`default_model` / `include_all_context` /
 （`None` を渡すと Pydantic の default を上書きしてしまうため）。
 """
 
-import tomllib
 from pathlib import Path
 from typing import Any
 
 from pydantic.fields import FieldInfo
 from pydantic_settings import PydanticBaseSettingsSource
+
+from mixseek.utils.toml import load_toml_with_workspace
 
 
 class WorkflowTomlSource(PydanticBaseSettingsSource):
@@ -45,24 +46,6 @@ class WorkflowTomlSource(PydanticBaseSettingsSource):
         self.toml_data: dict[str, Any] = {}
         self._load_and_resolve()
 
-    def _load_toml_file(self, toml_path: Path) -> dict[str, Any]:
-        """TOML ファイルを読み込む（workspace 基準で相対パス解決）。"""
-        # workspace 未指定時は _load_and_resolve() で自動取得済み
-        assert self.workspace is not None, "workspace must be set before loading TOML files"
-
-        resolved_path = toml_path
-        if not resolved_path.is_absolute():
-            resolved_path = self.workspace / resolved_path
-
-        if not resolved_path.exists():
-            raise FileNotFoundError(f"Workflow config file not found: {resolved_path}")
-
-        try:
-            with resolved_path.open("rb") as f:
-                return tomllib.load(f)
-        except tomllib.TOMLDecodeError as e:
-            raise ValueError(f"Invalid TOML syntax in workflow config ({resolved_path}): {e}") from e
-
     def _load_and_resolve(self) -> None:
         """TOML を読み込み `[workflow]` 配下を平坦化する。
 
@@ -70,12 +53,13 @@ class WorkflowTomlSource(PydanticBaseSettingsSource):
             FileNotFoundError: TOML ファイル不在
             ValueError: TOML 構文エラー / `[workflow]` セクション欠如
         """
-        if self.workspace is None:
-            from mixseek.utils.env import get_workspace_for_config
-
-            self.workspace = get_workspace_for_config()
-
-        data = self._load_toml_file(self.toml_file)
+        # 共通ユーティリティで workspace 基準のパス解決 + TOML 読み込み（workspace=None 時は
+        # 関数側が `get_workspace_for_config()` にフォールバックする）
+        data = load_toml_with_workspace(
+            self.toml_file,
+            workspace=self.workspace,
+            context="Workflow config file",
+        )
 
         if "workflow" not in data:
             raise ValueError(f"Invalid workflow config: missing 'workflow' section in {self.toml_file}")

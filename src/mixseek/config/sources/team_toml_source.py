@@ -1,11 +1,12 @@
 """Team-specific TOML configuration source with reference resolution support."""
 
-import tomllib
 from pathlib import Path
 from typing import Any
 
 from pydantic.fields import FieldInfo
 from pydantic_settings import PydanticBaseSettingsSource
+
+from mixseek.utils.toml import load_toml_with_workspace
 
 from .field_mapper import merge_member_agent_fields, normalize_member_agent_fields
 
@@ -42,37 +43,6 @@ class TeamTomlSource(PydanticBaseSettingsSource):
         self.toml_data: dict[str, Any] = {}
         self._load_and_resolve()
 
-    def _load_toml_file(self, toml_path: Path, context: str = "TOML file") -> dict[str, Any]:
-        """TOMLファイルを読み込む共通処理。
-
-        Args:
-            toml_path: TOMLファイルのパス（相対パスの場合はworkspace起点で解決）
-            context: エラーメッセージ用のコンテキスト（例："team.toml", "member reference"）
-
-        Returns:
-            読み込んだTOMLデータ
-
-        Raises:
-            FileNotFoundError: ファイルが見つからない場合
-            ValueError: TOML構文エラーの場合
-        """
-        # workspaceは_load_and_resolve()で必ず設定される
-        assert self.workspace is not None, "workspace must be set before loading TOML files"
-
-        # 絶対パスの場合はそのまま、相対パスの場合はworkspace起点で解決
-        resolved_path = toml_path
-        if not resolved_path.is_absolute():
-            resolved_path = self.workspace / resolved_path
-
-        if not resolved_path.exists():
-            raise FileNotFoundError(f"{context} not found: {resolved_path}")
-
-        try:
-            with resolved_path.open("rb") as f:
-                return tomllib.load(f)
-        except tomllib.TOMLDecodeError as e:
-            raise ValueError(f"Invalid TOML syntax in {context} ({resolved_path}): {e}") from e
-
     def _load_and_resolve(self) -> None:
         """TOMLファイルを読み込み、参照形式を解決。
 
@@ -80,14 +50,14 @@ class TeamTomlSource(PydanticBaseSettingsSource):
             FileNotFoundError: TOMLファイルまたは参照先ファイルが見つからない場合
             ValueError: TOML構文エラーまたはバリデーションエラー
         """
-        # workspace未指定時は自動取得
+        # workspace未指定時は自動取得（後続の `_resolve_member_reference` でも再利用）
         if self.workspace is None:
             from mixseek.utils.env import get_workspace_for_config
 
             self.workspace = get_workspace_for_config()
 
-        # 共通処理を使用してTOMLファイルを読み込み
-        data = self._load_toml_file(self.toml_file, context="Team config file")
+        # 共通ユーティリティで workspace 基準のパス解決 + TOML 読み込み
+        data = load_toml_with_workspace(self.toml_file, workspace=self.workspace, context="Team config file")
 
         if "team" not in data:
             raise ValueError(f"Invalid team config: missing 'team' section in {self.toml_file}")
@@ -130,9 +100,9 @@ class TeamTomlSource(PydanticBaseSettingsSource):
         """
         ref_path = Path(member_data["config"])
 
-        # 共通処理を使用して外部TOMLを読み込み
+        # 共通ユーティリティで外部 TOML を読み込み
         context = f"member reference '{member_data['config']}'"
-        member_toml = self._load_toml_file(ref_path, context=context)
+        member_toml = load_toml_with_workspace(ref_path, workspace=self.workspace, context=context)
 
         if "agent" not in member_toml:
             raise ValueError(f"Invalid agent config: missing 'agent' section in {member_data['config']}")

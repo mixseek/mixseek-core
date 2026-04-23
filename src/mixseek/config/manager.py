@@ -2,7 +2,6 @@
 
 import contextvars
 import logging
-import tomllib
 from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -12,6 +11,7 @@ from pydantic_settings.sources import EnvSettingsSource
 
 # PR2 で追加: workflow 用 TOML ソース（絶対 import で統一、循環なし）
 from mixseek.config.sources.workflow_toml_source import WorkflowTomlSource
+from mixseek.utils.toml import load_toml_with_workspace
 
 from .sources.tracing_source import SourceTrace
 
@@ -451,23 +451,9 @@ class ConfigurationManager:
         """
         # 相対パス解決は load_team_settings / load_workflow_settings 側の
         # TOML source と同じルール (workspace 起点) に揃える。
-        # self.workspace が None のときは MIXSEEK_WORKSPACE 経由で取得し、
+        # self.workspace が None のときは共通ユーティリティが MIXSEEK_WORKSPACE 経由で取得し、
         # 判別フェーズだけ CWD 基準になる不整合を防ぐ。
-        resolved = toml_file
-        if not resolved.is_absolute():
-            workspace_root = self.workspace
-            if workspace_root is None:
-                from mixseek.utils.env import get_workspace_for_config
-
-                workspace_root = get_workspace_for_config()
-            resolved = workspace_root / toml_file
-        if not resolved.exists():
-            raise FileNotFoundError(f"Config file not found: {resolved}")
-        try:
-            with resolved.open("rb") as f:
-                data = tomllib.load(f)
-        except tomllib.TOMLDecodeError as e:
-            raise ValueError(f"Invalid TOML syntax in {resolved}: {e}") from e
+        data = load_toml_with_workspace(toml_file, workspace=self.workspace, context="Config file")
 
         has_team = "team" in data
         has_workflow = "workflow" in data

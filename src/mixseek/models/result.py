@@ -54,9 +54,7 @@ class InitResult(BaseModel):
             typer.echo(f"Created files: {len(self.created_files)}")
         else:
             # エラーは mixseek.cli logger 経由で stderr 出力 + JSON モード構造化。
-            # Why: cli_logger の遅延 import で mixseek.models → mixseek.cli の
-            # 循環 import を回避する。
-            from mixseek.cli.output_logger import get_cli_logger
+            from mixseek.observability import get_cli_logger
 
             get_cli_logger().error(
                 self.message,

@@ -17,9 +17,9 @@ from pathlib import Path
 import typer
 
 from mixseek.cli.common_options import WORKSPACE_OPTION
-from mixseek.cli.output_logger import _early_setup_cli_loggers, get_cli_logger
 from mixseek.config import ConfigurationManager
 from mixseek.config.views import ConfigViewService
+from mixseek.observability import early_setup_cli_logger_from_env, get_cli_logger
 
 app = typer.Typer(help="Manage configuration settings")
 
@@ -86,7 +86,7 @@ def config_show(
         mixseek config show --config orchestrator.toml --workspace /path/to/workspace --environment prod
     """
     # config コマンドは setup_logging を呼ばないため、CLI logger を env var ベースで早期初期化する。
-    _early_setup_cli_loggers()
+    early_setup_cli_logger_from_env()
     cli_logger = get_cli_logger()
 
     try:
@@ -244,7 +244,7 @@ def config_list(
         # Show in JSON format (for programmatic use)
         mixseek config list --output-format json
     """
-    _early_setup_cli_loggers()
+    early_setup_cli_logger_from_env()
     cli_logger = get_cli_logger()
 
     try:
@@ -344,7 +344,7 @@ def config_init(
         # Overwrite existing template
         mixseek config init --component orchestrator --force
     """
-    _early_setup_cli_loggers()
+    early_setup_cli_logger_from_env()
     cli_logger = get_cli_logger()
 
     try:

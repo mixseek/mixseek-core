@@ -8,13 +8,13 @@ from pathlib import Path
 
 import typer
 
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.config.manager import ConfigurationManager
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.evaluator import Evaluator
 from mixseek.models.evaluation_config import EvaluationConfig  # noqa: F401
 from mixseek.models.evaluation_request import EvaluationRequest
 from mixseek.models.evaluation_result import EvaluationResult
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_for_config
 
 # Rebuild EvaluationRequest model after EvaluationConfig is imported

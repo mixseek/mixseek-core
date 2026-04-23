@@ -13,10 +13,14 @@ import click
 import typer
 from pydantic import ValidationError
 
-from mixseek.cli.output_logger import _early_setup_cli_loggers, get_cli_logger
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
 from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
-from mixseek.observability import setup_logfire, setup_logging
+from mixseek.observability import (
+    early_setup_cli_logger_from_env,
+    get_cli_logger,
+    setup_logfire,
+    setup_logging,
+)
 
 # Exit code constants
 EXIT_SUCCESS = 0
@@ -287,7 +291,7 @@ def ensure_log_format_env(cli_log_format: str | None) -> str:
 
     ``setup_logging()`` 呼び出し前の CLI 出力 (例: ``validate_logfire_flags``) が
     正しいフォーマット (text / json) で出力されるように、env var を確定した直後に
-    ``mixseek.cli`` / ``mixseek.cli.data`` logger を早期初期化する。
+    ``mixseek.cli`` logger を早期初期化する。
 
     値は小文字に正規化し、``{"json", "text"}`` 以外は ``"text"`` に fallback する。
     これにより "JSON"/"Json" 等の表記揺れや不正値が env と戻り値に伝搬しないようにする。
@@ -304,10 +308,10 @@ def ensure_log_format_env(cli_log_format: str | None) -> str:
     if effective not in {"json", "text"}:
         effective = "text"
     os.environ["MIXSEEK_LOG_FORMAT"] = effective
-    # env var 確定後に CLI logger / data logger を (再) 初期化。
+    # env var 確定後に CLI logger を (再) 初期化。
     # setup_logging() は initialize_observability() で後から呼ばれるが、
     # それより前の cli_logger 呼び出しも適切なフォーマットで出力するため。
-    _early_setup_cli_loggers()
+    early_setup_cli_logger_from_env()
     return effective
 
 

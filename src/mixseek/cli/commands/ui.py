@@ -16,11 +16,11 @@ from mixseek.cli.common_options import (
     NO_LOG_FILE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
+from mixseek.observability import get_cli_logger
 
 
 def ui(

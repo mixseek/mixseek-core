@@ -45,13 +45,12 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
-from mixseek.observability import get_log_format
+from mixseek.observability import get_cli_logger, get_log_format
 from mixseek.storage.aggregation_store import AggregationStore
 
 

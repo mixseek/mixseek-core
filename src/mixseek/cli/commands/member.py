@@ -23,7 +23,6 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.formatters import ResultFormatter
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import (
     ensure_log_format_env,
     initialize_observability,
@@ -36,6 +35,7 @@ from mixseek.config.manager import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.models.member_agent import MemberAgentConfig, MemberAgentResult
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
 
 

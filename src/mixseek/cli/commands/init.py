@@ -7,7 +7,6 @@ from pathlib import Path
 import typer
 
 from mixseek.cli.common_options import WORKSPACE_OPTION
-from mixseek.cli.output_logger import _early_setup_cli_loggers, get_cli_logger
 from mixseek.config.templates import generate_sample_config
 from mixseek.exceptions import (
     ParentDirectoryNotFoundError,
@@ -16,6 +15,7 @@ from mixseek.exceptions import (
 )
 from mixseek.models.result import InitResult
 from mixseek.models.workspace import WorkspacePath, WorkspaceStructure
+from mixseek.observability import early_setup_cli_logger_from_env, get_cli_logger
 from mixseek.utils.env import get_workspace_path
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def init(
     """
     # init コマンドは setup_logging() を呼ばない (ワークスペース自体を作る側) が、
     # CLI logger は env var ベースで早期初期化する必要がある。
-    _early_setup_cli_loggers()
+    early_setup_cli_logger_from_env()
 
     # Initialize workspace_path_input to None for safe error handling
     workspace_path_input: Path | None = None

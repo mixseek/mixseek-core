@@ -20,12 +20,12 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
 from mixseek.core.auth import close_all_auth_clients
+from mixseek.observability import get_cli_logger
 from mixseek.orchestrator import Orchestrator
 from mixseek.orchestrator.models import ExecutionSummary
 

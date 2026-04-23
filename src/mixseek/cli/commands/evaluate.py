@@ -19,8 +19,8 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.output_logger import get_cli_logger
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
 
 

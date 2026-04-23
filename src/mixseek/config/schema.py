@@ -1,5 +1,6 @@
 """Configuration schemas based on Pydantic Settings."""
 
+import collections
 import contextvars
 import os
 import re
@@ -1462,7 +1463,7 @@ class WorkflowStepSettings(BaseModel):
         """ステップ内の executor 名重複チェック。"""
         names = [e.name for e in self.executors]
         if len(names) != len(set(names)):
-            duplicates = sorted({n for n in names if names.count(n) > 1})
+            duplicates = sorted({n for n, count in collections.Counter(names).items() if count > 1})
             raise ValueError(f"ステップ '{self.id}' 内の Executor 名に重複があります: {duplicates}")
         return self
 
@@ -1532,7 +1533,7 @@ class WorkflowSettings(MixSeekBaseSettings):
         """ステップ ID の重複チェック。"""
         ids = [s.id for s in self.steps]
         if len(ids) != len(set(ids)):
-            duplicates = sorted({i for i in ids if ids.count(i) > 1})
+            duplicates = sorted({i for i, count in collections.Counter(ids).items() if count > 1})
             raise ValueError(f"ステップIDに重複があります: {duplicates}")
         return self
 

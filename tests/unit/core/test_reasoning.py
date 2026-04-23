@@ -33,6 +33,12 @@ class TestOpenAIProvider:
         apply_reasoning_effort(settings, "openai:gpt-5", effort)  # type: ignore[arg-type]
         assert settings.get("openai_reasoning_effort") == effort  # type: ignore[typeddict-item]
 
+    def test_openai_responses_prefix_also_supported(self) -> None:
+        """/v1/responses 経由のモデルでも同じ openai_reasoning_effort キーを使う."""
+        settings: ModelSettings = {}
+        apply_reasoning_effort(settings, "openai-responses:gpt-5.4-nano", "low")
+        assert settings.get("openai_reasoning_effort") == "low"  # type: ignore[typeddict-item]
+
     def test_openai_preserves_existing_settings(self) -> None:
         settings: ModelSettings = {"temperature": 0.2, "max_tokens": 100}
         apply_reasoning_effort(settings, "openai:gpt-5", "high")

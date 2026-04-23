@@ -27,6 +27,7 @@ _AUTH_VALIDATORS: dict[AuthProvider, Callable[[], None]] = {
     AuthProvider.GOOGLE_AI: validate_google_ai_credentials,
     AuthProvider.VERTEX_AI: validate_vertex_ai_credentials,
     AuthProvider.OPENAI: validate_openai_credentials,
+    AuthProvider.OPENAI_RESPONSES: validate_openai_credentials,
     AuthProvider.ANTHROPIC: validate_anthropic_credentials,
     AuthProvider.GROK: validate_grok_credentials,
     AuthProvider.GROK_RESPONSES: validate_grok_credentials,

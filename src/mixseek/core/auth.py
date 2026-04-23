@@ -34,6 +34,7 @@ class AuthProvider(Enum):
     GOOGLE_AI = "google_ai"
     VERTEX_AI = "vertex_ai"
     OPENAI = "openai"
+    OPENAI_RESPONSES = "openai_responses"
     ANTHROPIC = "anthropic"
     GROK = "grok"
     GROK_RESPONSES = "grok_responses"
@@ -71,6 +72,10 @@ def detect_auth_provider(model_id: str) -> AuthProvider:
     elif model_id.startswith("google-vertex:"):
         return AuthProvider.VERTEX_AI
 
+    elif model_id.startswith("openai-responses:"):
+        # reasoning_effort を使う gpt-5 系など Responses API 専用モデル向け
+        return AuthProvider.OPENAI_RESPONSES
+
     elif model_id.startswith("openai:"):
         return AuthProvider.OPENAI
 
@@ -91,7 +96,9 @@ def detect_auth_provider(model_id: str) -> AuthProvider:
         AuthProvider.GOOGLE_AI,
         "Use format 'google-gla:model-name' for Google AI models, "
         "'google-vertex:model-name' for Vertex AI models, "
-        "'openai:model-name' for OpenAI models, "
+        "'openai:model-name' for OpenAI Chat Completions models, "
+        "'openai-responses:model-name' for OpenAI Responses API (required for "
+        "reasoning-only models like gpt-5.4-nano), "
         "'anthropic:model-name' for Anthropic Claude models, "
         "'grok:model-name' for Grok models, "
         "'grok-responses:model-name' for Grok with web search tools, or "
@@ -432,6 +439,12 @@ def create_authenticated_model(
         # Extract base model name (remove 'openai:' prefix)
         base_model_name = model_id.replace("openai:", "")
         return OpenAIChatModel(base_model_name)
+
+    elif auth_provider == AuthProvider.OPENAI_RESPONSES:
+        # /v1/responses エンドポイント。gpt-5 系など reasoning 専用モデルに必須
+        validate_openai_credentials()
+        base_model_name = model_id.replace("openai-responses:", "")
+        return OpenAIResponsesModel(base_model_name)
 
     elif auth_provider == AuthProvider.ANTHROPIC:
         validate_anthropic_credentials()

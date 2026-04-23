@@ -561,6 +561,13 @@ class TestQwenProvider:
         """`qwen:` プレフィックスから AuthProvider.QWEN を検出する."""
         assert detect_auth_provider("qwen:qwen3.5-35b-a3b") == AuthProvider.QWEN
 
+    def test_detect_auth_provider_openai_responses(self) -> None:
+        """`openai-responses:` プレフィックスから AuthProvider.OPENAI_RESPONSES を検出する."""
+        assert (
+            detect_auth_provider("openai-responses:gpt-5.4-nano")
+            == AuthProvider.OPENAI_RESPONSES
+        )
+
     def test_validate_qwen_credentials_missing_url(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """MODEL_API_URL 未設定で AuthenticationError を送出する."""
         monkeypatch.delenv("MODEL_API_URL", raising=False)

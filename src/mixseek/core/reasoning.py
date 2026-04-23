@@ -13,7 +13,7 @@ from pydantic_ai.settings import ModelSettings
 
 ReasoningEffort = Literal["minimal", "low", "medium", "high"]
 
-_OPENAI_PREFIXES: tuple[str, ...] = ("openai:",)
+_OPENAI_PREFIXES: tuple[str, ...] = ("openai:", "openai-responses:")
 # mixseek では qwen: のみが OpenRouter（OpenAI 互換エンドポイント）経路
 _OPENROUTER_PREFIXES: tuple[str, ...] = ("qwen:",)
 

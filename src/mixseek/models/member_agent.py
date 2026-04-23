@@ -366,6 +366,8 @@ class MemberAgentConfig(BaseModel):
             return v
         elif v.startswith("openai:"):
             return v
+        elif v.startswith("openai-responses:"):
+            return v
         elif v.startswith("anthropic:"):
             return v
         elif v.startswith("grok:"):
@@ -379,13 +381,15 @@ class MemberAgentConfig(BaseModel):
                 f"Unsupported model '{v}'. Supported models: "
                 f"Google AI (e.g., 'google-gla:gemini-2.5-flash-lite'), "
                 f"Google Vertex AI (e.g., 'google-vertex:gemini-2.5-flash-lite'), "
-                f"OpenAI (e.g., 'openai:gpt-4o'), "
+                f"OpenAI Chat (e.g., 'openai:gpt-4o'), "
+                f"OpenAI Responses API (e.g., 'openai-responses:gpt-5.4-nano', "
+                f"required for reasoning-only models), "
                 f"Anthropic Claude (e.g., 'anthropic:claude-3-5-sonnet-20241022'), "
                 f"Grok (e.g., 'grok:grok-2-1212'), "
                 f"Grok with tools (e.g., 'grok-responses:grok-4-fast'), or "
                 f"Qwen via OpenAI-compatible endpoint (e.g., 'qwen:qwen3.5-35b-a3b'). "
                 f"Model identifier must start with 'google-gla:', 'google-vertex:', "
-                f"'openai:', 'anthropic:', 'grok:', 'grok-responses:', or 'qwen:'"
+                f"'openai:', 'openai-responses:', 'anthropic:', 'grok:', 'grok-responses:', or 'qwen:'"
             )
 
     @field_validator("name")

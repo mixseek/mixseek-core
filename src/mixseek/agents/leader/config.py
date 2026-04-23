@@ -12,6 +12,7 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from mixseek.config.schema import TeamSettings
+from mixseek.core.reasoning import ReasoningEffort
 
 
 class LeaderAgentConfig(BaseModel):
@@ -38,6 +39,13 @@ class LeaderAgentConfig(BaseModel):
     )
     seed: int | None = Field(
         default=None, description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）"
+    )
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
+        description=(
+            "Reasoning/thinking強度。openai:（OpenAI reasoningモデル）と qwen:（OpenRouter経由）のみサポート。"
+            "その他のprefix指定時は実行時に ValueError"
+        ),
     )
 
     @field_validator("system_instruction")
@@ -85,6 +93,12 @@ class TeamMemberAgentConfig(BaseModel):
     )
     seed: int | None = Field(
         default=None, description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）"
+    )
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
+        description=(
+            "Reasoning/thinking強度。openai:（OpenAI reasoningモデル）と qwen:（OpenRouter経由）のみサポート"
+        ),
     )
     config: str | None = Field(default=None, description="参照形式パス")
 

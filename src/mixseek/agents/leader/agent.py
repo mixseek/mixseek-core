@@ -14,12 +14,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from pydantic_ai import Agent
-from pydantic_ai.settings import ModelSettings
 
 from mixseek.agents.leader.config import TeamConfig
 from mixseek.agents.leader.dependencies import TeamDependencies
 from mixseek.agents.leader.tools import register_member_tools
 from mixseek.core.auth import create_authenticated_model
+from mixseek.core.model_settings import build_model_settings
 
 DEFAULT_LEADER_SYSTEM_INSTRUCTION = """
 あなたは研究チームのリーダーエージェントです。
@@ -64,20 +64,8 @@ def create_leader_agent(team_config: TeamConfig, member_agents: Mapping[str, Any
     # 認証済みモデル作成（Vertex AI対応、DRY準拠）
     authenticated_model = create_authenticated_model(model_id)
 
-    # ModelSettings作成（全パラメータ統合）
-    model_settings: ModelSettings = {}
-    if leader_config.temperature is not None:
-        model_settings["temperature"] = leader_config.temperature
-    if leader_config.max_tokens is not None:
-        model_settings["max_tokens"] = leader_config.max_tokens
-    if leader_config.stop_sequences is not None:
-        model_settings["stop_sequences"] = leader_config.stop_sequences
-    if leader_config.top_p is not None:
-        model_settings["top_p"] = leader_config.top_p
-    if leader_config.seed is not None:
-        model_settings["seed"] = leader_config.seed
-    if leader_config.timeout_seconds is not None:
-        model_settings["timeout"] = float(leader_config.timeout_seconds)
+    # ModelSettings作成（共通ヘルパに委譲、reasoning_effort もここで注入される）
+    model_settings = build_model_settings(leader_config)
 
     # retries設定を取得
     retries = leader_config.max_retries

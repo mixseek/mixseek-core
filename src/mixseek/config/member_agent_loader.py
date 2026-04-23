@@ -116,6 +116,7 @@ def member_settings_to_config(
         stop_sequences=settings.stop_sequences,
         top_p=settings.top_p,
         seed=settings.seed,
+        reasoning_effort=settings.reasoning_effort,
         system_instruction=system_instruction_text,
         system_prompt=settings.system_prompt,
         description=description,

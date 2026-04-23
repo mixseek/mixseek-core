@@ -12,6 +12,7 @@ from pydantic_settings import (
 )
 from pydantic_settings.sources import DotEnvSettingsSource, EnvSettingsSource
 
+from mixseek.core.reasoning import ReasoningEffort
 from mixseek.models.member_agent import PluginMetadata, ToolSettings
 
 from .mixins import WorkspaceValidatorMixin
@@ -405,6 +406,14 @@ class LeaderAgentSettings(MixSeekBaseSettings):
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
     )
 
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
+        description=(
+            "Reasoning/thinking強度。openai:（OpenAI reasoningモデル）と qwen:（OpenRouter経由）のみサポート。"
+            "その他のprefixを指定すると実行時 ValueError"
+        ),
+    )
+
     @field_validator("system_instruction")
     @classmethod
     def validate_system_instruction(cls, v: str | None) -> str | None:
@@ -545,6 +554,14 @@ class MemberAgentSettings(MixSeekBaseSettings):
     seed: int | None = Field(
         default=None,
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
+    )
+
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
+        description=(
+            "Reasoning/thinking強度。openai:（OpenAI reasoningモデル）と qwen:（OpenRouter経由）のみサポート。"
+            "その他のprefixを指定すると実行時 ValueError"
+        ),
     )
 
     # Custom Agent設定（Issue #146対応）

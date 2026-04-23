@@ -292,6 +292,28 @@ class TestMemberAgentConfig:
                 system_instruction={"text": 123},  # type: ignore[arg-type]
             )
 
+    @pytest.mark.parametrize("effort", ["minimal", "low", "medium", "high"])
+    def test_reasoning_effort_accepts_valid_literals(self, effort: str) -> None:
+        """reasoning_effort の有効値 4 種が通ること."""
+        config = MemberAgentConfig(
+            name="test-agent",
+            type=AgentType.PLAIN,
+            reasoning_effort=effort,  # type: ignore[arg-type]
+        )
+        assert config.reasoning_effort == effort
+
+    def test_reasoning_effort_defaults_to_none(self) -> None:
+        config = MemberAgentConfig(name="test-agent", type=AgentType.PLAIN)
+        assert config.reasoning_effort is None
+
+    def test_reasoning_effort_rejects_invalid_value(self) -> None:
+        with pytest.raises(ValidationError):
+            MemberAgentConfig(
+                name="test-agent",
+                type=AgentType.PLAIN,
+                reasoning_effort="max",  # type: ignore[arg-type]
+            )
+
 
 class TestEnvironmentConfig:
     """Test EnvironmentConfig model validation and environment variable handling."""

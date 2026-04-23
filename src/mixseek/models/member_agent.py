@@ -12,6 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validat
 from pydantic_ai.messages import ModelMessage
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from mixseek.core.reasoning import ReasoningEffort
+
 # Model configuration constants
 MAX_TOKENS_LOWER_BOUND = 1
 MAX_TOKENS_UPPER_BOUND = 65536
@@ -293,6 +295,15 @@ class MemberAgentConfig(BaseModel):
     )
     seed: int | None = Field(
         default=None, description="Random seed (supported by OpenAI/Gemini, not supported by Anthropic)"
+    )
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
+        description=(
+            "Reasoning / thinking effort level. "
+            "Supported prefixes: 'openai:' (OpenAI reasoning models), "
+            "'qwen:' (via OpenRouter extra_body.reasoning). "
+            "Other providers raise ValueError at runtime."
+        ),
     )
     timeout_seconds: int | None = Field(
         default=None,

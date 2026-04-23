@@ -18,7 +18,7 @@ workflow mode の実行エンジン一式を新規パッケージ `src/mixseek/w
 - [ ] `src/mixseek/workflow/__init__.py` 新規 (re-export)
 - [ ] `src/mixseek/workflow/models.py` 新規 (§5.2.1)
   - `ExecutableResult`, `StepResult`, `ExecutableOutput`, `WorkflowContext`, `WorkflowResult`, `StrategyResult`
-  - `WorkflowContext.build_task_prompt` / `_serialize` / `_all_previous_steps` / `_last_previous_step`
+  - `WorkflowContext.build_task_context` / `_serialize` / `_all_previous_steps` / `_last_previous_step`
   - `_serialize` は 4 フィールド固定: `executor_name` / `status` / `content` / `error_message`
 - [ ] `src/mixseek/workflow/exceptions.py` 新規 (§5.2.3)
   - `WorkflowStepFailedError`
@@ -56,7 +56,7 @@ workflow mode の実行エンジン一式を新規パッケージ `src/mixseek/w
 
 - [ ] `tests/unit/workflow/__init__.py` 新規
 - [ ] `tests/unit/workflow/test_models.py` 新規
-  - `WorkflowContext.build_task_prompt` JSON スキーマ (`{user_prompt, previous_steps}`)
+  - `WorkflowContext.build_task_context` JSON スキーマ (`{user_prompt, previous_steps}`)
   - `_serialize` 4 フィールド固定
   - `_last_previous_step` で Step 1 時 `{}` 返却
   - `include_all=True` vs `False` の挙動差

@@ -1,18 +1,21 @@
 """Configuration schemas based on Pydantic Settings."""
 
+import collections
 import contextvars
 import os
+import re
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
 )
 from pydantic_settings.sources import DotEnvSettingsSource, EnvSettingsSource
 
-from mixseek.models.member_agent import PluginMetadata, ToolSettings
+from mixseek.config.member_agent_loader import _resolve_bundled_system_instruction
+from mixseek.models.member_agent import MemberAgentConfig, PluginMetadata, ToolSettings
 
 from .mixins import WorkspaceValidatorMixin
 from .sources.toml_source import CustomTomlConfigSettingsSource
@@ -23,6 +26,10 @@ from .validators_common import validate_model_format
 _trace_storage_context: contextvars.ContextVar[dict[str, SourceTrace] | None] = contextvars.ContextVar(
     "_trace_storage_context", default=None
 )
+
+# Workflow executor 名のバリデーション用 regex（team/workflow 共通）
+# MemberAgentConfig.validate_name と等価（英数字・ハイフン・アンダースコア・ドットのみ）
+_EXECUTOR_NAME_RE = re.compile(r"^[A-Za-z0-9_\-\.]+$")
 
 
 class MappedEnvSettingsSource(EnvSettingsSource):
@@ -520,8 +527,8 @@ class MemberAgentSettings(MixSeekBaseSettings):
 
     timeout_seconds: int | None = Field(
         default=None,
-        ge=0,
-        description="Agent実行タイムアウト（秒）",
+        ge=1,
+        description="Agent実行タイムアウト（秒、1秒以上）",
     )
 
     max_retries: int = Field(
@@ -1172,3 +1179,370 @@ class TeamSettings(MixSeekBaseSettings):
             duplicates = [name for name in tool_names if tool_names.count(name) > 1]
             raise ValueError(f"Duplicate tool_name detected: {duplicates}")
         return self
+
+
+# =============================================================================
+# Workflow Mode Settings
+# =============================================================================
+# Workflow mode 用の設定スキーマ群。
+# team mode と並列に存在し、TOML の [workflow] セクションで設定される。
+# 既存 team mode のスキーマには影響を与えない（加算のみ）。
+
+
+class FunctionPluginMetadata(BaseModel):
+    """Function executor のプラグイン指定。
+
+    Note:
+        agent 用 `PluginMetadata` は流用不可（フィールド不一致 + extra=forbid）。
+        `module` / `function` のみを持つ軽量構造。
+    """
+
+    module: str = Field(
+        ...,
+        description="Python module path（例: 'mypackage.formatters'）",
+    )
+    function: str = Field(
+        ...,
+        description="Function 名（例: 'format_as_markdown'）",
+    )
+
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
+
+
+class AgentExecutorSettings(MixSeekBaseSettings):
+    """Workflow の agent 系 executor 設定。
+
+    対応 type: plain / web_search / web_fetch / code_execution / custom。
+    team mode の `MemberAgentSettings` と似た構造だが、以下が異なる:
+        - フィールド名: `name` / `type`（`agent_name` / `agent_type` ではない）
+        - `tool_name` / `tool_description` を持たない（Leader tool として登録されないため）
+        - `model` が Optional（WorkflowSettings.default_model にフォールバック）
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="MIXSEEK_WORKFLOW_AGENT__",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        case_sensitive=False,
+        extra="forbid",
+        validate_default=True,
+    )
+
+    # Executor 基本設定
+    name: str = Field(
+        ...,
+        description="Executor 一意名（ステップ内で重複不可）",
+    )
+    type: Literal["plain", "web_search", "web_fetch", "code_execution", "custom"] = Field(
+        ...,
+        description="Executor 種別",
+    )
+
+    # LLM 設定
+    model: str | None = Field(
+        default=None,
+        description=(
+            "LLM モデル（例: 'anthropic:claude-sonnet-4-5'）。省略時は WorkflowSettings.default_model にフォールバック"
+        ),
+    )
+    system_instruction: str | None = Field(
+        default=None,
+        description="システム指示（Noneの場合はデフォルト指示を bundled agent から読み込み）",
+    )
+    system_prompt: str | None = Field(
+        default=None,
+        description="システムプロンプト（Pydantic AI の system_prompt、system_instruction と併用可能）",
+    )
+    temperature: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description="Temperature（Noneの場合はモデルのデフォルト値）",
+    )
+    max_tokens: int | None = Field(
+        default=None,
+        gt=0,
+        description="最大トークン数（Noneの場合はLLM側のデフォルト値）",
+    )
+    timeout_seconds: int | None = Field(
+        default=None,
+        ge=1,
+        description="Agent実行タイムアウト（秒、1秒以上）",
+    )
+    max_retries: int = Field(
+        default=3,
+        ge=0,
+        description="LLM API呼び出しの最大リトライ回数",
+    )
+    stop_sequences: list[str] | None = Field(
+        default=None,
+        description="停止シーケンス（オプション）",
+    )
+    top_p: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Top-pサンプリング（Noneの場合はLLM側のデフォルト値）",
+    )
+    seed: int | None = Field(
+        default=None,
+        description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
+    )
+
+    # Plugin / Tool 設定
+    plugin: "PluginMetadata | None" = Field(
+        default=None,
+        description="Plugin 設定（type='custom' 時は必須）",
+    )
+    tool_settings: "ToolSettings | None" = Field(
+        default=None,
+        description="Tool 固有設定（web_search, code_execution 等のツール設定）",
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="追加のメタデータ（カスタムプラグインで利用可能）",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, v: str) -> str:
+        """Executor 名のバリデーション（英数字・ハイフン・アンダースコア・ドットのみ）。"""
+        if not _EXECUTOR_NAME_RE.match(v):
+            raise ValueError(f"Executor 名 '{v}' が不正です。英数字・ハイフン・アンダースコア・ドットのみ使用可能")
+        return v
+
+    @field_validator("model")
+    @classmethod
+    def _validate_model(cls, v: str | None) -> str | None:
+        """モデル形式のバリデーション（None は許容、指定時のみ `provider:model-name` 形式を強制）。"""
+        if v is None:
+            return None
+        return validate_model_format(v, allow_empty=False)
+
+    @model_validator(mode="after")
+    def _validate_custom_requires_plugin(self) -> "AgentExecutorSettings":
+        """type='custom' のときは plugin メタデータが必須。
+
+        下流 `MemberAgentFactory` 到達前にスキーマレベルで早期検出する。
+        """
+        if self.type == "custom" and self.plugin is None:
+            raise ValueError(f"Executor '{self.name}' は type='custom' のため plugin 設定が必須です")
+        return self
+
+    def to_member_agent_config(
+        self,
+        *,
+        workspace: Path | None = None,
+        default_model: str,
+    ) -> MemberAgentConfig:
+        """AgentExecutorSettings → MemberAgentConfig 変換。
+
+        bundled system_instruction 補完は team の `member_settings_to_config` と
+        同じヘルパー経由（`_resolve_bundled_system_instruction`）で解決する。
+
+        Args:
+            workspace: workspace パス（bundled TOML 解決に使用、省略可）
+            default_model: WorkflowSettings.default_model。self.model が None なら
+                このフォールバック値を使用する。
+
+        Returns:
+            MemberAgentConfig インスタンス
+        """
+        resolved_instruction = _resolve_bundled_system_instruction(
+            agent_type=self.type,
+            system_instruction=self.system_instruction,
+            workspace=workspace,
+        )
+        return MemberAgentConfig(
+            name=self.name,
+            type=self.type,
+            model=self.model or default_model,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            timeout_seconds=self.timeout_seconds,
+            max_retries=self.max_retries,
+            stop_sequences=self.stop_sequences,
+            top_p=self.top_p,
+            seed=self.seed,
+            system_instruction=resolved_instruction,
+            system_prompt=self.system_prompt,
+            # description は Leader tool 登録用の説明文。workflow mode は Leader tool を介さず
+            # executor を直接実行するため description フィールドを持たず、固定値 "" を渡す。
+            description="",
+            tool_settings=self.tool_settings,
+            plugin=self.plugin,
+            metadata=self.metadata,
+        )
+
+
+class FunctionExecutorSettings(MixSeekBaseSettings):
+    """Workflow の function executor 設定（Python callable）。"""
+
+    model_config = SettingsConfigDict(
+        env_prefix="MIXSEEK_WORKFLOW_FUNCTION__",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        case_sensitive=False,
+        extra="forbid",
+        validate_default=True,
+    )
+
+    name: str = Field(
+        ...,
+        description="Executor 一意名（ステップ内で重複不可）",
+    )
+    type: Literal["function"] = Field(
+        default="function",
+        description="Executor 種別（function 固定）",
+    )
+    plugin: FunctionPluginMetadata = Field(
+        ...,
+        description="呼び出す Python 関数の module path / function 名",
+    )
+    timeout_seconds: int | None = Field(
+        default=None,
+        ge=1,
+        description=(
+            "関数実行タイムアウト（秒、1秒以上）。"
+            "None ならタイムアウトなし。設定時は FunctionExecutable.run が asyncio.wait_for で包む。"
+        ),
+    )
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, v: str) -> str:
+        """Executor 名のバリデーション（英数字・ハイフン・アンダースコア・ドットのみ）。"""
+        if not _EXECUTOR_NAME_RE.match(v):
+            raise ValueError(f"Executor 名 '{v}' が不正です。英数字・ハイフン・アンダースコア・ドットのみ使用可能")
+        return v
+
+
+# Step 内の executor 設定。type フィールドで agent 系 / function を判別する
+# discriminated union。agent 系 Literal {plain, web_search, web_fetch, code_execution, custom}
+# と function の "function" に値重複がないため discriminator のみで分岐可能。
+StepExecutorConfig = Annotated[
+    AgentExecutorSettings | FunctionExecutorSettings,
+    Field(discriminator="type"),
+]
+
+
+class WorkflowStepSettings(BaseModel):
+    """Workflow の 1 ステップ設定。
+
+    ステップ内の executor は TOML 定義順に並列実行される（executor が単一なら直列）。
+    各 executor は一意な `name` を持つ必要がある。
+    """
+
+    id: str = Field(
+        ...,
+        description="ステップ識別子（workflow 内で一意）",
+    )
+    executors: list[StepExecutorConfig] = Field(
+        ...,
+        min_length=1,
+        description="ステップ内の executor 一覧（1 件以上、並列実行）",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("id")
+    @classmethod
+    def _validate_id(cls, v: str) -> str:
+        """ステップ ID の非空バリデーション。"""
+        if not v or not v.strip():
+            raise ValueError("ステップIDは空にできません")
+        return v
+
+    @model_validator(mode="after")
+    def _validate_executor_names_unique(self) -> "WorkflowStepSettings":
+        """ステップ内の executor 名重複チェック。"""
+        names = [e.name for e in self.executors]
+        if len(names) != len(set(names)):
+            duplicates = sorted({n for n, count in collections.Counter(names).items() if count > 1})
+            raise ValueError(f"ステップ '{self.id}' 内の Executor 名に重複があります: {duplicates}")
+        return self
+
+
+class WorkflowSettings(MixSeekBaseSettings):
+    """Workflow TOML スキーマ（team mode と並列に存在）。
+
+    Note:
+        DuckDB などの既存ストレージは `team_id` / `team_name` を参照するため、
+        `@property team_id` / `team_name` で `workflow_id` / `workflow_name`
+        にマップする。これらは Pydantic の `model_fields` には含まれないため
+        `extra="forbid"` と両立し、`model_dump()` にも出力されない。
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="MIXSEEK_WORKFLOW__",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        case_sensitive=False,
+        extra="forbid",
+        validate_default=True,
+    )
+
+    workflow_id: str = Field(
+        ...,
+        description="ワークフロー識別子（DuckDB の team_id に流用）",
+    )
+    workflow_name: str = Field(
+        ...,
+        description="ワークフロー表示名（DuckDB の team_name に流用）",
+    )
+    default_model: str = Field(
+        default="google-gla:gemini-2.5-flash",
+        description=("全 agent executor のデフォルトモデル。各 executor の `model` 省略時にフォールバックされる。"),
+    )
+    include_all_context: bool = Field(
+        default=True,
+        description="各ステップの agent へ渡す previous_steps に全ステップを含めるか（False なら直前1ステップのみ）",
+    )
+    final_output_format: Literal["json", "text"] = Field(
+        default="json",
+        description="最終提出物 (leader_board.submission_content) の整形フォーマット",
+    )
+    steps: list[WorkflowStepSettings] = Field(
+        ...,
+        min_length=1,
+        description="ステップ一覧（順次実行、1 件以上）",
+    )
+
+    @field_validator("workflow_id", "workflow_name")
+    @classmethod
+    def _validate_not_empty(cls, v: str) -> str:
+        """workflow_id / workflow_name の非空バリデーション。"""
+        if not v or not v.strip():
+            raise ValueError("workflow_id / workflow_name は空にできません")
+        return v
+
+    @field_validator("default_model")
+    @classmethod
+    def _validate_default_model(cls, v: str) -> str:
+        """default_model の形式バリデーション（`provider:model-name` 形式を強制）。"""
+        return validate_model_format(v, allow_empty=False)
+
+    @model_validator(mode="after")
+    def _validate_unique_step_ids(self) -> "WorkflowSettings":
+        """ステップ ID の重複チェック。"""
+        ids = [s.id for s in self.steps]
+        if len(ids) != len(set(ids)):
+            duplicates = sorted({i for i, count in collections.Counter(ids).items() if count > 1})
+            raise ValueError(f"ステップIDに重複があります: {duplicates}")
+        return self
+
+    @property
+    def team_id(self) -> str:
+        """team mode との互換用（DuckDB への保存などで利用）。"""
+        return self.workflow_id
+
+    @property
+    def team_name(self) -> str:
+        """team mode との互換用（DuckDB への保存などで利用）。"""
+        return self.workflow_name

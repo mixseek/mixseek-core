@@ -89,17 +89,22 @@ class WorkflowContext:
             include_all: True なら全過去ステップを、False なら直前 1 ステップのみ
                 `previous_steps` に含める（`WorkflowSettings.include_all_context`）。
         """
-        previous = self._all_previous_steps() if include_all else self._last_previous_step()
+        previous = self.all_steps_as_dict() if include_all else self.last_step_as_dict()
         payload = {"user_prompt": self.user_prompt, "previous_steps": previous}
         return json.dumps(payload, ensure_ascii=False)
 
-    def _all_previous_steps(self) -> dict[str, list[dict[str, Any]]]:
+    def all_steps_as_dict(self) -> dict[str, list[dict[str, Any]]]:
+        """全ステップの outputs を `{step_id: [serialized_output, ...]}` 形式で返す。"""
         return {
             step_id: [self._serialize(out) for out in result.outputs] for step_id, result in self.step_results.items()
         }
 
-    def _last_previous_step(self) -> dict[str, list[dict[str, Any]]]:
-        """直前 1 ステップのみ。Step 1 実行時（`step_results` 空）は `{}` を返す。"""
+    def last_step_as_dict(self) -> dict[str, list[dict[str, Any]]]:
+        """直前 1 ステップのみを `{step_id: [serialized_output, ...]}` 形式で返す。
+
+        `step_results` が空（Step 1 実行時の executor 入力組み立て等）は `{}` を返す。
+        全ステップ完了後に呼ぶと最終ステップが返る。
+        """
         if not self.step_results:
             return {}
         last_id, last_result = next(reversed(self.step_results.items()))

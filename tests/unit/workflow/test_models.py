@@ -3,7 +3,7 @@
 以下の invariant を検証する:
     - `WorkflowContext.build_task_context` のキー集合 == {"user_prompt", "previous_steps"}
     - `WorkflowContext._serialize` の 4 フィールド固定
-    - `_last_previous_step` は Step 1 実行時 `{}` を返す
+    - `last_step_as_dict` は Step 1 実行時 `{}` を返す
 """
 
 import json
@@ -92,30 +92,30 @@ class TestWorkflowContextSerialize:
         assert "executor_type" not in WorkflowContext._serialize(out)
 
 
-class TestLastPreviousStep:
-    """invariant #3: Step 1 実行時 `{}`、2 ステップ目以降で直前 1 ステップのみ。"""
+class TestLastStepAsDict:
+    """Step 1 実行時 `{}`、2 ステップ目以降で直前 1 ステップのみ。"""
 
     def test_empty_when_no_steps(self) -> None:
         ctx = WorkflowContext(user_prompt="q")
-        assert ctx._last_previous_step() == {}
+        assert ctx.last_step_as_dict() == {}
 
     def test_returns_only_last_step(self) -> None:
         ctx = WorkflowContext(user_prompt="q")
         ctx.add_step_result("s1", StepResult("s1", [_make_output(name="e1")]))
         ctx.add_step_result("s2", StepResult("s2", [_make_output(name="e2")]))
-        result = ctx._last_previous_step()
+        result = ctx.last_step_as_dict()
         assert set(result.keys()) == {"s2"}
         assert result["s2"][0]["executor_name"] == "e2"
 
 
-class TestAllPreviousSteps:
-    """`_all_previous_steps` が全ステップを含むこと。"""
+class TestAllStepsAsDict:
+    """`all_steps_as_dict` が全ステップを含むこと。"""
 
     def test_all_steps_included(self) -> None:
         ctx = WorkflowContext(user_prompt="q")
         ctx.add_step_result("s1", StepResult("s1", [_make_output(name="e1")]))
         ctx.add_step_result("s2", StepResult("s2", [_make_output(name="e2")]))
-        result = ctx._all_previous_steps()
+        result = ctx.all_steps_as_dict()
         assert set(result.keys()) == {"s1", "s2"}
 
 

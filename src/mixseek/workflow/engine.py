@@ -176,12 +176,7 @@ class WorkflowEngine:
         final_outputs = context.step_results[final_step_id].outputs
 
         if fmt == "json":
-            if include_all:
-                steps = {
-                    sid: [WorkflowContext._serialize(o) for o in r.outputs] for sid, r in context.step_results.items()
-                }
-            else:
-                steps = {final_step_id: [WorkflowContext._serialize(o) for o in final_outputs]}
+            steps = context.all_steps_as_dict() if include_all else context.last_step_as_dict()
             return json.dumps({"steps": steps}, ensure_ascii=False)
 
         # fmt == "text"

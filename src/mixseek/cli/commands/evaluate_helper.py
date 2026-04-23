@@ -151,7 +151,7 @@ async def evaluate_content(
         return result
 
     except FileNotFoundError as e:
-        cli_logger.warning(
+        cli_logger.error(
             f"⚠️  Evaluation config file not found: {e}",
             extra={"event": "evaluate.config_not_found", "error": str(e)},
         )
@@ -162,7 +162,7 @@ async def evaluate_content(
             )
         return None
     except Exception as e:
-        cli_logger.warning(
+        cli_logger.error(
             f"⚠️  Evaluation failed: {e}",
             extra={
                 "event": "evaluate.failed",
@@ -173,7 +173,7 @@ async def evaluate_content(
         if verbose:
             import traceback
 
-            cli_logger.warning(
+            cli_logger.error(
                 traceback.format_exc(),
                 extra={"event": "evaluate.failed_traceback"},
             )

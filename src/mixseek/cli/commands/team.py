@@ -50,7 +50,7 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
-from mixseek.observability import get_cli_logger, get_log_format
+from mixseek.observability import get_cli_logger
 from mixseek.storage.aggregation_store import AggregationStore
 
 
@@ -146,10 +146,6 @@ def team(
         "⚠️  Development/Testing only - Not for production use",
         extra={"event": "team.dev_warning"},
     )
-    # text モード視認性のための空行区切り。JSON モードで出すと JSONL が壊れるため
-    # text モード時のみ出力する。
-    if get_log_format() != "json":
-        typer.echo("", err=True)
 
     try:
         asyncio.run(

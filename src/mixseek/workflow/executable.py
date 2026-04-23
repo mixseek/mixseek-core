@@ -19,7 +19,7 @@ import importlib
 import logging
 import time
 from collections.abc import Awaitable, Callable
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -48,7 +48,7 @@ except ImportError:
 logger = logging.getLogger("mixseek.workflow.function")
 
 
-def _logfire_span(name: str, **attrs: Any) -> Any:
+def _logfire_span(name: str, **attrs: Any) -> AbstractContextManager[Any]:
     """logfire が利用可能なら `logfire.span`、未導入時は `nullcontext()` を返す。
 
     `WorkflowEngine.run` と `FunctionExecutable.run` の両方から使用される。
@@ -56,7 +56,7 @@ def _logfire_span(name: str, **attrs: Any) -> Any:
     span を手動で張る用途。
     """
     if _LOGFIRE_AVAILABLE and _logfire is not None:
-        return _logfire.span(name, **attrs)
+        return _logfire.span(name, **attrs)  # type: ignore[no-any-return]
     return nullcontext()
 
 

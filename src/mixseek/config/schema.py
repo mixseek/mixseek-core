@@ -1369,6 +1369,8 @@ class AgentExecutorSettings(MixSeekBaseSettings):
             seed=self.seed,
             system_instruction=resolved_instruction,
             system_prompt=self.system_prompt,
+            # description は Leader tool 登録用の説明文。workflow mode は Leader tool を介さず
+            # executor を直接実行するため description フィールドを持たず、固定値 "" を渡す。
             description="",
             tool_settings=self.tool_settings,
             plugin=self.plugin,

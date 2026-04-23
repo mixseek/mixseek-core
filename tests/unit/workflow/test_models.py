@@ -1,9 +1,9 @@
 """`mixseek.workflow.models` の単体テスト。
 
-以下の invariant を検証する（PR2 計画 §Invariants 対応表）:
-    #1 `WorkflowContext.build_task_context` のキー集合 == {"user_prompt", "previous_steps"}
-    #2 `WorkflowContext._serialize` の 4 フィールド固定
-    #3 `_last_previous_step` は Step 1 実行時 `{}` を返す
+以下の invariant を検証する:
+    - `WorkflowContext.build_task_context` のキー集合 == {"user_prompt", "previous_steps"}
+    - `WorkflowContext._serialize` の 4 フィールド固定
+    - `_last_previous_step` は Step 1 実行時 `{}` を返す
 """
 
 import json

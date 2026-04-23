@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from pydantic_settings import BaseSettings
 from pydantic_settings.sources import EnvSettingsSource
 
-# PR2 で追加: workflow 用 TOML ソース（絶対 import で統一、循環なし）
 from mixseek.config.sources.workflow_toml_source import WorkflowTomlSource
 from mixseek.utils.toml import load_toml_with_workspace
 

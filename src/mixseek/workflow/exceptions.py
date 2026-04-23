@@ -4,7 +4,7 @@
 class WorkflowStepFailedError(Exception):
     """Workflow ステップ継続不能な失敗時に raise される例外。
 
-    主に function executor の ERROR（D4）や `build_executable` の
+    主に function executor の ERROR や `build_executable` の
     動的 import 失敗時に `WorkflowEngine._execute_step` が昇格させる。
     後続ステップは実行されない。
 

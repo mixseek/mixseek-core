@@ -129,8 +129,7 @@ class WorkflowResult:
         Leader Agent の `result.output` (str) と `result.all_messages()` (list) のみ
         を使うため、`WorkflowResult` の先頭 2 フィールドと完全互換。`total_usage` は
         workflow パッケージ内の観測用で、`StrategyResult` には伝搬せず RoundController
-        からは参照されない（PR3 で `WorkflowStrategy.execute` が `StrategyResult` の
-        2 フィールドのみ返す形になる）。
+        からは参照されない。
     """
 
     submission_content: str
@@ -140,7 +139,7 @@ class WorkflowResult:
 
 @dataclass
 class StrategyResult:
-    """RoundController 統一戻り値（PR3 で使用するが定義は PR2 で先行投入）。
+    """RoundController 統一戻り値。
 
     team mode との互換性:
         現行 `controller.py` L309-310 の

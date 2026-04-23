@@ -165,7 +165,7 @@ class FunctionExecutable:
     Note:
         `asyncio.wait_for` で timeout しても同期関数を走らせている thread は
         中断できない（Python の制約）。`timeout_seconds` は「ハング時の上限」で
-        あり、確実なキャンセル保証ではない（設計書 §10 既知リスク）。
+        あり、確実なキャンセル保証ではない（既知リスク）。
     """
 
     def __init__(
@@ -252,7 +252,7 @@ def _user_exception_if_done(task: "asyncio.Task[Any]") -> BaseException | None:
         別例外（特に `TimeoutError`）を raise する pattern の場合、task の例外が
         非 `CancelledError` になるため「ユーザー例外」と誤分類する。Python の asyncio
         仕様上、外から wait_for のキャンセルシグナル由来の例外かを 100% 確実に判定する
-        手段がないため、この極めて稀なケースは許容する（設計書 §10 の既知リスク）。
+        手段がないため、この極めて稀なケースは許容する（既知リスク）。
     """
     if not task.done():
         return None

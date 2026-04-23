@@ -6,14 +6,6 @@
     3. 各 executor 結果を `TeamDependencies.submissions` に蓄積（team mode と同形式）
     4. 全ステップ完了後に `WorkflowResult` を構築（submission_content 整形 + all_messages
        連結 + total_usage 加算）
-
-設計書の不変条件（参考: `workflow-mode-plan.md` §5.2.4 / §10）:
-    D3: `all_messages` は **step 順 × executor 定義順** で連結する
-    D4: function executor の `status="ERROR"` は `WorkflowStepFailedError` に即昇格し、
-        後続ステップは実行しない（agent の ERROR は step 継続）
-    submission_content: `user_prompt` を**絶対に含めない**
-        （`UserPromptBuilder` 経由で submission_content が次ラウンド prompt に埋め込まれるため、
-         含めると Round 再帰膨張を起こす）
 """
 
 import asyncio
@@ -84,7 +76,7 @@ class WorkflowEngine:
                 include_all=self.settings.include_all_context,
                 fmt=self.settings.final_output_format,
             )
-            # D3: step 順 × executor 定義順で all_messages を連結
+            # step 順 × executor 定義順で all_messages を連結
             merged_messages: list[ModelMessage] = []
             total_usage = RunUsage()
             for r in context.step_results.values():
@@ -149,7 +141,7 @@ class WorkflowEngine:
                 )
             )
 
-        # D4: function ERROR は即昇格（WARNING は対象外、agent ERROR も対象外）
+        # function ERROR は即昇格（WARNING は対象外、agent ERROR も対象外）
         for exe, result in zip(executables, results, strict=True):
             if exe.executor_type == "function" and result.status == "ERROR":
                 raise WorkflowStepFailedError(
@@ -176,7 +168,7 @@ class WorkflowEngine:
         """submission_content を 4 ケース (include_all × fmt) で整形。
 
         invariant:
-            返値文字列に `user_prompt` を一切含めない（Round 再帰膨張回避、§10）。
+            返値文字列に `user_prompt` を一切含めない（Round 再帰膨張回避）。
             `UserPromptBuilder.format_submission_history` が次ラウンド以降の prompt に
             `submission_content` を埋め込むため、含めると指数膨張する。
         """

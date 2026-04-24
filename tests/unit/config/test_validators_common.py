@@ -1,6 +1,6 @@
 """Unit tests for common validation functions.
 
-Article 3 (Test-First Imperative) compliance:
+Test-First Imperative compliance:
 This test file is created BEFORE implementing validators_common.py.
 """
 
@@ -10,7 +10,7 @@ from mixseek.config.validators_common import validate_model_format
 
 
 class TestValidateModelFormat:
-    """validate_model_format()のテスト（Article 3準拠：実装前にテスト作成）"""
+    """validate_model_format()のテスト（実装前にテスト作成）"""
 
     def test_valid_model_format_with_colon(self) -> None:
         """Test valid model format with colon separator"""

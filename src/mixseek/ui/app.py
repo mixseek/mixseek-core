@@ -23,14 +23,14 @@ logo_path = Path(__file__).parent / "assets" / "mixseek700x144_Navy.svg"
 if logo_path.exists():
     st.logo(str(logo_path))
 
-# Validate MIXSEEK_WORKSPACE environment variable (Article 9)
+# Validate MIXSEEK_WORKSPACE environment variable
 try:
     workspace_path = get_workspace_path()
 except ValueError as e:
     st.error(str(e))
     st.stop()
 
-# Initialize standard logging (FR-026: 実行ログ表示機能)
+# Initialize standard logging (実行ログ表示機能)
 # セッション状態でガードし、一度だけ実行
 if "logging_initialized" not in st.session_state:
     # CLI utils と同じ方針で cast を使用し、LoggingConfig のバリデータで値検証を行う

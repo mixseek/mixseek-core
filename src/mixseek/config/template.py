@@ -1,9 +1,8 @@
-"""Template generation module for TOML configuration files (Phase 10).
+"""Template generation module for TOML configuration files.
 
 This module provides functionality to generate TOML templates for different
 configuration components (orchestrator, team, etc.).
 
-Article 9 Compliance:
 - Configuration values are explicitly sourced from Pydantic schema
 - No implicit defaults or assumptions
 - Proper error handling and propagation
@@ -107,8 +106,8 @@ class TemplateGenerator:
     ) -> str:
         """テンプレート生成の共通処理（Template Method）。
 
-        Article 10（DRY原則）準拠：ループ処理の重複を排除。
-        Article 11（Refactoring Policy）準拠：既存クラスを直接改善（V2クラス作成なし）。
+        DRY原則準拠：ループ処理の重複を排除。
+        Refactoring Policy準拠：既存クラスを直接改善（V2クラス作成なし）。
 
         Args:
             settings_class: 設定クラス

@@ -10,11 +10,6 @@ For production use, use Orchestration Layer instead.
 - 全Member Agent並列実行 → Agent Delegation（動的選択）
 - aggregated_content削除 → 構造化データのみ記録
 - Leader Agentが前ラウンドを意識しない独立設計
-
-References:
-    - Spec: specs/008-leader/spec.md (FR-021-028)
-    - Contracts: specs/008-leader/contracts/leader-agent-api.md (Section 5)
-    - Quickstart: specs/008-leader/quickstart.md
 """
 
 import asyncio
@@ -102,7 +97,7 @@ def team(
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
-    # ワークスペース解決（Phase 12 T084: ConfigurationManager経由）
+    # ワークスペース解決（ConfigurationManager経由）
     workspace_resolved = workspace
     if not workspace_resolved:
         try:
@@ -139,7 +134,7 @@ def team(
         workspace=workspace_resolved,
     )
 
-    # FR-022: 開発・テスト専用警告表示
+    # 開発・テスト専用警告表示
     typer.secho(
         "⚠️  Development/Testing only - Not for production use",
         fg=typer.colors.YELLOW,
@@ -155,7 +150,7 @@ def team(
                 output_format=output_format,
                 save_db=save_db,
                 evaluate=evaluate,
-                workspace=workspace_resolved,  # T084 fix: Use resolved workspace
+                workspace=workspace_resolved,  # Use resolved workspace
                 evaluate_config=evaluate_config,
                 verbose=verbose,
             )
@@ -181,9 +176,9 @@ async def _execute_team_command(
     verbose: bool,
 ) -> None:
     """チーム実行ロジック（イベントループ内で実行）"""
-    # Article 10 (DRY): ファイル存在チェックはTeamTomlSource内で実行されるため、
+    # ファイル存在チェックはTeamTomlSource内で実行されるため、
     # ここでの重複チェックは削除（相対パス解決前のチェックは不正確）
-    # T088 fix: Use ConfigurationManager to load TeamSettings (Article 9 compliant)
+    # Use ConfigurationManager to load TeamSettings
     config_manager = ConfigurationManager(workspace=workspace)
     team_settings = config_manager.load_team_settings(config)
 
@@ -193,7 +188,7 @@ async def _execute_team_command(
 
     member_agents: dict[str, BaseMemberAgent] = {}
 
-    # T088 fix: Use member_settings_to_config() for consistent MemberAgentConfig generation
+    # Use member_settings_to_config() for consistent MemberAgentConfig generation
     for member_settings in team_settings.members:
         # member_settings_to_config()を使用（詳細設定を保持）
         member_agent_config = member_settings_to_config(member_settings, agent_data=None, workspace=workspace)
@@ -205,7 +200,7 @@ async def _execute_team_command(
     team_config = team_settings_to_team_config(team_settings)
     leader_agent = create_leader_agent(team_config, member_agents)
 
-    # Generate execution_id for this run (Phase 4: execution_id integration)
+    # Generate execution_id for this run
     execution_id = str(uuid4())
 
     deps = TeamDependencies(
@@ -241,15 +236,13 @@ async def _execute_team_command(
         )
 
     if output_format == "json":
-        # FR-023: Integrate Leader and Member Agent message histories
+        # Integrate Leader and Member Agent message histories
         leader_messages_json = result.all_messages_json()
 
-        # FR-023 & Clarifications Session 2025-10-30:
-        # "Leader AgentとMember AgentのMessage Historyを統合した完全な対話履歴を
-        # 単一のmessage_historyフィールドに含める"
+        # Leader AgentとMember AgentのMessage Historyを統合した完全な対話履歴を
+        # 単一のmessage_historyフィールドに含める
         #
         # Structure preserves causality (which Leader tool call triggered which Member Agent)
-        # as required by FR-034
         message_history = {
             "leader_agent": json.loads(leader_messages_json),
             "member_agents": {
@@ -268,7 +261,7 @@ async def _execute_team_command(
             "failure_count": record.failure_count,
             "submissions": [s.model_dump(mode="json") for s in record.submissions],
             "total_usage": asdict(record.total_usage),
-            "message_history": message_history,  # FR-023: Integrated Leader + Member Agent message history
+            "message_history": message_history,  # Integrated Leader + Member Agent message history
         }
 
         # 評価結果を追加（--evaluate オプションが指定されている場合）
@@ -327,7 +320,7 @@ async def _execute_team_command(
                 err=True,
             )
 
-    # Member Agent 0件の場合は正常終了（FR-033準拠）
+    # Member Agent 0件の場合は正常終了
     if record.total_count > 0 and record.failure_count == record.total_count:
         typer.secho(
             "ERROR: All member agents failed. No successful submissions.",

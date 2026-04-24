@@ -1,4 +1,4 @@
-"""Tests for bitbank agent tools (TASK-009+).
+"""Tests for bitbank agent tools.
 
 This module contains tests for tool functions used by BitbankAPIAgent.
 All tests follow TDD Red phase - tests are written before implementation.
@@ -76,7 +76,7 @@ def test_member_config() -> MemberAgentConfig:
 
 
 class TestGetTickerData:
-    """Tests for get_ticker_data tool function (TASK-009)."""
+    """Tests for get_ticker_data tool function."""
 
     @pytest.mark.asyncio
     async def test_get_ticker_data_success(self, test_config: BitbankAPIConfig, mocker: MockerFixture) -> None:
@@ -122,7 +122,7 @@ class TestGetTickerData:
 
 
 class TestGetCandlestickData:
-    """Tests for get_candlestick_data tool function (TASK-011)."""
+    """Tests for get_candlestick_data tool function."""
 
     @pytest.mark.asyncio
     async def test_get_candlestick_data_success(self, test_config: BitbankAPIConfig, mocker: MockerFixture) -> None:
@@ -176,7 +176,7 @@ class TestGetCandlestickData:
 
 
 class TestCalculateFinancialMetrics:
-    """Tests for calculate_financial_metrics tool function (TASK-014)."""
+    """Tests for calculate_financial_metrics tool function."""
 
     def test_calculate_financial_metrics_success(self, test_config: BitbankAPIConfig) -> None:
         """Test successful financial metrics calculation from candlestick data"""
@@ -239,7 +239,7 @@ class TestCalculateFinancialMetrics:
 
 
 class TestBitbankAPIAgent:
-    """Tests for BitbankAPIAgent class (TASK-015)."""
+    """Tests for BitbankAPIAgent class."""
 
     @pytest.mark.asyncio
     async def test_bitbank_api_agent_ticker_task(

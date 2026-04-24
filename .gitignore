@@ -240,7 +240,14 @@ __marimo__/
 /.env.dev
 /.env.local
 
+# local agent settings
+.claude
+.codex
+.gemini/*
+
 # gemini files
+!.gemini/config.yaml
+!.gemini/styleguide.md
 .config/configstore/update-notifier-@google
 
 # gh CLI files

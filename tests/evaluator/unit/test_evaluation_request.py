@@ -31,7 +31,7 @@ class TestEvaluationRequestValidation:
         assert request.config is None
 
     def test_empty_user_query_raises_error(self, sample_submission: str, sample_team_id: str) -> None:
-        """Test that empty user_query raises ValidationError (FR-013)."""
+        """Test that empty user_query raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationRequest(
                 user_query="",
@@ -44,7 +44,7 @@ class TestEvaluationRequestValidation:
         assert "user_query" in str(error)
 
     def test_whitespace_only_user_query_raises_error(self, sample_submission: str, sample_team_id: str) -> None:
-        """Test that whitespace-only user_query raises ValidationError (FR-013)."""
+        """Test that whitespace-only user_query raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationRequest(
                 user_query="   \n\t  ",
@@ -57,7 +57,7 @@ class TestEvaluationRequestValidation:
         assert "user_query" in str(error)
 
     def test_empty_submission_raises_error(self, sample_user_query: str, sample_team_id: str) -> None:
-        """Test that empty submission raises ValidationError (FR-013)."""
+        """Test that empty submission raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationRequest(
                 user_query=sample_user_query,
@@ -70,7 +70,7 @@ class TestEvaluationRequestValidation:
         assert "submission" in str(error)
 
     def test_whitespace_only_submission_raises_error(self, sample_user_query: str, sample_team_id: str) -> None:
-        """Test that whitespace-only submission raises ValidationError (FR-013)."""
+        """Test that whitespace-only submission raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationRequest(
                 user_query=sample_user_query,

@@ -16,7 +16,7 @@ from mixseek.round_controller import RoundState
 
 @pytest.fixture
 def orchestrator_settings(tmp_path: Path) -> OrchestratorSettings:
-    """テスト用OrchestratorSettings（FR-011）"""
+    """テスト用OrchestratorSettings"""
     return OrchestratorSettings(
         workspace_path=tmp_path,
         timeout_per_team_seconds=600,
@@ -27,7 +27,7 @@ def orchestrator_settings(tmp_path: Path) -> OrchestratorSettings:
 
 
 def test_orchestrator_initialization(orchestrator_settings: OrchestratorSettings) -> None:
-    """Orchestrator初期化テスト（FR-011: OrchestratorSettings直接受け取り）"""
+    """Orchestrator初期化テスト（OrchestratorSettings直接受け取り）"""
     orchestrator = Orchestrator(settings=orchestrator_settings)
     assert orchestrator.settings == orchestrator_settings
     assert orchestrator.workspace == orchestrator_settings.workspace_path
@@ -35,7 +35,7 @@ def test_orchestrator_initialization(orchestrator_settings: OrchestratorSettings
 
 @pytest.mark.asyncio
 async def test_orchestrator_get_team_status_not_found(orchestrator_settings: OrchestratorSettings) -> None:
-    """Orchestrator チームステータス取得テスト（Not Found）（FR-011）"""
+    """Orchestrator チームステータス取得テスト（Not Found）"""
     orchestrator = Orchestrator(settings=orchestrator_settings)
 
     with pytest.raises(KeyError):
@@ -44,7 +44,7 @@ async def test_orchestrator_get_team_status_not_found(orchestrator_settings: Orc
 
 @pytest.mark.asyncio
 async def test_orchestrator_workspace_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Orchestrator ワークスペース環境変数取得テスト（FR-011）"""
+    """Orchestrator ワークスペース環境変数取得テスト"""
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
     settings = OrchestratorSettings(
@@ -61,11 +61,11 @@ async def test_orchestrator_workspace_from_env(monkeypatch: pytest.MonkeyPatch, 
 async def test_orchestrator_workspace_missing_env(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, isolate_from_project_dotenv: None
 ) -> None:
-    """Orchestrator ワークスペース検証テスト（Article 9準拠 + FR-011）"""
+    """Orchestrator ワークスペース検証テスト"""
     monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
     monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
-    # Article 9準拠: workspace_pathが必須
+    # workspace_pathが必須
     with pytest.raises(Exception):
         OrchestratorSettings(
             timeout_per_team_seconds=600,
@@ -75,7 +75,7 @@ async def test_orchestrator_workspace_missing_env(
 
 @pytest.mark.asyncio
 async def test_orchestrator_duplicate_team_id_raises_error(tmp_path: Path) -> None:
-    """Orchestrator team_id重複時にValueErrorが発生することを確認（FR-011）"""
+    """Orchestrator team_id重複時にValueErrorが発生することを確認"""
     # 絶対パスに変換（相対パスはworkspaceからの相対として解釈されるため）
     team1_path = str(Path("tests/fixtures/team1.toml").resolve())
     team_duplicate_path = str(Path("tests/fixtures/team_duplicate_id.toml").resolve())
@@ -98,7 +98,7 @@ async def test_orchestrator_duplicate_team_id_raises_error(tmp_path: Path) -> No
 @pytest.mark.skip(reason="Skipped until RoundController + ConfigurationManager integration is implemented")
 @pytest.mark.asyncio
 async def test_orchestrator_receives_leaderboard_entries(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """T044: Orchestrator が各チームから LeaderBoardEntry を受け取ることを検証
+    """Orchestrator が各チームから LeaderBoardEntry を受け取ることを検証
 
     Note: This test is skipped because RoundController uses lazy import and
     ConfigurationManager integration is deferred. Will be re-enabled when

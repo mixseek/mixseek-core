@@ -1,7 +1,7 @@
-"""Unit tests for environment variable mapping (Phase 3).
+"""Unit tests for environment variable mapping.
 
-Article 3準拠: リファクタリング前にテストファーストで既存動作を保証。
-Phase 3-1: 環境変数マッピングのStrategy + Factoryパターン化のテスト。
+リファクタリング前にテストファーストで既存動作を保証。
+環境変数マッピングのStrategy + Factoryパターン化のテスト。
 """
 
 from pathlib import Path
@@ -163,67 +163,67 @@ class TestMappedEnvSettingsSourceExistingBehavior:
 
 
 # ==========================================
-# TestEnvMappingStrategyPattern (Phase 3-2後にアクティブ化)
+# TestEnvMappingStrategyPattern
 # ==========================================
 
 
 class TestEnvMappingStrategyPattern:
-    """EnvMappingStrategyパターンのテスト（Phase 3-2実装後）。
+    """EnvMappingStrategyパターンのテスト。
 
-    Note: このテストクラスはPhase 3-2でenv_mappers.py実装後にアクティブ化されます。
+    Note: このテストクラスはenv_mappers.py実装後にアクティブ化されます。
     """
 
-    @pytest.mark.skip(reason="Phase 3-2: env_mappers.py implementation pending")
+    @pytest.mark.skip(reason="env_mappers.py implementation pending")
     def test_orchestrator_env_mapper_maps_workspace(
         self,
         tmp_path: Path,
     ) -> None:
         """OrchestratorEnvMapperがworkspace_pathをマッピングすることを確認。"""
-        # このテストはPhase 3-2で実装されます
+        # 未実装
         pass
 
-    @pytest.mark.skip(reason="Phase 3-2: env_mappers.py implementation pending")
+    @pytest.mark.skip(reason="env_mappers.py implementation pending")
     def test_ui_env_mapper_priority(
         self,
         tmp_path: Path,
     ) -> None:
         """UIEnvMapperが優先順位を正しく処理することを確認。"""
-        # このテストはPhase 3-2で実装されます
+        # 未実装
         pass
 
-    @pytest.mark.skip(reason="Phase 3-2: env_mappers.py implementation pending")
+    @pytest.mark.skip(reason="env_mappers.py implementation pending")
     def test_env_mapper_factory_returns_correct_mapper(self) -> None:
         """EnvMapperFactoryが正しいマッパーを返すことを確認。"""
-        # このテストはPhase 3-2で実装されます
+        # 未実装
         pass
 
-    @pytest.mark.skip(reason="Phase 3-2: env_mappers.py implementation pending")
+    @pytest.mark.skip(reason="env_mappers.py implementation pending")
     def test_env_mapper_factory_returns_none_for_unknown_class(self) -> None:
         """EnvMapperFactoryが未知のクラスに対してNoneを返すことを確認。"""
-        # このテストはPhase 3-2で実装されます
+        # 未実装
         pass
 
 
 # ==========================================
-# TestMappedEnvSettingsSourceRefactored (Phase 3-2後にアクティブ化)
+# TestMappedEnvSettingsSourceRefactored
 # ==========================================
 
 
 class TestMappedEnvSettingsSourceRefactored:
-    """リファクタリング後のMappedEnvSettingsSourceテスト（Phase 3-2実装後）。
+    """リファクタリング後のMappedEnvSettingsSourceテスト。
 
-    Note: Phase 3-2でenv_mappers.py実装後、MappedEnvSettingsSourceは
+    Note: env_mappers.py実装後、MappedEnvSettingsSourceは
     Factoryパターンを使用するようにリファクタリングされます。
     """
 
-    @pytest.mark.skip(reason="Phase 3-2: Refactoring pending")
+    @pytest.mark.skip(reason="Refactoring pending")
     def test_uses_factory_for_mapping(
         self,
         tmp_path: Path,
         monkeypatch: Any,
     ) -> None:
         """MappedEnvSettingsSourceがFactoryを使用してマッピングすることを確認。"""
-        # このテストはPhase 3-2で実装されます
+        # 未実装
         pass
 
 

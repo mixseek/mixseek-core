@@ -1,7 +1,4 @@
-"""Tests for Evaluator settings loading via ConfigurationManager.
-
-T080実装のテスト: ConfigurationManager.load_evaluation_settings()
-"""
+"""Tests for Evaluator settings loading via ConfigurationManager."""
 
 from pathlib import Path
 
@@ -48,7 +45,7 @@ class TestLoadEvaluationSettings:
         assert isinstance(traces, dict)
 
         # default_modelフィールドのトレース情報を確認
-        # Phase 2-4: トレース情報が存在することを確認（ソースタイプは優先順位による）
+        # トレース情報が存在することを確認（ソースタイプは優先順位による）
         if "default_model" in traces:
             trace = traces["default_model"]
             assert trace.source_type in ("cli", "toml", "env"), "Valid source type"
@@ -112,7 +109,7 @@ class TestLoadEvaluationSettings:
         assert len(evaluator_settings.metrics) == 3
 
     def test_metrics_dynamic_array_support(self, temp_workspace: Path) -> None:
-        """metrics配列の動的サポート検証（T080拡張機能）。"""
+        """metrics配列の動的サポート検証。"""
         # Arrange
         manager = ConfigurationManager(workspace=temp_workspace)
         toml_file = Path("configs/evaluator.toml")
@@ -183,7 +180,7 @@ class TestEvaluatorSettingsToEvaluationConfig:
 
 
 class TestEvaluationConfigFromTomlFileMigration:
-    """EvaluationConfig.from_toml_file()の移行検証（T080）。"""
+    """EvaluationConfig.from_toml_file()の移行検証。"""
 
     def test_from_toml_file_uses_new_system(self, temp_workspace: Path) -> None:
         """from_toml_file()が新しいConfigurationManagerを使用している。"""

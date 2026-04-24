@@ -364,14 +364,14 @@ $MIXSEEK_WORKSPACE/
 
 - **DRY原則**: Member Agent設定を1箇所で管理
 - **再利用性**: 同じagent.tomlを複数チームで使用
-- **一貫性**: specs/027のMember Agent設定と統一
+- **一貫性**: Member Agent設定と統一
 - **テスト容易性**: Member Agent単体でテスト可能
 - **ワークスペース管理**: `MIXSEEK_WORKSPACE` 起点で統一的に管理
 
 #### 注意事項
 
 - `config` キーが存在する場合、既存TOMLファイルを読み込む
-- 参照先ファイルが存在しない場合、エラー終了（フォールバック禁止、Article 9準拠）
+- 参照先ファイルが存在しない場合、エラー終了（フォールバック禁止）
 - **相対パスの解決**:
   - `MIXSEEK_WORKSPACE` 設定時: 環境変数を起点に解決（推奨）
   - `MIXSEEK_WORKSPACE` 未設定: カレントディレクトリを起点に解決（警告ログ出力）
@@ -830,7 +830,6 @@ Leader Agentの応答を後から評価することもできます。
 mixseek evaluate "質問" "Leader Agentの応答テキスト"
 ```
 
-詳細は [Evaluator仕様](../specs/006-evaluator/spec.md) を参照してください。
 
 ## 集約処理（aggregated_content）
 
@@ -1142,17 +1141,6 @@ Round: 1
    ```
 
 ## 参考資料
-
-### 仕様書
-
-- [Leader Agent仕様](../specs/008-leader/spec.md) - 機能要件、成功基準
-- [データモデル](../specs/008-leader/data-model.md) - MemberSubmission、MemberSubmissionsRecord
-- [API契約](../specs/008-leader/contracts/aggregation_store.md) - AggregationStore仕様
-- [クイックスタート](../specs/008-leader/quickstart.md) - 最速セットアップ
-
-### 実装知見
-
-- [Pydantic AI + DuckDB統合](../specs/008-leader/findings/pydantic-ai-duckdb-integration.md) - 10の技術的知見
 
 ### 関連ドキュメント
 

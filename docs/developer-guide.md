@@ -227,7 +227,7 @@ make -C dockerfiles/ci quality-gate-fast
 
 #### テスト駆動開発
 
-このプロジェクトはTDDアプローチに従います（Article 3準拠）：
+このプロジェクトはTDDアプローチに従います：
 
 1. **テストを最初に書く** - テストは最初は失敗するべき
 2. **最小限のコードを実装** してテストをパスさせる
@@ -294,7 +294,7 @@ app.command()(new_command)
 
 ### CLIオプションの標準化
 
-**Constitution Article 10 (DRY Principle) 準拠**: CLIオプションは `src/mixseek/cli/common_options.py` で定義された共通定数を使用してください。
+**DRY Principle 準拠**: CLIオプションは `src/mixseek/cli/common_options.py` で定義された共通定数を使用してください。
 
 #### 利用可能な共通オプション
 
@@ -389,7 +389,7 @@ class NewModel(BaseModel):
 
 ## アーキテクチャパターン
 
-### ライブラリファースト設計（Article 1）
+### ライブラリファースト設計
 
 すべての機能はまずライブラリコードとして実装され、その後CLIでラップされます：
 
@@ -398,7 +398,7 @@ from pathlib import Path
 from typing import TypedDict
 
 class ProcessResult(TypedDict):
-    """処理結果の型定義（Article 16: 型安全性）"""
+    """処理結果の型定義"""
     success: bool
     processed_count: int
     errors: list[str]
@@ -534,9 +534,9 @@ settings = manager.load_settings(OrchestratorSettings)
 CLI引数 > 環境変数 > .env > TOML > デフォルト値
 ```
 
-#### Article 9準拠
+#### Data Accuracy Mandate準拠
 
-Configuration Managerは Article 9 (Data Accuracy Mandate) に完全準拠：
+Configuration ManagerはData Accuracy Mandateに完全準拠：
 
 - **明示的なデータソース**: Pydantic スキーマから明示的にフィールド情報を取得
 - **暗黙的デフォルトなし**: すべての値はスキーマまたはソースから取得
@@ -758,14 +758,6 @@ Docker環境での問題については、以下を参照してください：
 **Note**: バージョン番号は`pyproject.toml`の`version`フィールドで管理されます。`src/mixseek/__init__.py`では`importlib.metadata.version("mixseek-core")`を使用して自動取得します。
 
 ## 参照
-
-追加の技術仕様と設計ドキュメントについては、プロジェクト仕様を参照してください：
-
-- 機能仕様: `specs/005-command/spec.md`
-- 実装計画: `specs/005-command/plan.md`
-- クイックスタートガイド: `specs/005-command/quickstart.md`
-- CLI仕様: `specs/005-command/contracts/cli-interface.md`
-- データモデル: `specs/005-command/data-model.md`
 
 Docker関連のドキュメント：
 

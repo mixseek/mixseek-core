@@ -1,12 +1,12 @@
 """Authentication module for MixSeek-Core Member Agents.
 
-This module implements Article 9 (Data Accuracy Mandate) compliant authentication
+This module implements Data Accuracy Mandate compliant authentication
 handling for Google AI and Vertex AI providers. It enforces explicit error handling
-and prohibits implicit fallbacks to ensure constitutional compliance.
+and prohibits implicit fallbacks.
 
-Constitutional Requirements:
-- Article 9: NO implicit fallbacks, explicit data source specification
-- Article 3: Test-first development with comprehensive test coverage
+Requirements:
+- NO implicit fallbacks, explicit data source specification
+- Test-first development with comprehensive test coverage
 """
 
 import os
@@ -42,8 +42,7 @@ class AuthProvider(Enum):
 class AuthenticationError(Exception):
     """Raised when authentication validation fails.
 
-    This exception enforces Article 9 compliance by providing explicit
-    error messages instead of silent fallbacks.
+    This exception provides explicit error messages instead of silent fallbacks.
     """
 
     def __init__(self, message: str, provider: AuthProvider, suggestion: str = ""):
@@ -102,7 +101,7 @@ def validate_test_environment() -> bool:
 
     Note:
         This is the ONLY condition under which TestModel usage is allowed.
-        Article 9 compliance: Explicit test environment detection.
+        Explicit test environment detection.
     """
     return bool(os.getenv("PYTEST_CURRENT_TEST"))
 
@@ -346,9 +345,9 @@ def validate_grok_credentials() -> None:
 def create_authenticated_model(
     model_id: str,
 ) -> GoogleModel | OpenAIChatModel | OpenAIResponsesModel | AnthropicModel | TestModel:
-    """Create an authenticated model instance with Article 9 compliance.
+    """Create an authenticated model instance.
 
-    This function enforces constitutional requirements:
+    This function enforces the following requirements:
     - NO implicit fallbacks to TestModel
     - Explicit error handling for all authentication failures
     - Clear separation between test and production environments
@@ -363,7 +362,7 @@ def create_authenticated_model(
     Raises:
         AuthenticationError: If authentication validation fails
     """
-    # CRITICAL: Article 9 compliance - only use TestModel in legitimate test environment
+    # CRITICAL: only use TestModel in legitimate test environment
     if validate_test_environment():
         return TestModel()
 
@@ -380,7 +379,7 @@ def create_authenticated_model(
 
     elif auth_provider == AuthProvider.VERTEX_AI:
         validate_vertex_ai_credentials()
-        # T098: Use explicit provider parameter instead of environment variable
+        # Use explicit provider parameter instead of environment variable
         # pydantic-ai's GoogleModel handles Vertex AI mode via provider="google-vertex"
         # No need to set GOOGLE_GENAI_USE_VERTEXAI environment variable
         base_model_name = model_id.replace("google-vertex:", "")

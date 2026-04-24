@@ -1,5 +1,5 @@
 # Solo Leader Team Configuration
-# Member Agent 0件のチーム設定例（FR-033, SC-008対応）
+# Member Agent 0件のチーム設定例
 #
 # このチーム設定では、Member Agentを使用せず、Leader Agent単独でタスクを処理します。
 # Leader Agentが直接ユーザープロンプトに応答し、結果を生成します。

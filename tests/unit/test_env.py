@@ -24,7 +24,7 @@ class TestGetWorkspacePath:
         assert result == cli_path
 
     def test_get_workspace_path_uses_env_when_no_cli(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        """Test environment variable is used when CLI argument is None (Article 9準拠)."""
+        """Test environment variable is used when CLI argument is None."""
         env_path = tmp_path / "workspace"
         env_path.mkdir(parents=True, exist_ok=True)
 
@@ -36,7 +36,7 @@ class TestGetWorkspacePath:
     def test_get_workspace_path_error_when_neither_provided(
         self, monkeypatch: MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """Test WorkspacePathNotSpecifiedError is raised when neither CLI nor env var is set (Article 9準拠)."""
+        """Test WorkspacePathNotSpecifiedError is raised when neither CLI nor env var is set."""
         # Remove environment variable if it exists
         monkeypatch.delenv(WORKSPACE_ENV_VAR, raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
@@ -50,7 +50,7 @@ class TestGetWorkspacePath:
     def test_get_workspace_path_handles_empty_env_var(
         self, monkeypatch: MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """Test empty environment variable is treated as not set (Article 9準拠)."""
+        """Test empty environment variable is treated as not set."""
         monkeypatch.setenv(WORKSPACE_ENV_VAR, "")
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
 
@@ -79,7 +79,7 @@ class TestGetWorkspacePath:
     def test_get_workspace_path_with_clean_environment(
         self, monkeypatch: MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """Test with completely clean environment (Article 9準拠)."""
+        """Test with completely clean environment."""
         # Clear all workspace-related environment variables
         monkeypatch.delenv(WORKSPACE_ENV_VAR, raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)

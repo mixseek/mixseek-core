@@ -355,14 +355,6 @@ make -C dockerfiles/prod backup-image
 docker tag mixseek-core/prod:latest mixseek-core/prod:v1.0.0
 ```
 
-## 📖 ドキュメント
-
-- [Dockerファイルインターフェース契約](../specs/003-dockerfiles/contracts/dockerfile-interface.md)
-- [Makefileインターフェース契約](../specs/003-dockerfiles/contracts/makefile-interface.md)
-- [環境テンプレート契約](../specs/003-dockerfiles/contracts/environment-template.md)
-- [クイックスタートガイド](../specs/003-dockerfiles/quickstart.md)
-- [データモデル](../specs/003-dockerfiles/data-model.md)
-
 ## 🎯 使用例とベストプラクティス
 
 ### 新規プロジェクト開始時

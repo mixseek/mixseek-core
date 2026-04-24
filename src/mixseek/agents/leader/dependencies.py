@@ -3,9 +3,6 @@
 Agent Delegationで各Member Agentに共有される依存関係オブジェクト。
 RunContext[TeamDependencies]として使用されます。
 
-References:
-    - Data Model: specs/008-leader/data-model.md (Section 4)
-    - Research: specs/008-leader/research.md (Section 1)
 """
 
 from dataclasses import dataclass, field

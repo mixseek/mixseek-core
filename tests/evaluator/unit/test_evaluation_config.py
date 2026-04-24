@@ -32,7 +32,7 @@ class TestMetricConfigValidation:
         assert metric.model is None
 
     def test_weight_within_0_to_1_range(self) -> None:
-        """Test that weight must be within 0-1 range (FR-003)."""
+        """Test that weight must be within 0-1 range."""
         # Minimum
         metric_min = MetricConfig(name="test_metric", weight=0.0)
         assert metric_min.weight == 0.0
@@ -46,7 +46,7 @@ class TestMetricConfigValidation:
         assert metric_mid.weight == 0.5
 
     def test_weight_below_zero_raises_error(self) -> None:
-        """Test that weight below 0 raises ValidationError (FR-003)."""
+        """Test that weight below 0 raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             MetricConfig(name="test_metric", weight=-0.1)
 
@@ -54,7 +54,7 @@ class TestMetricConfigValidation:
         assert "weight" in str(error)
 
     def test_weight_above_one_raises_error(self) -> None:
-        """Test that weight above 1.0 raises ValidationError (FR-003)."""
+        """Test that weight above 1.0 raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             MetricConfig(name="test_metric", weight=1.1)
 
@@ -146,7 +146,7 @@ class TestEvaluationConfigValidation:
         assert len(config.enabled_metrics) == 3
 
     def test_weights_sum_to_one_validation(self) -> None:
-        """Test that weights must sum to 1.0 (±0.001 tolerance) (FR-009)."""
+        """Test that weights must sum to 1.0 (±0.001 tolerance)."""
         # Valid: Exactly 1.0
         config_exact = EvaluationConfig(
             llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=3),
@@ -178,7 +178,7 @@ class TestEvaluationConfigValidation:
         assert config_high is not None
 
     def test_weights_not_summing_to_one_raises_error(self) -> None:
-        """Test that weights not summing to 1.0 raises ValidationError (FR-009)."""
+        """Test that weights not summing to 1.0 raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationConfig(
                 llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=3),
@@ -219,7 +219,7 @@ class TestEvaluationConfigValidation:
         assert "metrics" in str(error).lower()
 
     def test_invalid_default_model_format_raises_error(self) -> None:
-        """Test that invalid default_model format raises ValidationError (FR-016)."""
+        """Test that invalid default_model format raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationConfig(
                 llm_default=LLMDefaultConfig(model="invalid-format", max_retries=3),
@@ -230,7 +230,7 @@ class TestEvaluationConfigValidation:
         assert "model" in str(error).lower() or "format" in str(error).lower()
 
     def test_negative_max_retries_raises_error(self) -> None:
-        """Test that negative max_retries raises ValidationError (FR-010)."""
+        """Test that negative max_retries raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationConfig(
                 llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=-1),
@@ -241,7 +241,7 @@ class TestEvaluationConfigValidation:
         assert "max_retries" in str(error).lower()
 
     def test_equal_weights_when_all_none(self) -> None:
-        """Test that equal weights are applied when all weights are None (FR-008)."""
+        """Test that equal weights are applied when all weights are None."""
         config = EvaluationConfig(
             llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=3),
             metrics=[
@@ -306,7 +306,7 @@ class TestEvaluationConfigValidation:
         assert "relevance" in config.enabled_metrics
 
     def test_get_model_for_metric_with_override(self) -> None:
-        """Test get_model_for_metric returns metric-specific model (FR-015)."""
+        """Test get_model_for_metric returns metric-specific model."""
         config = EvaluationConfig(
             llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=3),
             metrics=[
@@ -320,7 +320,7 @@ class TestEvaluationConfigValidation:
         assert model == "openai:gpt-5"
 
     def test_get_model_for_metric_with_default(self) -> None:
-        """Test get_model_for_metric returns default when no override (FR-016)."""
+        """Test get_model_for_metric returns default when no override."""
         config = EvaluationConfig(
             llm_default=LLMDefaultConfig(model="anthropic:claude-sonnet-4-5-20250929", max_retries=3),
             metrics=[

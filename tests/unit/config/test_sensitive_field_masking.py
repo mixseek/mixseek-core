@@ -1,7 +1,7 @@
 """Tests for sensitive field masking in configuration output.
 
-Article 3 Compliance: Test-First Implementation
-Article 9 Compliance: Explicit security policy for sensitive data
+Test-First Implementation.
+Explicit security policy for sensitive data.
 """
 
 from pathlib import Path

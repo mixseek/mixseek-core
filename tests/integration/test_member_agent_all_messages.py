@@ -1,4 +1,4 @@
-"""Integration tests for Member Agent all_messages capture (FR-016)
+"""Integration tests for Member Agent all_messages capture
 
 Tests verify that Member Agent implementations correctly capture
 complete message history from Pydantic AI and store it in MemberAgentResult.
@@ -60,7 +60,7 @@ async def test_plain_member_agent_captures_all_messages() -> None:
     assert result.status == "success"
     assert result.is_success()
 
-    # Verify all_messages is captured (FR-016)
+    # Verify all_messages is captured
     assert result.all_messages is not None, "all_messages should be captured from Pydantic AI"
     assert isinstance(result.all_messages, list), "all_messages should be a list"
     assert len(result.all_messages) == 2, "all_messages should contain ModelRequest and ModelResponse"
@@ -114,7 +114,7 @@ async def test_web_search_member_agent_captures_all_messages() -> None:
     assert result.status == "success"
     assert result.is_success()
 
-    # Verify all_messages is captured (FR-016)
+    # Verify all_messages is captured
     assert result.all_messages is not None, "all_messages should be captured from Pydantic AI"
     assert isinstance(result.all_messages, list), "all_messages should be a list"
     assert len(result.all_messages) == 2, "all_messages should contain messages"
@@ -164,7 +164,7 @@ async def test_code_execution_member_agent_captures_all_messages() -> None:
     assert result.status == "success"
     assert result.is_success()
 
-    # Verify all_messages is captured (FR-016)
+    # Verify all_messages is captured
     assert result.all_messages is not None, "all_messages should be captured from Pydantic AI"
     assert isinstance(result.all_messages, list), "all_messages should be a list"
     assert len(result.all_messages) == 2, "all_messages should contain messages"

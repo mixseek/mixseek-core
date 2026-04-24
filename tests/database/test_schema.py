@@ -1,7 +1,5 @@
 """DuckDBスキーマのテスト
 
-Article 3: Test-First Imperative準拠
-
 Tests:
     - RoundHistoryテーブル作成
     - LeaderBoardテーブル作成
@@ -71,7 +69,7 @@ class TestDuckDBSchema:
         assert "aggregated_submissions" not in column_names  # 旧カラム名は存在しない
 
     def test_round_history_unique_constraint(self, conn: duckdb.DuckDBPyConnection) -> None:
-        """RoundHistory UNIQUE制約（team_id + round_number、FR-008）"""
+        """RoundHistory UNIQUE制約（team_id + round_number）"""
         # Arrange: テーブル作成
         conn.execute("CREATE SEQUENCE IF NOT EXISTS round_history_id_seq")
         conn.execute("""
@@ -198,7 +196,7 @@ class TestDuckDBSchema:
         assert rows[2][1] == -42.3
 
     def test_leader_board_ranking_index(self, conn: duckdb.DuckDBPyConnection) -> None:
-        """LeaderBoardランキングインデックス（FR-011）"""
+        """LeaderBoardランキングインデックス"""
         # Arrange & Act
         conn.execute("CREATE SEQUENCE IF NOT EXISTS leader_board_id_seq")
         conn.execute("""

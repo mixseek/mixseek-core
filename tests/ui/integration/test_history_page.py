@@ -37,12 +37,12 @@ def test_history_page_has_required_ui_elements() -> None:
 
 
 def test_history_page_has_detail_view() -> None:
-    """Test that history page has detail view functionality (FR-017)."""
+    """Test that history page has detail view functionality."""
     page_path = Path(__file__).parent.parent.parent.parent / "src" / "mixseek" / "ui" / "pages" / "3_history.py"
     with open(page_path) as f:
         content = f.read()
 
-    # Check detail view elements (FR-017)
+    # Check detail view elements
     assert "fetch_execution_detail(" in content
     assert "selected_execution_id" in content
     assert "実行詳細" in content

@@ -417,4 +417,3 @@ cache_ttl_seconds = 300
 - [API概要](../index.md) - MixSeek-Core API全体
 - [Agents API](../agents/index.md) - エージェント関連API
 - [Models API](../models/index.md) - データモデルAPI
-- [仕様書](https://github.com/your-org/mixseek-core/specs/001-specs/spec.md) - 詳細な機能仕様

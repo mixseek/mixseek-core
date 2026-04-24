@@ -3,10 +3,6 @@
 Test Coverage:
     - MemberSubmission: Member Agent応答の軽量モデル
     - MemberSubmissionsRecord: 記録結果モデル（構造化データ）
-
-References:
-    - Spec: specs/008-leader/spec.md (FR-003)
-    - Data Model: specs/008-leader/data-model.md
 """
 
 from mixseek.models.leader_agent import MemberSubmission, MemberSubmissionsRecord
@@ -14,7 +10,7 @@ from mixseek.models.member_agent import AgentType, MemberAgentResult, ResultStat
 
 
 class TestMemberSubmission:
-    """MemberSubmission変換テスト（T008）"""
+    """MemberSubmission変換テスト"""
 
     def test_from_member_result_success(self) -> None:
         """正常系: 成功応答の変換"""
@@ -84,7 +80,7 @@ class TestMemberSubmission:
 
 
 class TestMemberSubmissionsRecord:
-    """MemberSubmissionsRecord記録テスト（T009）"""
+    """MemberSubmissionsRecord記録テスト"""
 
     def test_from_member_results_all_success(self) -> None:
         """正常系: 全て成功時の記録"""
@@ -109,7 +105,7 @@ class TestMemberSubmissionsRecord:
         assert len(record.failed_submissions) == 0
 
     def test_from_member_results_with_failures(self) -> None:
-        """正常系: 失敗混在時のエラー除外（FR-002）"""
+        """正常系: 失敗混在時のエラー除外"""
         # Given: 2成功、1失敗
         results = [
             MemberAgentResult.success(content="Success 1", agent_name="agent-1", agent_type=AgentType.PLAIN),
@@ -122,7 +118,7 @@ class TestMemberSubmissionsRecord:
             results=results, round_number=1, team_id="team-001", team_name="Test Team"
         )
 
-        # Then: 失敗が自動除外される（FR-002）
+        # Then: 失敗が自動除外される
         assert record.total_count == 3
         assert record.success_count == 2
         assert record.failure_count == 1
@@ -131,7 +127,7 @@ class TestMemberSubmissionsRecord:
         assert record.failed_submissions[0].agent_name == "agent-2"
 
     def test_aggregate_usage(self) -> None:
-        """リソース使用量集計（FR-005）"""
+        """リソース使用量集計"""
         # Given: 3つの応答（リソース情報付き）
         results = [
             MemberAgentResult.success(

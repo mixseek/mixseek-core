@@ -1,7 +1,5 @@
 """mixseek exec コマンド終了コードテスト
 
-Article 3: Test-First Imperative準拠
-
 終了コード仕様:
     - 0: 全チーム成功（failed_teams_info が空）
     - 1: 部分成功（team_results が非空 かつ failed_teams_info が非空）

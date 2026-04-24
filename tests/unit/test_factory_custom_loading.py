@@ -1,6 +1,6 @@
 """Unit tests for MemberAgentFactory custom agent loading with priority handling.
 
-This module tests the priority handling logic (FR-021) when loading custom agents:
+This module tests the priority handling logic when loading custom agents:
 1. First priority: agent_module (recommended)
 2. Second priority: path (fallback)
 """
@@ -40,7 +40,7 @@ class TestPriorityAgent(BaseMemberAgent):
 
 
 class TestCustomAgentPriorityHandling:
-    """Tests for FR-021 priority handling in custom agent loading."""
+    """Tests for priority handling in custom agent loading."""
 
     def setup_method(self) -> None:
         """Setup before each test - ensure clean state."""

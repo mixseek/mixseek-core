@@ -7,9 +7,6 @@ This subpackage groups all Member Agent implementations and shared utilities:
     - web_search: Research-focused agent implementation (WebSearchMemberAgent)
     - code_execution: Computational agent implementation (CodeExecutionMemberAgent)
 
-References:
-    - Spec: specs/009-member/spec.md
-    - Plan: specs/009-member/plan.md
 """
 
 from mixseek.agents.member.base import BaseMemberAgent

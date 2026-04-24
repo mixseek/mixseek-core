@@ -128,7 +128,7 @@ class TestEvaluationResultValidation:
         assert result.overall_score == 85.0
 
     def test_empty_metrics_list_raises_error(self) -> None:
-        """Test that empty metrics list raises ValidationError (FR-001)."""
+        """Test that empty metrics list raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             EvaluationResult(metrics=[], overall_score=0.0)
 

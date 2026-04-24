@@ -7,7 +7,7 @@ from mixseek.config import ConfigurationManager, LeaderAgentSettings, Orchestrat
 
 
 class TestTracingIntegration:
-    """End-to-end tracing integration tests (T029)"""
+    """End-to-end tracing integration tests"""
 
     def test_trace_records_default_values(self) -> None:
         """Test that trace records default values appropriately"""

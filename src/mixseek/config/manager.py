@@ -23,10 +23,10 @@ if TYPE_CHECKING:
         TeamSettings,
     )
 
-# Generic type variable for settings classes (Phase 12: Generic return type)
+# Generic type variable for settings classes
 SettingsT = TypeVar("SettingsT", bound=BaseSettings)
 
-# T097: Context variable for config_file (thread-safe and async-safe)
+# Context variable for config_file (thread-safe and async-safe)
 # This replaces the class attribute to avoid race conditions in concurrent calls
 _config_file_context: contextvars.ContextVar[Path | None] = contextvars.ContextVar("config_file", default=None)
 
@@ -51,7 +51,7 @@ class ConfigurationManager:
             cli_args: CLI引数（typerから変換）
             workspace: ワークスペースパス
             environment: 実行環境（dev/staging/prod）
-            config_file: TOMLファイルパス（T097: 環境変数アクセスを呼び出し側に移譲）
+            config_file: TOMLファイルパス（環境変数アクセスを呼び出し側に移譲）
         """
         self.cli_args = cli_args or {}
         self.workspace = workspace
@@ -66,7 +66,7 @@ class ConfigurationManager:
         """設定を読み込み。
 
         優先順位: CLI > 環境変数 > .env > TOML > デフォルト値
-        None 値は優先順位チェーンから除外される（Article 9準拠）
+        None 値は優先順位チェーンから除外される
 
         TOML ファイル読み込みは CustomTomlConfigSettingsSource により
         自動的に処理されます。
@@ -78,7 +78,7 @@ class ConfigurationManager:
         Returns:
             設定インスタンス
         """
-        # CLI引数から None 値をフィルタリング（Article 9: Data Accuracy Mandate）
+        # CLI引数から None 値をフィルタリング
         filtered_cli_args = {k: v for k, v in self.cli_args.items() if v is not None}
 
         # CLI引数と追加引数をマージ
@@ -92,8 +92,8 @@ class ConfigurationManager:
         if self.workspace and "workspace_path" not in init_kwargs:
             init_kwargs["workspace_path"] = self.workspace
 
-        # T097: config_fileをコンテキスト変数に設定（settings_customise_sources()で使用）
-        # Article 9準拠: ConfigurationManager呼び出し側が環境変数読み取りの責任を持つ
+        # config_fileをコンテキスト変数に設定（settings_customise_sources()で使用）
+        # ConfigurationManager呼び出し側が環境変数読み取りの責任を持つ
         # contextvars使用により、並行処理・ネストされた呼び出しでも安全
         token = _config_file_context.set(self.config_file)
 
@@ -105,7 +105,7 @@ class ConfigurationManager:
         finally:
             # クリーンアップ: コンテキスト変数をリセット（元の値に復元）
             _config_file_context.reset(token)
-            # Phase 2-4追加: trace_storage context varsもクリアして、テスト間の干渉を防ぐ
+            # trace_storage context varsもクリアして、テスト間の干渉を防ぐ
             from .schema import _trace_storage_context
 
             _trace_storage_context.set(None)
@@ -115,7 +115,7 @@ class ConfigurationManager:
         settings_instance: BaseSettings,
         field_name: str,
     ) -> SourceTrace | None:
-        """設定値のトレース情報を取得（Phase 2: インスタンス対応）。
+        """設定値のトレース情報を取得。
 
         Args:
             settings_instance: 設定インスタンス
@@ -156,7 +156,7 @@ class ConfigurationManager:
             value = getattr(settings, field_name)
             trace = self.get_trace_info(settings, field_name)
 
-            # Mask sensitive fields (Article 9: Explicit security policy)
+            # Mask sensitive fields
             from mixseek.config.views import ConfigViewService
 
             masked_value = ConfigViewService._mask_value(field_name, value)
@@ -203,7 +203,7 @@ class ConfigurationManager:
             if field_info.default is not None:
                 defaults[field_name] = field_info.default
             elif field_info.default_factory is not None:
-                # Cast default_factory to Callable for type safety (Article 16)
+                # Cast default_factory to Callable for type safety
                 factory = cast(Callable[[], Any], field_info.default_factory)
                 defaults[field_name] = factory()
         return defaults
@@ -218,8 +218,8 @@ class ConfigurationManager:
     ) -> SettingsT:
         """設定ファイルをトレース付きで読み込む汎用メソッド（Template Method）。
 
-        Article 10（DRY原則）準拠：4つのload_*_settingsメソッドの共通処理を統合。
-        Article 11（Refactoring Policy）準拠：既存クラスを直接改善（V2クラス作成なし）。
+        DRY原則準拠：4つのload_*_settingsメソッドの共通処理を統合。
+        Refactoring Policy準拠：既存クラスを直接改善（V2クラス作成なし）。
 
         Args:
             settings_cls: 設定クラス（TeamSettings, MemberAgentSettings等）
@@ -237,7 +237,7 @@ class ConfigurationManager:
         """
         from .sources.tracing_source import TracingSourceWrapper
 
-        # CLI引数から None 値をフィルタリング（Article 9: Data Accuracy Mandate）
+        # CLI引数から None 値をフィルタリング
         filtered_cli_args = {k: v for k, v in self.cli_args.items() if v is not None}
 
         # カスタムTOMLソースを作成（workspace対応）
@@ -349,7 +349,7 @@ class ConfigurationManager:
         toml_file: Path,
         **extra_kwargs: Any,
     ) -> "TeamSettings":
-        """Team設定を参照解決付きで読み込み（T091実装、T078トレーシング対応）。
+        """Team設定を参照解決付きで読み込み（トレーシング対応）。
 
         既存のteam.toml形式（参照形式 config="agents/xxx.toml" を含む）と
         完全互換性を維持します。
@@ -393,7 +393,7 @@ class ConfigurationManager:
         toml_file: Path,
         **extra_kwargs: Any,
     ) -> "MemberAgentSettings":
-        """Member Agent設定を読み込み（T079実装）。
+        """Member Agent設定を読み込み。
 
         個別のMember Agent TOMLファイル（例: examples/agents/plain_agent.toml）を
         読み込み、MemberAgentSettingsインスタンスを返します。
@@ -438,7 +438,7 @@ class ConfigurationManager:
         toml_file: Path,
         **extra_kwargs: Any,
     ) -> "EvaluatorSettings":
-        """Evaluator設定を読み込み（T080実装）。
+        """Evaluator設定を読み込み。
 
         evaluator.toml形式（EvaluationConfig互換）を読み込み、
         EvaluatorSettingsインスタンスを返します。
@@ -489,7 +489,7 @@ class ConfigurationManager:
 
         evaluator_config が指定されていればそれを使用し、
         未指定の場合は {workspace}/configs/evaluator.toml を試し、
-        ファイルが存在しなければデフォルト値を返します（FR-049準拠）。
+        ファイルが存在しなければデフォルト値を返します。
 
         Args:
             evaluator_config: Evaluator設定ファイルパス（オプション）
@@ -499,7 +499,7 @@ class ConfigurationManager:
             EvaluatorSettings instance
 
         Raises:
-            FileNotFoundError: 明示的に指定されたファイルが存在しない場合（FR-048準拠）
+            FileNotFoundError: 明示的に指定されたファイルが存在しない場合
             ValueError: TOML構文エラーまたはバリデーションエラー、または workspace が None の場合
 
         Examples:
@@ -511,7 +511,7 @@ class ConfigurationManager:
         """
         from .schema import EvaluatorSettings
 
-        # workspace が None の場合はエラー（Article 9: Data Accuracy Mandate）
+        # workspace が None の場合はエラー
         if self.workspace is None:
             raise ValueError(
                 "ConfigurationManager.workspace is None. Cannot resolve relative paths or default config location."
@@ -521,11 +521,11 @@ class ConfigurationManager:
             # 明示的に指定されたパスから読み込み（存在しない場合はエラー）
             config_path = Path(evaluator_config)
             if not config_path.is_absolute():
-                # 相対パスの場合は workspace 基準で解決（FR-045準拠）
+                # 相対パスの場合は workspace 基準で解決
                 config_path = self.workspace / config_path
 
             if not config_path.exists():
-                # FR-048準拠: 明示的に指定されたファイルが存在しない場合はエラー
+                # 明示的に指定されたファイルが存在しない場合はエラー
                 raise FileNotFoundError(
                     f"Evaluator config file not found: {config_path}\n"
                     f"Please check the path specified in evaluator_config."
@@ -538,7 +538,7 @@ class ConfigurationManager:
         if default_config.exists():
             return self.load_evaluation_settings(default_config, **extra_kwargs)
 
-        # FR-049準拠: ファイルが存在しない場合はデフォルト値で初期化
+        # ファイルが存在しない場合はデフォルト値で初期化
         default_settings = EvaluatorSettings()
         logger.warning(
             f"Configuration file not found: {default_config}. Using default configuration.",
@@ -623,7 +623,7 @@ class ConfigurationManager:
         """
         from .schema import JudgmentSettings
 
-        # workspace が None の場合はエラー（Article 9: Data Accuracy Mandate）
+        # workspace が None の場合はエラー
         if self.workspace is None:
             raise ValueError(
                 "ConfigurationManager.workspace is None. Cannot resolve relative paths or default config location."
@@ -663,7 +663,7 @@ class ConfigurationManager:
         toml_file: Path,
         **extra_kwargs: Any,
     ) -> "OrchestratorSettings":
-        """Orchestrator設定を読み込み（T086実装）。
+        """Orchestrator設定を読み込み。
 
         orchestrator.toml形式を読み込み、OrchestratorSettingsインスタンスを返します。
 
@@ -691,7 +691,7 @@ class ConfigurationManager:
         from .schema import OrchestratorSettings
         from .sources.orchestrator_toml_source import OrchestratorTomlSource
 
-        # workspaceを設定（T093 fix: workspace_pathをinit_kwargsに含める）
+        # workspaceを設定（workspace_pathをinit_kwargsに含める）
         if "workspace_path" not in extra_kwargs and self.workspace is not None:
             extra_kwargs["workspace_path"] = self.workspace
 
@@ -775,7 +775,7 @@ class ConfigurationManager:
         """
         from .schema import PromptBuilderSettings
 
-        # workspace が None の場合はエラー（Article 9: Data Accuracy Mandate）
+        # workspace が None の場合はエラー
         if self.workspace is None:
             raise ValueError(
                 "ConfigurationManager.workspace is None. Cannot resolve relative paths or default config location."

@@ -3,8 +3,8 @@
 This test suite validates the Pydantic models for Member Agent configurations,
 including validation rules, error handling, and field constraints.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the full implementation to ensure proper validation and error handling.
+These tests are written BEFORE the full implementation to ensure proper
+validation and error handling.
 """
 
 from typing import Any

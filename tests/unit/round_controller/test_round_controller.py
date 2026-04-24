@@ -94,7 +94,7 @@ async def test_run_round_returns_leaderboard_entry(
     mock_create_leader: MagicMock,
     tmp_path: Path,
 ) -> None:
-    """T042: run_round()がLeaderBoardEntryを返すことを検証"""
+    """run_round()がLeaderBoardEntryを返すことを検証"""
 
     # Leader Agentのモック
     mock_agent = AsyncMock()
@@ -165,7 +165,7 @@ async def test_run_round_returns_leaderboard_entry(
         timeout_seconds=60,
     )
 
-    # T042: LeaderBoardEntryが返されることを検証
+    # LeaderBoardEntryが返されることを検証
     assert isinstance(result, LeaderBoardEntry)
     assert result.team_id == "test-team-001"
     assert result.team_name == "Test Team 1"
@@ -193,7 +193,7 @@ async def test_single_round_duckdb_save(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T043: 単一ラウンドのDuckDB保存を検証（round_status、leader_boardテーブル）"""
+    """単一ラウンドのDuckDB保存を検証（round_status、leader_boardテーブル）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -251,7 +251,7 @@ async def test_single_round_duckdb_save(
         timeout_seconds=60,
     )
 
-    # T043: DuckDBに保存されたことを検証
+    # DuckDBに保存されたことを検証
     from mixseek.storage.aggregation_store import AggregationStore
 
     store = AggregationStore(db_path=tmp_path / "mixseek.db")
@@ -297,7 +297,7 @@ async def test_multi_round_execution(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T048: 複数ラウンド実行テスト（最大5ラウンド、各ラウンドのDuckDB記録を検証）"""
+    """複数ラウンド実行テスト（最大5ラウンド、各ラウンドのDuckDB記録を検証）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -381,7 +381,7 @@ async def test_multi_round_execution(
         timeout_seconds=60,
     )
 
-    # T048: 複数ラウンドが実行されたことを検証
+    # 複数ラウンドが実行されたことを検証
     from mixseek.storage.aggregation_store import AggregationStore
 
     store = AggregationStore(db_path=tmp_path / "mixseek.db")
@@ -429,7 +429,7 @@ async def test_round_continuation_judgment(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T049: ラウンド継続判定テスト（最小ラウンド数確認、LLM判定、最大ラウンド数確認の3段階を検証）"""
+    """ラウンド継続判定テスト（最小ラウンド数確認、LLM判定、最大ラウンド数確認の3段階を検証）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -496,7 +496,7 @@ async def test_round_continuation_judgment(
         timeout_seconds=60,
     )
 
-    # T049: Verify continuation logic
+    # Verify continuation logic
     # - Should run at least min_rounds (2)
     # - LLM judgment should be called after min_rounds
     # - Should stop when LLM says no improvement
@@ -517,7 +517,7 @@ async def test_next_round_prompt_formatting(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T050: 次ラウンドプロンプト整形テスト（過去のSubmission履歴、評価フィードバック、ランキング情報の統合を検証）"""
+    """次ラウンドプロンプト整形テスト（過去のSubmission履歴、評価フィードバック、ランキング情報の統合を検証）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -605,7 +605,7 @@ async def test_next_round_prompt_formatting(
         timeout_seconds=60,
     )
 
-    # T050: Verify prompt formatting
+    # Verify prompt formatting
     # - First round: only user prompt
     # - Second+ rounds: should include past submissions, feedback, ranking
     assert len(prompts_captured) >= 2
@@ -626,7 +626,7 @@ async def test_best_score_submission_identification(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """T051: 終了時の最高スコアSubmission特定テスト（同点時は最も遅いラウンド番号を選択）"""
+    """終了時の最高スコアSubmission特定テスト（同点時は最も遅いラウンド番号を選択）"""
 
     monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
 
@@ -704,8 +704,158 @@ async def test_best_score_submission_identification(
         timeout_seconds=60,
     )
 
-    # T051: Verify best score identification with tiebreaker
+    # Verify best score identification with tiebreaker
     # - Best score is 85.0 (rounds 2 and 3)
     # - Tiebreaker: latest round (round 3) should be chosen
     assert result.score == 85.0
     assert result.round_number == 3  # Latest round with best score
+
+
+@pytest.mark.asyncio
+@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.controller.Evaluator")
+@patch("mixseek.round_controller.controller.JudgmentClient")
+async def test_judge_on_final_round_false_skips_llm(
+    mock_judgment_client_class: MagicMock,
+    mock_evaluator_class: MagicMock,
+    mock_create_leader: MagicMock,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """judge_on_final_round=False のとき、最終ラウンドではLLM Judgementをスキップすることを検証"""
+
+    monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
+
+    # Leader Agent モック
+    mock_agent = AsyncMock()
+
+    async def mock_run(*args: Any, **kwargs: Any) -> Any:
+        mock_result = MagicMock()
+        mock_result.output = "Submission"
+        mock_result.all_messages.return_value = []
+        mock_result.usage.return_value = RunUsage(input_tokens=100, output_tokens=50, requests=1)
+        return mock_result
+
+    mock_agent.run.side_effect = mock_run
+    mock_create_leader.return_value = mock_agent
+
+    # Evaluator モック
+    mock_evaluator = MagicMock()
+    mock_evaluator.evaluate = AsyncMock(
+        return_value=EvaluationResult(
+            metrics=[MetricScore(metric_name="ClarityCoherence", score=80.0, evaluator_comment="OK")],
+            overall_score=80.0,
+        )
+    )
+    mock_evaluator_class.return_value = mock_evaluator
+
+    # Judgment モック - 常に should_continue=True を返す
+    # （最終ラウンドで呼び出されないことが検証ポイント）
+    from mixseek.round_controller.models import ImprovementJudgment
+
+    mock_client = MagicMock()
+    mock_client.judge_improvement_prospects = AsyncMock(
+        return_value=ImprovementJudgment(should_continue=True, reasoning="Continue expected", confidence_score=0.9)
+    )
+    mock_judgment_client_class.return_value = mock_client
+
+    # max_rounds=2 で判定対象ラウンドは2回 (round 1, round 2=最終)
+    team_config_path = Path.cwd() / "tests" / "fixtures" / "team1.toml"
+    task = OrchestratorTask(
+        execution_id=str(uuid4()),
+        user_prompt="テストプロンプト",
+        team_configs=[team_config_path],
+        timeout_seconds=300,
+        max_rounds=2,
+        min_rounds=1,
+    )
+    controller = RoundController(
+        team_config_path=team_config_path,
+        workspace=tmp_path,
+        task=task,
+        evaluator_settings=EvaluatorSettings(),
+        judgment_settings=JudgmentSettings(judge_on_final_round=False),
+        prompt_builder_settings=PromptBuilderSettings(),
+    )
+
+    result = await controller.run_round(
+        user_prompt="テストプロンプト",
+        timeout_seconds=60,
+    )
+
+    # LLM Judgement は round 1 のみ呼ばれ、最終 round 2 ではスキップされる
+    assert mock_client.judge_improvement_prospects.await_count == 1
+    # max_rounds に到達して終了
+    assert result.exit_reason == "max_rounds_reached"
+    assert result.round_number == 2
+
+
+@pytest.mark.asyncio
+@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.controller.Evaluator")
+@patch("mixseek.round_controller.controller.JudgmentClient")
+async def test_judge_on_final_round_true_default_calls_llm(
+    mock_judgment_client_class: MagicMock,
+    mock_evaluator_class: MagicMock,
+    mock_create_leader: MagicMock,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """judge_on_final_round=True (デフォルト) のとき、最終ラウンドでもLLM Judgementが呼ばれることを検証"""
+
+    monkeypatch.setenv("MIXSEEK_WORKSPACE", str(tmp_path))
+
+    mock_agent = AsyncMock()
+
+    async def mock_run(*args: Any, **kwargs: Any) -> Any:
+        mock_result = MagicMock()
+        mock_result.output = "Submission"
+        mock_result.all_messages.return_value = []
+        mock_result.usage.return_value = RunUsage(input_tokens=100, output_tokens=50, requests=1)
+        return mock_result
+
+    mock_agent.run.side_effect = mock_run
+    mock_create_leader.return_value = mock_agent
+
+    mock_evaluator = MagicMock()
+    mock_evaluator.evaluate = AsyncMock(
+        return_value=EvaluationResult(
+            metrics=[MetricScore(metric_name="ClarityCoherence", score=80.0, evaluator_comment="OK")],
+            overall_score=80.0,
+        )
+    )
+    mock_evaluator_class.return_value = mock_evaluator
+
+    from mixseek.round_controller.models import ImprovementJudgment
+
+    mock_client = MagicMock()
+    mock_client.judge_improvement_prospects = AsyncMock(
+        return_value=ImprovementJudgment(should_continue=True, reasoning="Continue expected", confidence_score=0.9)
+    )
+    mock_judgment_client_class.return_value = mock_client
+
+    team_config_path = Path.cwd() / "tests" / "fixtures" / "team1.toml"
+    task = OrchestratorTask(
+        execution_id=str(uuid4()),
+        user_prompt="テストプロンプト",
+        team_configs=[team_config_path],
+        timeout_seconds=300,
+        max_rounds=2,
+        min_rounds=1,
+    )
+    controller = RoundController(
+        team_config_path=team_config_path,
+        workspace=tmp_path,
+        task=task,
+        evaluator_settings=EvaluatorSettings(),
+        judgment_settings=JudgmentSettings(),  # default: judge_on_final_round=True
+        prompt_builder_settings=PromptBuilderSettings(),
+    )
+
+    await controller.run_round(
+        user_prompt="テストプロンプト",
+        timeout_seconds=60,
+    )
+
+    # デフォルトでは最終ラウンドでもLLM Judgement が呼ばれる (round 1, round 2 の2回)
+    assert mock_client.judge_improvement_prospects.await_count == 2

@@ -1,13 +1,12 @@
-"""Integration tests for Phase 12 Configuration Manager migration (T087).
+"""Integration tests for Configuration Manager migration.
 
-このテストは、T078-T086の移行が正しく動作することを検証します：
-- LeaderAgentSettings migration (T078)
-- MemberAgentSettings migration (T079)
-- EvaluatorSettings migration (T080)
-- OrchestratorSettings migration (T081)
-- UISettings migration (T083)
-- 後方互換性テスト（FR-020）
-- Article 9準拠の検証
+このテストは、各モジュールの移行が正しく動作することを検証します：
+- LeaderAgentSettings migration
+- MemberAgentSettings migration
+- EvaluatorSettings migration
+- OrchestratorSettings migration
+- UISettings migration
+- 後方互換性テスト
 """
 
 from pathlib import Path
@@ -22,10 +21,10 @@ from mixseek.exceptions import WorkspacePathNotSpecifiedError
 
 
 class TestLeaderAgentMigration:
-    """T078: LeaderAgentSettings migration tests."""
+    """LeaderAgentSettings migration tests."""
 
     def test_load_team_config_uses_configuration_manager(self, tmp_path: Path) -> None:
-        """load_team_config()がConfigurationManagerを使用していることを検証（T078）。"""
+        """load_team_config()がConfigurationManagerを使用していることを検証。"""
         from mixseek.agents.leader.config import load_team_config
 
         # Arrange: Create valid team config
@@ -59,7 +58,7 @@ tool_description = "Plain agent"
     def test_load_team_config_article_9_compliance(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """workspace未指定時に明示的エラーを発生（Article 9準拠 - T078 fix）。"""
+        """workspace未指定時に明示的エラーを発生。"""
         from mixseek.agents.leader.config import load_team_config
 
         # Arrange: Clear environment variables
@@ -75,10 +74,10 @@ tool_description = "Plain agent"
 
 
 class TestMemberAgentMigration:
-    """T079: MemberAgentSettings migration tests."""
+    """MemberAgentSettings migration tests."""
 
     def test_load_member_settings_with_relative_path(self, tmp_path: Path) -> None:
-        """相対パスでMember Agent設定を読み込める（T079）。"""
+        """相対パスでMember Agent設定を読み込める。"""
         # Arrange: Create member agent config
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -109,7 +108,7 @@ text = "You are a plain agent."
         # この部分は実際のAPIに合わせて調整が必要
 
     def test_member_toml_source_tool_description_default(self, tmp_path: Path) -> None:
-        """tool_description未指定時にデフォルト値が生成される（T079 fix）。"""
+        """tool_description未指定時にデフォルト値が生成される。"""
         from mixseek.config.schema import MemberAgentSettings
         from mixseek.config.sources.member_toml_source import MemberAgentTomlSource
 
@@ -144,7 +143,7 @@ text = "Test instruction"
     def test_member_toml_source_article_9_compliance(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """workspace未指定時に明示的エラー（Article 9準拠 - T079 fix）。"""
+        """workspace未指定時に明示的エラー。"""
         from mixseek.config.schema import MemberAgentSettings
         from mixseek.config.sources.member_toml_source import MemberAgentTomlSource
 
@@ -173,10 +172,10 @@ model = "google-gla:gemini-2.5-flash-lite"
 
 
 class TestEvaluatorMigration:
-    """T080: EvaluatorSettings migration tests."""
+    """EvaluatorSettings migration tests."""
 
     def test_load_evaluation_settings(self, tmp_path: Path) -> None:
-        """EvaluatorSettingsを読み込める（T080）。"""
+        """EvaluatorSettingsを読み込める。"""
         # Arrange: Create evaluator config
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -208,7 +207,7 @@ weight = 0.4
         assert len(evaluator_settings.metrics) == 1
 
     def test_evaluation_config_backward_compatibility(self, tmp_path: Path) -> None:
-        """EvaluationConfig.from_toml_file()の後方互換性（T080）。"""
+        """EvaluationConfig.from_toml_file()の後方互換性。"""
         from mixseek.models.evaluation_config import EvaluationConfig
 
         # Arrange: Create evaluator config
@@ -240,12 +239,12 @@ weight = 1.0
 
 
 class TestOrchestratorMigration:
-    """T081: Orchestrator migration tests."""
+    """Orchestrator migration tests."""
 
     def test_load_orchestrator_settings_article_9_compliance(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """workspace未指定時に明示的エラー（Article 9準拠 - T081 fix, FR-011）。"""
+        """workspace未指定時に明示的エラー。"""
         from mixseek.orchestrator import load_orchestrator_settings
 
         # Arrange: Clear environment variables
@@ -270,26 +269,26 @@ config = "team1.toml"
 
 
 class TestUISettingsMigration:
-    """T083: UISettings migration tests."""
+    """UISettings migration tests."""
 
     def test_ui_settings_schema_exists(self) -> None:
-        """UISettingsスキーマが存在する（T083）。"""
+        """UISettingsスキーマが存在する。"""
         # Assert: UISettings exists with expected fields (Pydantic model fields)
         assert "port" in UISettings.model_fields
         assert "workspace_path" in UISettings.model_fields
 
     def test_cli_ui_command_uses_configuration_manager(self) -> None:
-        """cli/commands/ui.pyがConfigurationManagerを使用している（T083/T086）。"""
+        """cli/commands/ui.pyがConfigurationManagerを使用している。"""
         # Note: This is verified by reading the source code
         # src/mixseek/cli/commands/ui.py:27 uses ConfigurationManager.load_settings(UISettings)
         pass
 
 
 class TestBackwardCompatibility:
-    """FR-020: 後方互換性テスト。"""
+    """後方互換性テスト。"""
 
     def test_existing_toml_files_still_work(self, tmp_path: Path) -> None:
-        """既存のTOMLファイルが引き続き使用できる（FR-020）。"""
+        """既存のTOMLファイルが引き続き使用できる。"""
         # Arrange: Create TOML files in old format
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -322,12 +321,12 @@ tool_description = "Agent 1"
 
 
 class TestArticle9Compliance:
-    """Article 9準拠検証テスト。"""
+    """暗黙的フォールバック禁止の検証テスト。"""
 
     def test_no_implicit_cwd_fallback(
         self, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """暗黙的なCWDフォールバックが存在しない（Article 9）。"""
+        """暗黙的なCWDフォールバックが存在しない。"""
         # Arrange: Clear environment variables
         monkeypatch.delenv("MIXSEEK_WORKSPACE", raising=False)
         monkeypatch.delenv("MIXSEEK_WORKSPACE_PATH", raising=False)
@@ -341,7 +340,7 @@ class TestArticle9Compliance:
     def test_explicit_error_messages(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolate_from_project_dotenv: None
     ) -> None:
-        """workspace未指定時に明示的なエラーメッセージ（Article 9, FR-011）。"""
+        """workspace未指定時に明示的なエラーメッセージ。"""
         from mixseek.orchestrator import load_orchestrator_settings
 
         # Arrange: Clear environment variables

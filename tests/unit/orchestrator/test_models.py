@@ -16,7 +16,7 @@ from mixseek.orchestrator.models import (
 )
 
 
-# T003: OrchestratorTask Tests
+# OrchestratorTask Tests
 def test_orchestrator_task_creation() -> None:
     """OrchestratorTask作成テスト"""
     task = OrchestratorTask(
@@ -48,7 +48,7 @@ def test_orchestrator_task_validation() -> None:
         )
 
 
-# T004: TeamStatus Tests
+# TeamStatus Tests
 def test_team_status_creation() -> None:
     """TeamStatus作成テスト"""
     status = TeamStatus(
@@ -70,7 +70,7 @@ def test_team_status_transitions() -> None:
     assert status.status == "completed"
 
 
-# T005: RoundResult Tests
+# RoundResult Tests
 def test_round_result_creation() -> None:
     """RoundResult作成テスト"""
     result = RoundResult(
@@ -120,7 +120,7 @@ def test_round_result_validation() -> None:
     assert result_negative.evaluation_score == -42.3
 
 
-# T006: ExecutionSummary Tests
+# ExecutionSummary Tests
 def test_execution_summary_creation() -> None:
     """ExecutionSummary作成テスト"""
     from mixseek.models.leaderboard import LeaderBoardEntry

@@ -1,6 +1,6 @@
 """Unit tests for ConfigurationManager load_*_settings methods.
 
-Article 3準拠: リファクタリング前にテストファーストで実装動作を保証。
+リファクタリング前にテストファーストで実装動作を保証。
 """
 
 from pathlib import Path
@@ -111,7 +111,7 @@ def workspace_with_configs(tmp_path: Path) -> Path:
 
 
 class TestLoadTeamSettings:
-    """load_team_settings()のテスト（T091、T078対応）。"""
+    """load_team_settings()のテスト。"""
 
     def test_load_team_settings_returns_team_settings_instance(
         self,
@@ -197,7 +197,7 @@ class TestLoadTeamSettings:
         workspace_with_configs: Path,
         team_toml_content: str,
     ) -> None:
-        """None値のCLI引数がフィルタリングされることを確認（Article 9準拠）。"""
+        """None値のCLI引数がフィルタリングされることを確認。"""
         # Arrange
         team_toml = workspace_with_configs / "configs" / "team.toml"
         team_toml.write_text(team_toml_content)
@@ -220,7 +220,7 @@ class TestLoadTeamSettings:
 
 
 class TestLoadMemberSettings:
-    """load_member_settings()のテスト（T079対応）。"""
+    """load_member_settings()のテスト。"""
 
     def test_load_member_settings_returns_member_agent_settings_instance(
         self,

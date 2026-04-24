@@ -3,8 +3,8 @@
 This test suite validates that timeout settings correctly propagate through
 the agent creation chain: TeamConfig → LeaderAgent → ModelSettings.
 
-According to Article 3 (Test-First Imperative), these tests are written BEFORE
-the implementation to ensure proper timeout handling across components.
+These tests are written BEFORE the implementation to ensure proper timeout
+handling across components.
 """
 
 import pytest

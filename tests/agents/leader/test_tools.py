@@ -1,7 +1,5 @@
 """Member Agent Tool動的生成のテスト
 
-Article 3: Test-First Imperative準拠
-
 TOML設定からMember Agent ToolをLeader Agentに動的登録するテスト。
 
 Tests:
@@ -20,7 +18,7 @@ from mixseek.agents.leader.tools import register_member_tools
 
 
 class TestRegisterMemberTools:
-    """register_member_tools関数のテスト（FR-032）"""
+    """register_member_tools関数のテスト"""
 
     def test_register_tools_from_config(self) -> None:
         """TOML設定からTool動的生成"""

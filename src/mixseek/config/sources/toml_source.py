@@ -1,7 +1,6 @@
 """Custom TOML configuration source for Pydantic Settings.
 
-.. note:: T089移行完了
-    環境変数アクセスは呼び出し側（MixSeekBaseSettings.settings_customise_sources）に移動しました。
+環境変数アクセスは呼び出し側（MixSeekBaseSettings.settings_customise_sources）に移動しました。
 """
 
 import tomllib
@@ -69,9 +68,8 @@ class CustomTomlConfigSettingsSource(PydanticBaseSettingsSource):
     config.toml ファイルから設定を読み込みます。
     Pydantic の TomlConfigSettingsSource の代わりに使用します。
 
-    .. note:: T089移行完了
-        環境変数アクセスは呼び出し側（MixSeekBaseSettings.settings_customise_sources）に移動しました。
-        ソースは渡されたconfig_file_pathパラメータのみを使用します。
+    環境変数アクセスは呼び出し側（MixSeekBaseSettings.settings_customise_sources）に移動しました。
+    ソースは渡されたconfig_file_pathパラメータのみを使用します。
     """
 
     def __init__(self, settings_cls: type, config_file_path: Path | str | None = None) -> None:
@@ -79,24 +77,24 @@ class CustomTomlConfigSettingsSource(PydanticBaseSettingsSource):
 
         Args:
             settings_cls: 設定クラス
-            config_file_path: TOMLファイルパス（Path or str）（T089: 環境変数アクセスは呼び出し側で実施）
+            config_file_path: TOMLファイルパス（Path or str）（環境変数アクセスは呼び出し側で実施）
 
         Note:
             config_file_pathが未指定の場合、後方互換性のため環境変数MIXSEEK_CONFIG_FILEを
             フォールバックとして読み込みます。通常の使用（MixSeekBaseSettingsから呼び出される）
             では、環境変数は既に読み込まれてconfig_file_pathとして渡されます。
-            文字列が渡された場合は自動的にPathオブジェクトに変換されます（T089 fix）。
+            文字列が渡された場合は自動的にPathオブジェクトに変換されます。
         """
         super().__init__(settings_cls)
 
-        # T089: 後方互換性のためのフォールバック（直接インスタンス化時のテスト等）
+        # 後方互換性のためのフォールバック（直接インスタンス化時のテスト等）
         if config_file_path is None:
             import os
 
             config_file_env = os.environ.get("MIXSEEK_CONFIG_FILE")
             self.config_file_path = Path(config_file_env) if config_file_env else None
         else:
-            # T089 fix: 文字列もPathオブジェクトに変換（型安全性）
+            # 文字列もPathオブジェクトに変換（型安全性）
             self.config_file_path = Path(config_file_path)
 
         self.toml_data: dict[str, Any] = {}
@@ -109,9 +107,8 @@ class CustomTomlConfigSettingsSource(PydanticBaseSettingsSource):
         デフォルトの config.toml ファイルを読み込みます。
         ファイルが存在しない場合は何もしません。
 
-        .. note:: T089移行完了
-            環境変数 MIXSEEK_CONFIG_FILE の読み込みは呼び出し側（MixSeekBaseSettings）で実施されます。
-            このメソッドは渡されたパスのみを使用します。
+        環境変数 MIXSEEK_CONFIG_FILE の読み込みは呼び出し側（MixSeekBaseSettings）で実施されます。
+        このメソッドは渡されたパスのみを使用します。
 
         優先順位（呼び出し側で決定）:
         1. MIXSEEK_CONFIG_FILE 環境変数で明示的に指定されたファイル
@@ -121,7 +118,7 @@ class CustomTomlConfigSettingsSource(PydanticBaseSettingsSource):
             ValueError: パス検証エラー（パストラバーサル検出）
             Exception: TOML ファイルの構文エラー
         """
-        # T089: config_file_pathパラメータを使用（環境変数アクセスは呼び出し側で実施済み）
+        # config_file_pathパラメータを使用（環境変数アクセスは呼び出し側で実施済み）
         if self.config_file_path is not None:
             config_file = self.config_file_path
         else:

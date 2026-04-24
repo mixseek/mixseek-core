@@ -29,10 +29,7 @@ class CodeExecutionMemberAgent(BaseMemberAgent):
     IMPORTANT: Only Anthropic Claude models support actual code execution.
     Other providers (Google AI, Vertex AI, OpenAI) will raise an error at initialization.
 
-    Reference:
-        - spec.md:239 - Supported Provider: Anthropic Claude only
-        - spec.md:366-369 - Clarifications (2025-10-21 approved)
-        - findings/2025-10-21-code-execution-provider-compatibility.md
+    Supported Provider: Anthropic Claude only.
     """
 
     def __init__(self, config: MemberAgentConfig):
@@ -47,7 +44,6 @@ class CodeExecutionMemberAgent(BaseMemberAgent):
         super().__init__(config)
 
         # Validate provider: Only Anthropic Claude supports code execution
-        # Reference: spec.md:239, spec.md:366-369 (Clarifications)
         if not config.model.startswith("anthropic:"):
             raise ValueError(
                 f"Code Execution Agent only supports Anthropic Claude models.\n"
@@ -59,17 +55,14 @@ class CodeExecutionMemberAgent(BaseMemberAgent):
                 f"  ❌ OpenAI - Not supported (CodeExecutionTool not available)\n\n"
                 f"Please update your configuration to use an Anthropic Claude model.\n"
                 f'Example: model = "anthropic:claude-sonnet-4-5-20250929"\n'
-                f"Required environment variable: ANTHROPIC_API_KEY\n\n"
-                f"For more details, see:\n"
-                f"  - specs/009-member/spec.md:239\n"
-                f"  - specs/009-member/findings/2025-10-21-code-execution-provider-compatibility.md"
+                f"Required environment variable: ANTHROPIC_API_KEY"
             )
 
-        # Article 9 compliant authentication - NO implicit fallbacks
+        # NO implicit fallbacks in authentication
         try:
             model = create_authenticated_model(config.model)
         except AuthenticationError as e:
-            # Article 9: Explicit error propagation, no silent fallbacks
+            # Explicit error propagation, no silent fallbacks
             raise ValueError(f"Authentication failed: {e}") from e
 
         # Create ModelSettings from config
@@ -142,7 +135,7 @@ class CodeExecutionMemberAgent(BaseMemberAgent):
             # Execute with Pydantic AI agent
             result = await self._agent.run(task, deps=deps, **kwargs)
 
-            # Capture complete message history (FR-016)
+            # Capture complete message history
             all_messages = result.all_messages()
 
             execution_time_ms = int((time.time() - start_time) * 1000)

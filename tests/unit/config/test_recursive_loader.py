@@ -1,7 +1,7 @@
 """Unit tests for RecursiveConfigLoader.
 
-Article 3準拠: リファクタリング前にテストファーストで実装動作を保証。
-Phase 2-1: RecursiveConfigLoaderの循環参照チェック処理のテスト。
+リファクタリング前にテストファーストで実装動作を保証。
+RecursiveConfigLoaderの循環参照チェック処理のテスト。
 """
 
 from pathlib import Path
@@ -200,7 +200,7 @@ class TestRecursiveConfigLoaderBasic:
 
 
 class TestCircularReferenceDetection:
-    """循環参照検出テスト（T106, FR-042）。"""
+    """循環参照検出テスト。"""
 
     def test_circular_reference_raises_value_error(
         self,
@@ -318,7 +318,7 @@ timeout_seconds = 300
 
 
 class TestMaxRecursionDepthLimit:
-    """最大再帰深度制限テスト（T107, FR-043）。"""
+    """最大再帰深度制限テスト。"""
 
     def test_max_recursion_depth_raises_value_error(
         self,

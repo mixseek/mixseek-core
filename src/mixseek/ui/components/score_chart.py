@@ -6,8 +6,6 @@ Functions:
     render_score_chart: スコア推移のPlotly折れ線グラフ表示
 
 References:
-    - Spec: specs/014-ui/spec.md (FR-009, FR-020, SC-010)
-    - Research: specs/014-ui/research.md (Section 1: Plotly Express選定, WebGL対応)
     - Plotly docs: https://plotly.com/python/line-charts/
 """
 

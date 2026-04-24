@@ -9,8 +9,7 @@ Models:
     TeamSubmission: チームサブミッション
 
 References:
-    - Database schema: specs/008-leader/contracts/database-schema.sql
-    - Research: specs/014-ui/research.md (Section 2: DuckDB スキーマ)
+    - Database schema: DuckDB (mixseek.db)
 """
 
 from datetime import datetime

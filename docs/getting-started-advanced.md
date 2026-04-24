@@ -121,7 +121,18 @@ mixseek exec \
 2. 改善の余地がある場合はラウンド2へ
 3. 改善が見られない、または最大ラウンド到達で終了
 
-**参考**: 詳細は [設定ガイド](./configuration-guide.md) を参照
+**最終ラウンドでの無意味な判定を省く**:
+
+最終ラウンド（`max_rounds` に到達したラウンド）では、判定結果によらず次のラウンドは実行されません。
+このため判定処理は結果に何も寄与しないので、`judge_on_final_round = false` を設定することで
+無意味なLLM呼び出しを回避できます（副次的にAPI費用も削減されます）。
+
+```toml
+# judgment_search_news.toml
+judge_on_final_round = false  # 最終ラウンドの無意味な判定をスキップ
+```
+
+**参考**: 詳細は [設定ガイド](./configuration-guide.md) および [設定リファレンス](./configuration-reference.md#judgment設定) を参照
 
 ## カスタマイズ
 

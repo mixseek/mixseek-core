@@ -143,7 +143,7 @@ def setup_logfire(
         raise ImportError("Logfire not installed. Install with: uv sync --extra logfire") from e
 
     try:
-        # T098: LOGFIRE_PROJECT 環境変数の設定
+        # LOGFIRE_PROJECT 環境変数の設定
         if config.project_name:
             os.environ["LOGFIRE_PROJECT"] = config.project_name
 

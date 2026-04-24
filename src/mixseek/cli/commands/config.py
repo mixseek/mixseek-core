@@ -3,13 +3,13 @@
 Provides commands for viewing and managing configuration settings:
 - `mixseek config show` - Display current configuration
 - `mixseek config list` - List all available configuration items
-- `mixseek config init` - Generate TOML templates (Phase 10)
+- `mixseek config init` - Generate TOML templates
 
-Article 9 Compliance:
+Compliance:
 - Configuration values are explicitly sourced from ConfigurationManager
 - No implicit defaults or assumptions
 - Proper error messages and guidance
-- Phase 12: Environment management via ConfigurationManager
+- Environment management via ConfigurationManager
 """
 
 from pathlib import Path

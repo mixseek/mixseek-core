@@ -226,11 +226,11 @@ class LLMJudgeMetric(BaseMetric):
             submission: AIエージェントによって生成されたSubmission
             model: LLMモデル識別子（フォーマット："provider:model-name"）
                 例："anthropic:claude-sonnet-4-5-20250929", "openai:gpt-4"
-            prompt_builder_settings: PromptBuilder設定（必須、Article 9準拠）
-            temperature: LLM temperature設定。0.0で決定的な出力、高いほどランダム性が増す（FR-019）
-            max_tokens: LLM max_tokens設定。Noneの場合は制限なし（FR-019）
-            max_retries: LLM API呼び出しの最大リトライ試行回数（FR-010, FR-019）
-            system_instruction: オプションのsystem_instruction上書き。Noneの場合はget_instruction()を使用（FR-019）
+            prompt_builder_settings: PromptBuilder設定（必須）
+            temperature: LLM temperature設定。0.0で決定的な出力、高いほどランダム性が増す
+            max_tokens: LLM max_tokens設定。Noneの場合は制限なし
+            max_retries: LLM API呼び出しの最大リトライ試行回数
+            system_instruction: オプションのsystem_instruction上書き。Noneの場合はget_instruction()を使用
             timeout_seconds: HTTPタイムアウト（秒）。Noneの場合はデフォルトタイムアウト
             stop_sequences: 生成を停止するシーケンスのリスト。Noneの場合は使用しない
             top_p: Top-pサンプリングパラメータ（0.0-1.0）。Noneの場合はモデルデフォルト
@@ -267,12 +267,12 @@ class LLMJudgeMetric(BaseMetric):
             ```
         """
 
-        # system_instructionの上書きがある場合は使用、なければget_instruction()を使用（FR-019）
+        # system_instructionの上書きがある場合は使用、なければget_instruction()を使用
         instruction = system_instruction if system_instruction is not None else self.get_instruction()
 
         user_prompt = self._get_user_prompt(user_query, submission, prompt_builder_settings)
 
-        # 構造化された出力でLLMを呼び出す（FR-010, FR-019）
+        # 構造化された出力でLLMを呼び出す
         raw_result = await evaluate_with_llm(
             instruction=instruction,
             user_prompt=user_prompt,

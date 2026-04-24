@@ -11,7 +11,7 @@ from .field_mapper import merge_member_agent_fields, normalize_member_agent_fiel
 
 
 class TeamTomlSource(PydanticBaseSettingsSource):
-    """Team設定専用のTOMLソース（T090：参照形式サポート）。
+    """Team設定専用のTOMLソース（参照形式サポート）。
 
     既存のteam.toml形式（参照形式 config="agents/xxx.toml" を含む）と
     完全互換性を維持します。
@@ -43,7 +43,7 @@ class TeamTomlSource(PydanticBaseSettingsSource):
         self._load_and_resolve()
 
     def _load_toml_file(self, toml_path: Path, context: str = "TOML file") -> dict[str, Any]:
-        """TOMLファイルを読み込む共通処理（Article 10: DRY原則準拠）。
+        """TOMLファイルを読み込む共通処理。
 
         Args:
             toml_path: TOMLファイルのパス（相対パスの場合はworkspace起点で解決）
@@ -86,7 +86,7 @@ class TeamTomlSource(PydanticBaseSettingsSource):
 
             self.workspace = get_workspace_for_config()
 
-        # 共通処理を使用してTOMLファイルを読み込み（Article 10: DRY原則準拠）
+        # 共通処理を使用してTOMLファイルを読み込み
         data = self._load_toml_file(self.toml_file, context="Team config file")
 
         if "team" not in data:
@@ -130,7 +130,7 @@ class TeamTomlSource(PydanticBaseSettingsSource):
         """
         ref_path = Path(member_data["config"])
 
-        # 共通処理を使用して外部TOMLを読み込み（Article 10: DRY原則準拠）
+        # 共通処理を使用して外部TOMLを読み込み
         context = f"member reference '{member_data['config']}'"
         member_toml = self._load_toml_file(ref_path, context=context)
 

@@ -3,8 +3,7 @@
 This test suite validates the Web Fetch Member Agent implementation,
 including provider validation, tool configuration, error handling, and execution.
 
-According to Article 3 (Test-First Imperative), these tests validate
-the Web Fetch Agent implementation for Issue #230.
+These tests validate the Web Fetch Agent implementation for Issue #230.
 """
 
 from unittest.mock import AsyncMock, MagicMock
@@ -166,7 +165,7 @@ class TestWebFetchMemberAgent:
         agent._agent = MagicMock()
         agent._agent.run = AsyncMock(
             return_value=MagicMock(
-                output="The page content is: Welcome to Example.com",
+                output="The page content is: Welcome to the example domain page",
                 usage=MagicMock(total_tokens=250),
             )
         )
@@ -178,7 +177,7 @@ class TestWebFetchMemberAgent:
         assert result.agent_name == "test-fetch-agent"
         assert result.agent_type == "web_fetch"
         assert result.content is not None
-        assert "Example.com" in result.content
+        assert "example domain page" in result.content
         assert result.is_success() is True
         assert result.is_error() is False
 

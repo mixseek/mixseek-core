@@ -1,4 +1,4 @@
-"""Unit tests for MemberAgentResult.all_messages field (FR-016)
+"""Unit tests for MemberAgentResult.all_messages field
 
 Tests verify that MemberAgentResult can store complete message history
 from Pydantic AI and properly serialize/deserialize it.

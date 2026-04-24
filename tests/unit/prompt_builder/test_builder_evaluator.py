@@ -1,9 +1,4 @@
-"""Unit tests for UserPromptBuilder.build_evaluator_prompt method.
-
-Feature: 140-user-prompt-builder-evaluator-judgement
-Task: T015
-Date: 2025-11-25
-"""
+"""Unit tests for UserPromptBuilder.build_evaluator_prompt method."""
 
 from pathlib import Path
 from unittest.mock import patch

@@ -1,10 +1,10 @@
 """Integration tests for User Story 1: Built-in Metrics Evaluation.
 
 Tests cover:
-- T057: Basic evaluation with default config and all 3 metrics
-- T058: Sequential metric evaluation (no parallel execution)
-- T059: LLM API retry logic with mocked failures
-- T060: Empty/whitespace input validation
+- Basic evaluation with default config and all 3 metrics
+- Sequential metric evaluation (no parallel execution)
+- LLM API retry logic with mocked failures
+- Empty/whitespace input validation
 """
 
 from pathlib import Path
@@ -23,7 +23,7 @@ from mixseek.models.evaluation_result import MetricScore
 
 
 class TestBasicEvaluation:
-    """T057: Test basic evaluation with default config and all 3 metrics."""
+    """Test basic evaluation with default config and all 3 metrics."""
 
     def test_evaluator_loads_default_config(self, temp_workspace: Path) -> None:
         """Test that Evaluator correctly loads configuration from TOML file."""
@@ -142,7 +142,7 @@ class TestBasicEvaluation:
 
 
 class TestSequentialEvaluation:
-    """T058: Test that metrics are evaluated sequentially, not in parallel."""
+    """Test that metrics are evaluated sequentially, not in parallel."""
 
     @pytest.mark.asyncio
     async def test_metrics_evaluated_in_order(
@@ -215,7 +215,7 @@ class TestSequentialEvaluation:
 
 
 class TestRetryLogic:
-    """T059: Test LLM API retry logic with simulated failures."""
+    """Test LLM API retry logic with simulated failures."""
 
     @pytest.mark.asyncio
     async def test_retry_on_transient_api_failure(
@@ -296,7 +296,7 @@ class TestRetryLogic:
 
 
 class TestInputValidation:
-    """T060: Test validation of empty/whitespace inputs."""
+    """Test validation of empty/whitespace inputs."""
 
     def test_empty_query_raises_validation_error(self, temp_workspace: Path) -> None:
         """Test that empty user_query raises ValidationError."""

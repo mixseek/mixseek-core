@@ -234,5 +234,3 @@ except Exception as e:
 
 - [Member Agentガイド](../../../docs/member-agents.md)
 - [カスタムエージェント開発ガイド](../../../docs/member-agents.md#カスタムエージェント開発ガイド)
-- [クイックスタートガイド](../../../specs/009-member/quickstart.md)
-- [仕様書](../../../specs/114-custom-member/spec.md)

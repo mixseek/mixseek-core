@@ -15,7 +15,7 @@ from .field_mapper import normalize_member_agent_fields
 
 
 class MemberAgentTomlSource(PydanticBaseSettingsSource):
-    """Member Agent設定専用のTOMLソース（T079実装）。
+    """Member Agent設定専用のTOMLソース。
 
     個別のMember Agent TOMLファイル（Feature 027形式）を読み込み、
     MemberAgentSettingsスキーマに変換します。
@@ -62,7 +62,7 @@ class MemberAgentTomlSource(PydanticBaseSettingsSource):
             FileNotFoundError: TOMLファイルが見つからない場合
             ValueError: TOML構文エラーまたはバリデーションエラー
         """
-        # workspace未指定時は明示的エラー（Article 9準拠 - T079 fix）
+        # workspace未指定時は明示的エラー
         if self.workspace is None:
             from mixseek.utils.env import get_workspace_path
 

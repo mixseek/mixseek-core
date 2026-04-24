@@ -38,8 +38,8 @@ class EvaluationRequest(BaseModel):
         ```
 
     Validation Rules:
-        - user_query: 空または空白のみにはできない（FR-013）
-        - submission: 空または空白のみにはできない（FR-013）
+        - user_query: 空または空白のみにはできない
+        - submission: 空または空白のみにはできない
         - execution_id: Noneまたは空でない文字列でなければならない
         - team_id: Noneまたは空でない文字列でなければならない
         - round_number: Noneまたは1以上の整数でなければならない
@@ -88,7 +88,7 @@ class EvaluationRequest(BaseModel):
         """ユーザークエリが空または空白のみでないことを検証します。
 
         Raises:
-            ValueError: クエリが空または空白のみの場合（FR-013）
+            ValueError: クエリが空または空白のみの場合
         """
         if not v or not v.strip():
             raise ValueError(
@@ -102,7 +102,7 @@ class EvaluationRequest(BaseModel):
         """Submissionが空または空白のみでないことを検証します。
 
         Raises:
-            ValueError: Submissionが空または空白のみの場合（FR-013）
+            ValueError: Submissionが空または空白のみの場合
         """
         if not v or not v.strip():
             raise ValueError("AI response cannot be empty or whitespace-only. Cannot evaluate empty responses.")

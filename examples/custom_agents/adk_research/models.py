@@ -1,7 +1,7 @@
 """Pydantic models for Google ADK Research Agent.
 
 This module provides data models for the ADK Research Agent implementation,
-following Article 9 (Data Accuracy Mandate) and Article 16 (Type Safety) compliance.
+following Data Accuracy Mandate and Type Safety compliance.
 """
 
 from datetime import UTC, datetime
@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ADKAgentConfig(BaseModel):
-    """Google ADK agent configuration (Article 9 compliant).
+    """Google ADK agent configuration.
 
     All settings are explicitly defined with no implicit fallbacks.
     Values should be provided via TOML configuration file.
@@ -132,7 +132,7 @@ class ADKAgentConfig(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """Single search result from google_search tool (FR-004).
+    """Single search result from google_search tool.
 
     Used for source tracking in MemberAgentResult.metadata.
 
@@ -176,7 +176,7 @@ class SearchResult(BaseModel):
 
 
 class ResearchReport(BaseModel):
-    """Deep Research pipeline output (FR-003).
+    """Deep Research pipeline output.
 
     Structured output from the multi-agent research pipeline.
 
@@ -270,7 +270,7 @@ class ResearchReportSchema(BaseModel):
     )
 
 
-# Error codes for ADK agent operations (FR-006)
+# Error codes for ADK agent operations
 ADKErrorCode = Literal[
     "AUTH_ERROR",
     "RATE_LIMIT",

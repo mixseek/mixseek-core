@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a15 (2026-04-24)
+
+### Feat
+
+- **judgment**: add judge_on_final_round configuration for API cost management
+- **judgment**: add judge_on_final_round option to control LLM calls in final round
+
+### Fix
+
+- **test**: CodeQL誤検知を回避するためテスト文字列を変更
+
 ## v0.1.0a14 (2026-04-15)
 
 ### Fix

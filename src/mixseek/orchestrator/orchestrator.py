@@ -9,8 +9,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from mixseek.agents.leader.config import load_team_config
 from mixseek.config import ConfigurationManager, OrchestratorSettings
+from mixseek.config.schema import LeaderAgentSettings, TeamSettings, WorkflowSettings
 
 # Logfireインポート（オプショナル）
 try:
@@ -33,6 +33,24 @@ if TYPE_CHECKING:
     from mixseek.round_controller import OnRoundCompleteCallback, RoundController
 
 logger = logging.getLogger(__name__)
+
+
+def _primary_model_of(unit_settings: TeamSettings | WorkflowSettings) -> str | None:
+    """auth 確認用の代表モデル ID を返す。
+
+    - Team: ``leader.model``（TOML 未指定時は ``LeaderAgentSettings`` のデフォルト）
+    - Workflow: ``WorkflowSettings.default_model``
+    """
+    if isinstance(unit_settings, TeamSettings):
+        # ``TeamSettings.leader`` は ``dict[str, Any]``（schema 定義参照）
+        model = unit_settings.leader.get("model")
+        if model:
+            return str(model)
+        default = LeaderAgentSettings.model_fields["model"].default
+        return str(default) if default else None
+    if isinstance(unit_settings, WorkflowSettings):
+        return unit_settings.default_model
+    return None
 
 
 def load_orchestrator_settings(config_path: Path, workspace: Path | None = None) -> OrchestratorSettings:
@@ -180,16 +198,23 @@ class Orchestrator:
         logger.info(f"Starting orchestration with {len(task.team_configs)} teams (timeout: {timeout}s)")
         logger.debug(f"Workspace: {self.workspace}")
 
+        # ConfigurationManager は team / workflow ともに `load_unit_settings` で読み込む。
+        # 同じ TOML を 3 回ロードする無駄を避けるため、ここで一度だけ全件ロードする。
+        config_manager = ConfigurationManager(workspace=self.workspace)
+        all_unit_settings: list[TeamSettings | WorkflowSettings] = []
+        for team_config_path in task.team_configs:
+            all_unit_settings.append(config_manager.load_unit_settings(team_config_path))
+
         # デバッグ: API 認証情報の確認（credentials_status のみ）
         from mixseek.core.auth import get_auth_info
 
         try:
-            for team_config_path in task.team_configs:
-                temp_config = load_team_config(team_config_path, self.workspace)
-                if temp_config.leader and temp_config.leader.model:
-                    auth_info = get_auth_info(temp_config.leader.model)
+            for unit_settings in all_unit_settings:
+                primary_model = _primary_model_of(unit_settings)
+                if primary_model:
+                    auth_info = get_auth_info(primary_model)
                     logger.debug(
-                        f"Team {temp_config.team_id}: Model={temp_config.leader.model}, "
+                        f"Team {unit_settings.team_id}: Model={primary_model}, "
                         f"Auth={auth_info.get('provider', 'unknown')}, "
                         f"Credentials={auth_info.get('credentials_status', 'unknown')}"
                     )
@@ -198,27 +223,23 @@ class Orchestrator:
 
         # team_id重複チェック（data integrity保証）
         team_ids: list[str] = []
-        for team_config_path in task.team_configs:
-            temp_config = load_team_config(team_config_path, self.workspace)
-            if temp_config.team_id in team_ids:
+        for unit_settings in all_unit_settings:
+            if unit_settings.team_id in team_ids:
                 raise ValueError(
-                    f"Duplicate team_id detected: '{temp_config.team_id}'. "
+                    f"Duplicate team_id detected: '{unit_settings.team_id}'. "
                     f"Each team configuration must have a unique team_id."
                 )
-            team_ids.append(temp_config.team_id)
+            team_ids.append(unit_settings.team_id)
 
         # TeamStatus初期化
-        for team_config_path in task.team_configs:
-            # 一時的にチームIDを取得（設定読み込み）
-            temp_config = load_team_config(team_config_path, self.workspace)
-            self.team_statuses[temp_config.team_id] = TeamStatus(
-                team_id=temp_config.team_id,
-                team_name=temp_config.team_name,
+        for unit_settings in all_unit_settings:
+            self.team_statuses[unit_settings.team_id] = TeamStatus(
+                team_id=unit_settings.team_id,
+                team_name=unit_settings.team_name,
             )
-            logger.debug(f"Registered team: {temp_config.team_id} ({temp_config.team_name})")
+            logger.debug(f"Registered team: {unit_settings.team_id} ({unit_settings.team_name})")
 
         # Evaluator設定を取得
-        config_manager = ConfigurationManager(workspace=self.workspace)
         evaluator_settings = config_manager.get_evaluator_settings(self.settings.evaluator_config)
 
         # Judgment設定を取得

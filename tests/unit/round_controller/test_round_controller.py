@@ -83,7 +83,7 @@ def test_round_controller_get_team_info(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -183,7 +183,7 @@ async def test_run_round_returns_leaderboard_entry(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_single_round_duckdb_save(
@@ -287,7 +287,7 @@ async def test_single_round_duckdb_save(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_multi_round_execution(
@@ -419,7 +419,7 @@ async def test_multi_round_execution(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_round_continuation_judgment(
@@ -505,7 +505,7 @@ async def test_round_continuation_judgment(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -616,7 +616,7 @@ async def test_next_round_prompt_formatting(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_best_score_submission_identification(

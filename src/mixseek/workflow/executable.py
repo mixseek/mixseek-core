@@ -135,7 +135,7 @@ class AgentExecutable:
             )
             # ResultStatus は小文字 ("success"/"error"/"warning") なので .upper() で
             # ExecutableResult.status の大文字 Literal に変換する。DuckDB 側の
-            # MemberSubmissionsRecord が "SUCCESS" 文字列比較を使うため（leader/models.py L43）。
+            # MemberSubmissionsRecord が "SUCCESS" 文字列比較を使うため（leader/models.py）。
             return ExecutableResult(
                 content=result.content,
                 execution_time_ms=elapsed,

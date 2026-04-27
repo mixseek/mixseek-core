@@ -4,7 +4,8 @@
 本モジュールの strategy 経由で行う。これにより以下を満たす:
 
 - ラウンド管理 (Evaluator / DuckDB / 進捗ファイル / 終了判定) を team/workflow で共通化
-- team mode 既存挙動の完全保持（`LeaderStrategy` は L286-310 をそのまま carve-out）
+- team mode 既存挙動の完全保持（`LeaderStrategy` は `RoundController._execute_single_round` の
+  team mode 部分をそのまま carve-out）
 - workflow mode は `WorkflowStrategy` 経由で `WorkflowEngine` に委譲
 
 Note:
@@ -50,7 +51,7 @@ class ExecutionStrategy(Protocol):
 class LeaderStrategy:
     """team mode の Leader/Member 実行を担う ExecutionStrategy 実装。
 
-    既存 `RoundController._execute_single_round` の L286-310 を carve-out したもの。
+    既存 `RoundController._execute_single_round` の team mode 部分を carve-out したもの。
     `MemberAgentFactory.create_agent` で member 辞書を構築し、`create_leader_agent`
     で Leader Agent を生成、`leader_agent.run(user_prompt, deps=deps)` を実行する。
     """

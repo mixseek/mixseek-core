@@ -198,15 +198,18 @@ class Orchestrator:
         logger.info(f"Starting orchestration with {len(task.team_configs)} teams (timeout: {timeout}s)")
         logger.debug(f"Workspace: {self.workspace}")
 
-        # ConfigurationManager は team / workflow ともに `load_unit_settings` で読み込む
+        # ConfigurationManager は team / workflow ともに `load_unit_settings` で読み込む。
+        # 同じ TOML を 3 回ロードする無駄を避けるため、ここで一度だけ全件ロードする。
         config_manager = ConfigurationManager(workspace=self.workspace)
+        all_unit_settings: list[TeamSettings | WorkflowSettings] = []
+        for team_config_path in task.team_configs:
+            all_unit_settings.append(config_manager.load_unit_settings(team_config_path))
 
         # デバッグ: API 認証情報の確認（credentials_status のみ）
         from mixseek.core.auth import get_auth_info
 
         try:
-            for team_config_path in task.team_configs:
-                unit_settings = config_manager.load_unit_settings(team_config_path)
+            for unit_settings in all_unit_settings:
                 primary_model = _primary_model_of(unit_settings)
                 if primary_model:
                     auth_info = get_auth_info(primary_model)
@@ -220,8 +223,7 @@ class Orchestrator:
 
         # team_id重複チェック（data integrity保証）
         team_ids: list[str] = []
-        for team_config_path in task.team_configs:
-            unit_settings = config_manager.load_unit_settings(team_config_path)
+        for unit_settings in all_unit_settings:
             if unit_settings.team_id in team_ids:
                 raise ValueError(
                     f"Duplicate team_id detected: '{unit_settings.team_id}'. "
@@ -230,8 +232,7 @@ class Orchestrator:
             team_ids.append(unit_settings.team_id)
 
         # TeamStatus初期化
-        for team_config_path in task.team_configs:
-            unit_settings = config_manager.load_unit_settings(team_config_path)
+        for unit_settings in all_unit_settings:
             self.team_statuses[unit_settings.team_id] = TeamStatus(
                 team_id=unit_settings.team_id,
                 team_name=unit_settings.team_name,

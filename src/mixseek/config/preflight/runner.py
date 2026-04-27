@@ -20,8 +20,10 @@ from mixseek.config.preflight.validators import (
     _validate_orchestrator,
     _validate_prompt_builder,
     _validate_teams,
+    _validate_workflows,
     _validate_workspace_writable,
 )
+from mixseek.config.preflight.validators.unit_kind import _detect_unit_kinds
 
 
 def run_preflight_check(config_path: Path, workspace: Path | None = None) -> PreflightResult:
@@ -47,9 +49,15 @@ def run_preflight_check(config_path: Path, workspace: Path | None = None) -> Pre
     # 解決済みworkspaceを使用
     resolved_workspace = orch_settings.workspace_path
 
-    # 2. チーム（個別に検証、1チームの失敗が他をブロックしない）
-    team_result, team_settings_list = _validate_teams(orch_settings, resolved_workspace)
+    # 2. チーム / ワークフロー
+    # 全 teams entry の kind を一度だけ判定し、両 validator で共有する。
+    # (各 validator が個別に再判定するとファイル変動時に判定ずれが起きる余地があるため)
+    unit_kinds = _detect_unit_kinds(orch_settings, resolved_workspace)
+    team_result, team_settings_list = _validate_teams(orch_settings, resolved_workspace, unit_kinds=unit_kinds)
     categories.append(team_result)
+
+    wf_result, workflow_settings_list = _validate_workflows(orch_settings, resolved_workspace, unit_kinds=unit_kinds)
+    categories.append(wf_result)
 
     # 3. Evaluator
     eval_result, evaluator_settings = _validate_evaluator(orch_settings, resolved_workspace)
@@ -63,8 +71,13 @@ def run_preflight_check(config_path: Path, workspace: Path | None = None) -> Pre
     pb_result = _validate_prompt_builder(orch_settings, resolved_workspace)
     categories.append(pb_result)
 
-    # 6. 認証（収集できたモデルIDに基づいて検証）
-    auth_result = _validate_auth(team_settings_list, evaluator_settings, judgment_settings)
+    # 6. 認証（収集できたモデルIDに基づいて検証、workflow 由来モデルも含む）
+    auth_result = _validate_auth(
+        team_settings_list,
+        evaluator_settings,
+        judgment_settings,
+        workflow_settings_list=workflow_settings_list,
+    )
     categories.append(auth_result)
 
     # 7. カスタムメトリクス（evaluator設定が取得できた場合のみ）

@@ -4,11 +4,13 @@ from collections.abc import Callable
 
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
 from mixseek.config.schema import (
+    AgentExecutorSettings,
     EvaluatorSettings,
     JudgmentSettings,
     LeaderAgentSettings,
     MemberAgentSettings,
     TeamSettings,
+    WorkflowSettings,
 )
 from mixseek.core.auth import (
     AuthenticationError,
@@ -39,6 +41,8 @@ def _collect_model_ids(
     team_settings_list: list[TeamSettings],
     evaluator_settings: EvaluatorSettings | None,
     judgment_settings: JudgmentSettings | None,
+    *,
+    workflow_settings_list: list[WorkflowSettings] | None = None,
 ) -> set[str]:
     """全設定からモデルIDを収集する。
 
@@ -80,6 +84,16 @@ def _collect_model_ids(
         if judgment_settings.model:
             model_ids.add(judgment_settings.model)
 
+    # Workflow 設定からモデルIDを収集（default_model + 各 agent executor の model）
+    for workflow in workflow_settings_list or []:
+        if workflow.default_model:
+            model_ids.add(workflow.default_model)
+        for step in workflow.steps:
+            for executor in step.executors:
+                if isinstance(executor, AgentExecutorSettings) and executor.model:
+                    model_ids.add(executor.model)
+                # FunctionExecutorSettings は model を持たないため対象外
+
     # テスト専用モデルをフィルタ除外
     model_ids -= _TEST_MODEL_IDS
 
@@ -90,6 +104,8 @@ def _validate_auth(
     team_settings_list: list[TeamSettings],
     evaluator_settings: EvaluatorSettings | None,
     judgment_settings: JudgmentSettings | None,
+    *,
+    workflow_settings_list: list[WorkflowSettings] | None = None,
 ) -> CategoryResult:
     """認証情報を検証する。
 
@@ -97,7 +113,12 @@ def _validate_auth(
     """
     checks: list[CheckResult] = []
 
-    model_ids = _collect_model_ids(team_settings_list, evaluator_settings, judgment_settings)
+    model_ids = _collect_model_ids(
+        team_settings_list,
+        evaluator_settings,
+        judgment_settings,
+        workflow_settings_list=workflow_settings_list,
+    )
 
     if not model_ids:
         checks.append(

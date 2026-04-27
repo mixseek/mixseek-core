@@ -13,9 +13,12 @@ from mixseek.config.preflight.validators.judgment import _validate_judgment
 from mixseek.config.preflight.validators.orchestrator import _validate_orchestrator
 from mixseek.config.preflight.validators.prompt_builder import _validate_prompt_builder
 from mixseek.config.preflight.validators.team import _validate_teams
+from mixseek.config.preflight.validators.unit_kind import _detect_unit_kind
+from mixseek.config.preflight.validators.workflow import _validate_workflows
 from mixseek.config.preflight.validators.workspace import _validate_workspace_writable
 
 __all__ = [
+    "_detect_unit_kind",
     "_validate_auth",
     "_validate_custom_metrics",
     "_validate_evaluator",
@@ -24,5 +27,6 @@ __all__ = [
     "_validate_orchestrator",
     "_validate_prompt_builder",
     "_validate_teams",
+    "_validate_workflows",
     "_validate_workspace_writable",
 ]

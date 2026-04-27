@@ -415,6 +415,21 @@ class TestValidateAuth:
         # テストモデルはスキップされるのでエラーにならない
         assert not cat.has_errors
 
+    def test_workflow_kwarg_positional_compat(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """workflow_settings_list kwarg 追加後も既存 positional 呼び出しが壊れない (PR4 互換確認)"""
+        monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
+
+        from mixseek.config.preflight import _validate_auth
+        from mixseek.config.schema import TeamSettings
+
+        team = MagicMock(spec=TeamSettings)
+        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
+        team.members = []
+
+        # 引数を3つだけ渡す既存呼び出し（kwarg 省略時のデフォルト None で動く）
+        cat = _validate_auth([team], None, None)
+        assert not cat.has_errors
+
 
 # ---------------------------------------------------------------------------
 # _validate_custom_metrics テスト

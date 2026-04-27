@@ -48,7 +48,6 @@ def _validate_teams(
     for i, (team_entry, kind) in enumerate(zip(teams, unit_kinds, strict=True)):
         team_config_path = team_entry.get("config", "")
         if kind == "workflow":
-            # workflow entry は _validate_workflows 側で処理する
             continue
 
         try:
@@ -59,9 +58,11 @@ def _validate_teams(
             # を raise するため except で ERROR 化される。
             result = config_manager.load_unit_settings(Path(team_config_path))
             if not isinstance(result, TeamSettings):
-                # kind="team" 判定を抜けたが load_unit_settings が WorkflowSettings を返した
-                # 異常系（_detect_unit_kind と load_unit_settings の解釈不一致を想定外検出）。
-                raise TypeError(f"Expected TeamSettings, got {type(result).__name__}")
+                # _detect_unit_kind と load_unit_settings の解釈ずれを検出（想定外）。
+                raise TypeError(
+                    f"内部不整合: kind=team と判定された entry が "
+                    f"{type(result).__name__} を返しました（TeamSettings を期待）"
+                )
             team_settings_list.append(result)
             checks.append(
                 CheckResult(

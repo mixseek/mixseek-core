@@ -31,7 +31,6 @@ def _validate_workflows(
     for i, (entry, kind) in enumerate(zip(settings.teams, unit_kinds, strict=True)):
         wf_config_path = entry.get("config", "")
         if kind != "workflow":
-            # team entry / unknown entry は team validator 側で処理する
             continue
         try:
             wf_settings = config_manager.load_workflow_settings(Path(wf_config_path))

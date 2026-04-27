@@ -9,14 +9,17 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from mixseek.agents.leader.agent import create_leader_agent
-from mixseek.agents.leader.config import team_settings_to_team_config
+from mixseek.agents.leader.config import TeamConfig, team_settings_to_team_config
 from mixseek.agents.leader.dependencies import TeamDependencies
 from mixseek.agents.leader.models import MemberSubmissionsRecord
-from mixseek.agents.member.factory import MemberAgentFactory
 from mixseek.config import ConfigurationManager
-from mixseek.config.member_agent_loader import member_settings_to_config
-from mixseek.config.schema import EvaluatorSettings, JudgmentSettings, PromptBuilderSettings
+from mixseek.config.schema import (
+    EvaluatorSettings,
+    JudgmentSettings,
+    PromptBuilderSettings,
+    TeamSettings,
+    WorkflowSettings,
+)
 from mixseek.evaluator import Evaluator
 from mixseek.models.evaluation_config import EvaluationConfig  # noqa: F401
 from mixseek.models.evaluation_request import EvaluationRequest
@@ -26,6 +29,11 @@ from mixseek.prompt_builder import UserPromptBuilder
 from mixseek.prompt_builder.models import RoundPromptContext
 from mixseek.round_controller.judgment_client import JudgmentClient
 from mixseek.round_controller.models import OnRoundCompleteCallback, RoundState
+from mixseek.round_controller.strategy import (
+    ExecutionStrategy,
+    LeaderStrategy,
+    WorkflowStrategy,
+)
 from mixseek.storage.aggregation_store import AggregationStore
 
 logger = logging.getLogger(__name__)
@@ -80,15 +88,26 @@ class RoundController:
             FileNotFoundError: If team_config_path does not exist
             ValidationError: If team configuration is invalid
         """
-        # Use ConfigurationManager to load TeamSettings
+        # ConfigurationManager 経由で TeamSettings / WorkflowSettings を判別
         config_manager = ConfigurationManager(workspace=workspace)
-        team_settings = config_manager.load_team_settings(team_config_path)
+        unit_settings = config_manager.load_unit_settings(team_config_path)
 
-        # Convert to TeamConfig for backward compatibility
-        self.team_config = team_settings_to_team_config(team_settings)
-        self.team_settings = team_settings  # Keep for member agent creation
+        self._unit_settings = unit_settings
+        self.team_id: str = unit_settings.team_id
+        self.team_name: str = unit_settings.team_name
         self.workspace = workspace
         self.task = task
+
+        # Strategy 選択（team / workflow を統一）。team_config は legacy 互換のため属性として保持
+        if isinstance(unit_settings, TeamSettings):
+            self.team_config: TeamConfig | None = team_settings_to_team_config(unit_settings)
+            self._strategy: ExecutionStrategy = LeaderStrategy(unit_settings, workspace)
+        elif isinstance(unit_settings, WorkflowSettings):
+            # workflow には Leader/TeamConfig の概念がない
+            self.team_config = None
+            self._strategy = WorkflowStrategy(unit_settings, workspace)
+        else:
+            raise TypeError(f"Unsupported unit settings type: {type(unit_settings).__name__}")
         self.evaluator_settings = evaluator_settings
         self.judgment_settings = judgment_settings
         self.prompt_builder_settings = prompt_builder_settings
@@ -108,11 +127,11 @@ class RoundController:
 
     def get_team_id(self) -> str:
         """Get team identifier"""
-        return self.team_config.team_id
+        return self.team_id
 
     def get_team_name(self) -> str:
         """Get team name"""
-        return self.team_config.team_name
+        return self.team_name
 
     def _write_progress_file(
         self,
@@ -139,7 +158,7 @@ class RoundController:
             logs_dir.mkdir(exist_ok=True)
 
             # 進捗ファイルパス（チームごとに分離）
-            progress_file = logs_dir / f"{self.task.execution_id}.{self.team_config.team_id}.progress.json"
+            progress_file = logs_dir / f"{self.task.execution_id}.{self.team_id}.progress.json"
 
             # 進捗データ
             progress_data = {
@@ -147,8 +166,8 @@ class RoundController:
                 "status": status,
                 "current_round": current_round,
                 "total_rounds": self.task.max_rounds,
-                "team_id": self.team_config.team_id,
-                "team_name": self.team_config.team_name,
+                "team_id": self.team_id,
+                "team_name": self.team_name,
                 "current_agent": current_agent,
                 "updated_at": datetime.now(UTC).isoformat(),
             }
@@ -189,8 +208,8 @@ class RoundController:
         if LOGFIRE_AVAILABLE:
             with logfire.span(
                 "round_controller.run_round",
-                team_id=self.team_config.team_id,
-                team_name=self.team_config.team_name,
+                team_id=self.team_id,
+                team_name=self.team_name,
                 execution_id=self.task.execution_id,
                 max_rounds=self.task.max_rounds,
                 min_rounds=self.task.min_rounds,
@@ -255,8 +274,8 @@ class RoundController:
             user_prompt=user_prompt,
             round_number=round_number,
             round_history=self.round_history,
-            team_id=self.team_config.team_id,
-            team_name=self.team_config.team_name,
+            team_id=self.team_id,
+            team_name=self.team_name,
             execution_id=self.task.execution_id,
             store=self.store,
         )
@@ -283,40 +302,30 @@ class RoundController:
         """
         round_started_at = datetime.now(UTC)
 
-        # 1. Create Member Agents
-        # Use member_settings_to_config() for consistent MemberAgentConfig generation
-        member_agents: dict[str, object] = {}
-        for member_settings in self.team_settings.members:
-            # member_settings_to_config()を使用（詳細設定を保持）
-            member_config = member_settings_to_config(member_settings, agent_data=None, workspace=self.workspace)
+        # 1. Strategy 実行（team mode は Leader/Member、workflow mode は WorkflowEngine）
+        # team mode のときのみ進捗ファイルに current_agent="leader" を表示する
+        current_agent = "leader" if isinstance(self._strategy, LeaderStrategy) else None
+        self._write_progress_file(round_number, status="running", current_agent=current_agent)
 
-            member_agent = MemberAgentFactory.create_agent(member_config)
-            member_agents[member_settings.agent_name] = member_agent
-
-        # 2. Execute Leader Agent
-        # 進捗ファイル更新: Leader実行開始
-        self._write_progress_file(round_number, status="running", current_agent="leader")
-
-        leader_agent = create_leader_agent(self.team_config, member_agents)
         deps = TeamDependencies(
             execution_id=self.task.execution_id,
-            team_id=self.team_config.team_id,
-            team_name=self.team_config.team_name,
+            team_id=self.team_id,
+            team_name=self.team_name,
             round_number=round_number,
         )
 
-        result = await leader_agent.run(user_prompt, deps=deps)
-        submission_content: str = result.output
-        message_history = result.all_messages()
+        strategy_result = await self._strategy.execute(user_prompt, deps)
+        submission_content: str = strategy_result.submission_content
+        message_history = strategy_result.all_messages
 
-        # 進捗ファイル更新: Leader実行完了
+        # 進捗ファイル更新: Strategy 実行完了
         self._write_progress_file(round_number, status="running", current_agent=None)
 
         # 3. Save round history (existing table)
         member_record = MemberSubmissionsRecord(
             execution_id=self.task.execution_id,
-            team_id=self.team_config.team_id,
-            team_name=self.team_config.team_name,
+            team_id=self.team_id,
+            team_name=self.team_name,
             round_number=round_number,
             submissions=deps.submissions,
         )
@@ -337,7 +346,7 @@ class RoundController:
             user_query=original_user_prompt,
             submission=submission_content,
             execution_id=self.task.execution_id,
-            team_id=self.team_config.team_id,
+            team_id=self.team_id,
             round_number=round_number,
         )
 
@@ -366,8 +375,8 @@ class RoundController:
         if self.store is not None:
             await self.store.save_to_leader_board(
                 execution_id=self.task.execution_id,
-                team_id=self.team_config.team_id,
-                team_name=self.team_config.team_name,
+                team_id=self.team_id,
+                team_name=self.team_name,
                 round_number=round_number,
                 submission_content=submission_content,
                 submission_format="md",
@@ -381,8 +390,8 @@ class RoundController:
         if self.store is not None:
             await self.store.save_round_status(
                 execution_id=self.task.execution_id,
-                team_id=self.team_config.team_id,
-                team_name=self.team_config.team_name,
+                team_id=self.team_id,
+                team_name=self.team_name,
                 round_number=round_number,
                 should_continue=None,  # Will be updated after judgment
                 reasoning=None,
@@ -428,8 +437,8 @@ class RoundController:
             if self.store is not None:
                 await self.store.save_round_status(
                     execution_id=self.task.execution_id,
-                    team_id=self.team_config.team_id,
-                    team_name=self.team_config.team_name,
+                    team_id=self.team_id,
+                    team_name=self.team_name,
                     round_number=current_round,
                     should_continue=True,
                     reasoning=f"Below minimum rounds ({current_round} < {self.task.min_rounds})",
@@ -445,8 +454,8 @@ class RoundController:
             user_prompt=user_query,
             round_number=current_round,
             round_history=self.round_history,
-            team_id=self.team_config.team_id,
-            team_name=self.team_config.team_name,
+            team_id=self.team_id,
+            team_name=self.team_name,
             execution_id=self.task.execution_id,
             store=self.store,
         )
@@ -465,8 +474,8 @@ class RoundController:
         if self.store is not None:
             await self.store.save_round_status(
                 execution_id=self.task.execution_id,
-                team_id=self.team_config.team_id,
-                team_name=self.team_config.team_name,
+                team_id=self.team_id,
+                team_name=self.team_name,
                 round_number=current_round,
                 should_continue=judgment.should_continue,
                 reasoning=judgment.reasoning,
@@ -504,8 +513,8 @@ class RoundController:
         if self.store is not None:
             await self.store.save_to_leader_board(
                 execution_id=self.task.execution_id,
-                team_id=self.team_config.team_id,
-                team_name=self.team_config.team_name,
+                team_id=self.team_id,
+                team_name=self.team_name,
                 round_number=best_state.round_number,
                 submission_content=best_state.submission_content,
                 submission_format="md",
@@ -518,8 +527,8 @@ class RoundController:
         # Create and return LeaderBoardEntry
         leader_board_entry = LeaderBoardEntry(
             execution_id=self.task.execution_id,
-            team_id=self.team_config.team_id,
-            team_name=self.team_config.team_name,
+            team_id=self.team_id,
+            team_name=self.team_name,
             round_number=best_state.round_number,
             submission_content=best_state.submission_content,
             submission_format="md",

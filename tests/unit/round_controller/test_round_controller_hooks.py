@@ -73,7 +73,7 @@ def _create_mock_store() -> AsyncMock:
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -122,7 +122,7 @@ async def test_on_round_complete_called_after_each_round(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -184,7 +184,7 @@ async def test_on_round_complete_receives_correct_args(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -247,7 +247,7 @@ async def test_on_round_complete_exception_does_not_stop_execution(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
@@ -294,7 +294,7 @@ async def test_on_round_complete_none_does_not_cause_error(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.AggregationStore")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")

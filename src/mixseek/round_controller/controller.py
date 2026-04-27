@@ -9,7 +9,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from mixseek.agents.leader.config import TeamConfig, team_settings_to_team_config
 from mixseek.agents.leader.dependencies import TeamDependencies
 from mixseek.agents.leader.models import MemberSubmissionsRecord
 from mixseek.config import ConfigurationManager
@@ -98,13 +97,10 @@ class RoundController:
         self.workspace = workspace
         self.task = task
 
-        # Strategy 選択（team / workflow を統一）。team_config は legacy 互換のため属性として保持
+        # Strategy 選択（team / workflow を統一）
         if isinstance(unit_settings, TeamSettings):
-            self.team_config: TeamConfig | None = team_settings_to_team_config(unit_settings)
             self._strategy: ExecutionStrategy = LeaderStrategy(unit_settings, workspace)
         elif isinstance(unit_settings, WorkflowSettings):
-            # workflow には Leader/TeamConfig の概念がない
-            self.team_config = None
             self._strategy = WorkflowStrategy(unit_settings, workspace)
         else:
             raise TypeError(f"Unsupported unit settings type: {type(unit_settings).__name__}")

@@ -366,7 +366,7 @@ class TestValidateAuth:
         team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
         team.members = []
 
-        cat = _validate_auth([team], None, None)
+        cat = _validate_auth([team], None, None, [])
         assert not cat.has_errors
 
     def test_missing_provider_key_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -381,7 +381,7 @@ class TestValidateAuth:
         team.leader = {"model": "openai:gpt-4o"}
         team.members = []
 
-        cat = _validate_auth([team], None, None)
+        cat = _validate_auth([team], None, None, [])
         assert cat.has_errors
 
     def test_same_provider_validated_once(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -397,7 +397,7 @@ class TestValidateAuth:
         member.model = "google-gla:gemini-2.5-flash"
         team.members = [member]
 
-        cat = _validate_auth([team], None, None)
+        cat = _validate_auth([team], None, None, [])
         # Google AIの検証が1回だけ行われる（チェック結果は1つ）
         google_checks = [c for c in cat.checks if "google" in c.name.lower()]
         assert len(google_checks) == 1
@@ -411,23 +411,8 @@ class TestValidateAuth:
         team.leader = {"model": "test_model"}
         team.members = []
 
-        cat = _validate_auth([team], None, None)
+        cat = _validate_auth([team], None, None, [])
         # テストモデルはスキップされるのでエラーにならない
-        assert not cat.has_errors
-
-    def test_workflow_kwarg_positional_compat(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """workflow_settings_list kwarg 追加後も既存 positional 呼び出しが壊れない (PR4 互換確認)"""
-        monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
-
-        from mixseek.config.preflight import _validate_auth
-        from mixseek.config.schema import TeamSettings
-
-        team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
-        team.members = []
-
-        # 引数を3つだけ渡す既存呼び出し（kwarg 省略時のデフォルト None で動く）
-        cat = _validate_auth([team], None, None)
         assert not cat.has_errors
 
 

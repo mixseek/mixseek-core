@@ -1,7 +1,8 @@
-"""`_validate_auth` に追加された `workflow_settings_list` kwarg のテスト。
+"""`_validate_auth` に追加された `workflow_settings_list` 引数のテスト。
 
 `workflow.default_model` および各 agent executor の `model` が認証検証対象として
-収集されることを検証する。既存 positional 呼び出しの後方互換も確認する。
+収集されることを検証する。`workflow_settings_list` は必須引数なので、workflow が
+存在しないケースでは空リストを渡す。
 """
 
 from typing import Any
@@ -47,7 +48,7 @@ class TestCollectModelIdsWorkflow:
         """`default_model` が収集対象に入る"""
         wf = _make_workflow(default_model="anthropic:claude-sonnet-4-5")
 
-        ids = _collect_model_ids([], None, None, workflow_settings_list=[wf])
+        ids = _collect_model_ids([], None, None, [wf])
 
         assert "anthropic:claude-sonnet-4-5" in ids
 
@@ -66,7 +67,7 @@ class TestCollectModelIdsWorkflow:
             ],
         )
 
-        ids = _collect_model_ids([], None, None, workflow_settings_list=[wf])
+        ids = _collect_model_ids([], None, None, [wf])
 
         assert "openai:gpt-5" in ids
         assert "google-gla:gemini-2.5-flash" in ids
@@ -92,14 +93,14 @@ class TestCollectModelIdsWorkflow:
             ],
         )
 
-        ids = _collect_model_ids([], None, None, workflow_settings_list=[wf])
+        ids = _collect_model_ids([], None, None, [wf])
 
         # function executor 由来は model なしで無視、default_model のみ収集される
         assert ids == {"google-gla:gemini-2.5-flash"}
 
-    def test_workflow_settings_list_none_default(self) -> None:
-        """`workflow_settings_list` 省略 → 既存挙動 (team/eval/judg のみ)"""
-        ids = _collect_model_ids([], None, None)
+    def test_empty_workflow_settings_list(self) -> None:
+        """`workflow_settings_list=[]` → workflow 由来モデルなし (team/eval/judg のみ)"""
+        ids = _collect_model_ids([], None, None, [])
 
         assert ids == set()
 
@@ -111,7 +112,7 @@ class TestCollectModelIdsWorkflow:
 
         wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
 
-        ids = _collect_model_ids([team], None, None, workflow_settings_list=[wf])
+        ids = _collect_model_ids([team], None, None, [wf])
 
         assert ids == {"google-gla:gemini-2.5-flash"}
 
@@ -125,7 +126,7 @@ class TestValidateAuthWorkflow:
 
         wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
 
-        cat = _validate_auth([], None, None, workflow_settings_list=[wf])
+        cat = _validate_auth([], None, None, [wf])
 
         # GOOGLE_API_KEY あり → エラーなし
         assert not cat.has_errors
@@ -148,32 +149,19 @@ class TestValidateAuthWorkflow:
         # GOOGLE_API_KEY だけ設定（default_model 用）
         monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
 
-        cat = _validate_auth([], None, None, workflow_settings_list=[wf])
+        cat = _validate_auth([], None, None, [wf])
 
         assert cat.has_errors
 
-    def test_workflow_settings_list_none_compat(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """`workflow_settings_list=None` (kwarg 省略) → 既存挙動"""
+    def test_empty_workflow_settings_list(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`workflow_settings_list=[]` → team モデルのみ検証 (workflow 由来モデルなし)"""
         monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
 
         team = MagicMock(spec=TeamSettings)
         team.leader = {"model": "google-gla:gemini-2.5-flash"}
         team.members = []
 
-        cat = _validate_auth([team], None, None)
-
-        assert not cat.has_errors
-
-    def test_positional_call_compat(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """既存 positional 呼び出し `_validate_auth([team], None, None)` が壊れない"""
-        monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
-
-        team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
-        team.members = []
-
-        # 過去テスト互換: positional でも呼べる
-        cat = _validate_auth([team], None, None)
+        cat = _validate_auth([team], None, None, [])
 
         assert not cat.has_errors
 
@@ -187,7 +175,7 @@ class TestValidateAuthWorkflow:
 
         wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
 
-        cat = _validate_auth([team], None, None, workflow_settings_list=[wf])
+        cat = _validate_auth([team], None, None, [wf])
 
         google_checks = [c for c in cat.checks if "google" in c.name.lower()]
         assert len(google_checks) == 1

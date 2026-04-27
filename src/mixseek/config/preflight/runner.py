@@ -73,7 +73,7 @@ def run_preflight_check(config_path: Path, workspace: Path | None = None) -> Pre
         team_settings_list,
         evaluator_settings,
         judgment_settings,
-        workflow_settings_list=workflow_settings_list,
+        workflow_settings_list,
     )
     categories.append(auth_result)
 

@@ -41,8 +41,7 @@ def _collect_model_ids(
     team_settings_list: list[TeamSettings],
     evaluator_settings: EvaluatorSettings | None,
     judgment_settings: JudgmentSettings | None,
-    *,
-    workflow_settings_list: list[WorkflowSettings] | None = None,
+    workflow_settings_list: list[WorkflowSettings],
 ) -> set[str]:
     """全設定からモデルIDを収集する。
 
@@ -85,7 +84,7 @@ def _collect_model_ids(
             model_ids.add(judgment_settings.model)
 
     # Workflow 設定からモデルIDを収集（default_model + 各 agent executor の model）
-    for workflow in workflow_settings_list or []:
+    for workflow in workflow_settings_list:
         if workflow.default_model:
             model_ids.add(workflow.default_model)
         for step in workflow.steps:
@@ -104,8 +103,7 @@ def _validate_auth(
     team_settings_list: list[TeamSettings],
     evaluator_settings: EvaluatorSettings | None,
     judgment_settings: JudgmentSettings | None,
-    *,
-    workflow_settings_list: list[WorkflowSettings] | None = None,
+    workflow_settings_list: list[WorkflowSettings],
 ) -> CategoryResult:
     """認証情報を検証する。
 
@@ -117,7 +115,7 @@ def _validate_auth(
         team_settings_list,
         evaluator_settings,
         judgment_settings,
-        workflow_settings_list=workflow_settings_list,
+        workflow_settings_list,
     )
 
     if not model_ids:

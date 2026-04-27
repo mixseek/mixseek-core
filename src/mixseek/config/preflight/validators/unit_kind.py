@@ -46,9 +46,9 @@ def _detect_unit_kind(config_path: Path, workspace: Path) -> UnitKind:
 
 
 def _detect_unit_kinds(settings: OrchestratorSettings, workspace: Path) -> list[UnitKind]:
-    """orchestrator の `teams` 全 entry の kind を一度だけ判定する。
+    """orchestrator の `teams` 全 entry の kind を一括判定する。
 
-    runner から両 validator に同じ結果を共有することで、TOML を 2 回ではなく 1 回しか
-    読まずに済み、validator 間で kind 判定がずれる余地を排除する。
+    `_validate_teams` / `_validate_workflows` の各 validator 先頭で 1 回呼び、
+    `zip(settings.teams, unit_kinds, strict=True)` で entry とペアにして処理する。
     """
     return [_detect_unit_kind(Path(entry.get("config", "")), workspace) for entry in settings.teams]

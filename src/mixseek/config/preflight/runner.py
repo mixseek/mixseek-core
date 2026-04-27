@@ -23,7 +23,6 @@ from mixseek.config.preflight.validators import (
     _validate_workflows,
     _validate_workspace_writable,
 )
-from mixseek.config.preflight.validators.unit_kind import _detect_unit_kinds
 
 
 def run_preflight_check(config_path: Path, workspace: Path | None = None) -> PreflightResult:
@@ -50,13 +49,11 @@ def run_preflight_check(config_path: Path, workspace: Path | None = None) -> Pre
     resolved_workspace = orch_settings.workspace_path
 
     # 2. チーム / ワークフロー
-    # 全 teams entry の kind を一度だけ判定し、両 validator で共有する。
-    # (各 validator が個別に再判定するとファイル変動時に判定ずれが起きる余地があるため)
-    unit_kinds = _detect_unit_kinds(orch_settings, resolved_workspace)
-    team_result, team_settings_list = _validate_teams(orch_settings, resolved_workspace, unit_kinds=unit_kinds)
+    # 各 validator は内部で entry の kind 判定を行い、自身が担当する種別のみを処理する。
+    team_result, team_settings_list = _validate_teams(orch_settings, resolved_workspace)
     categories.append(team_result)
 
-    wf_result, workflow_settings_list = _validate_workflows(orch_settings, resolved_workspace, unit_kinds=unit_kinds)
+    wf_result, workflow_settings_list = _validate_workflows(orch_settings, resolved_workspace)
     categories.append(wf_result)
 
     # 3. Evaluator

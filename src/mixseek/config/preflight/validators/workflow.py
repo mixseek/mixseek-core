@@ -4,15 +4,13 @@ from pathlib import Path
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
-from mixseek.config.preflight.validators.unit_kind import UnitKind, _detect_unit_kinds
+from mixseek.config.preflight.validators.unit_kind import _detect_unit_kinds
 from mixseek.config.schema import WorkflowSettings
 
 
 def _validate_workflows(
     settings: OrchestratorSettings,
     workspace: Path,
-    *,
-    unit_kinds: list[UnitKind] | None = None,
 ) -> tuple[CategoryResult, list[WorkflowSettings]]:
     """workflow kind の entry を `load_workflow_settings` で検証する。
 
@@ -23,15 +21,12 @@ def _validate_workflows(
     Args:
         settings: orchestrator 設定
         workspace: 解決済みワークスペース
-        unit_kinds: 各 entry の kind 判定結果（runner 経由で 1 回だけ計算したものを共有）。
-            None の場合は内部で `_detect_unit_kinds` を呼ぶフォールバック挙動。
     """
     checks: list[CheckResult] = []
     workflow_settings_list: list[WorkflowSettings] = []
     config_manager = ConfigurationManager(workspace=workspace)
 
-    if unit_kinds is None:
-        unit_kinds = _detect_unit_kinds(settings, workspace)
+    unit_kinds = _detect_unit_kinds(settings, workspace)
 
     for i, (entry, kind) in enumerate(zip(settings.teams, unit_kinds, strict=True)):
         wf_config_path = entry.get("config", "")

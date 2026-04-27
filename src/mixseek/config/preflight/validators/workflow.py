@@ -4,7 +4,7 @@ from pathlib import Path
 
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus
-from mixseek.config.preflight.validators.unit_kind import _detect_unit_kinds
+from mixseek.config.preflight.validators.util import _detect_unit_kinds
 from mixseek.config.schema import WorkflowSettings
 
 

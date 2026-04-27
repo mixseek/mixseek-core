@@ -1,15 +1,14 @@
-"""プリフライトチェック: TOML トップレベルキー判別ヘルパー。
+"""プリフライトチェック: validator 共通ユーティリティ。
 
-`_detect_unit_kind` を独立モジュールに置くことで、`team.py` / `workflow.py` から
-`from mixseek.config.preflight.validators.unit_kind import _detect_unit_kind` で
-直接 import でき、`validators/__init__.py` 経由の循環 import を回避する。
+`validators/` 配下のファイル名慣例は config 種類（team / workflow / auth / ...）
+を表すため、それに該当しない共通ヘルパーは本モジュールに集約する。
 """
 
-import tomllib
 from pathlib import Path
 from typing import Literal
 
 from mixseek.config import OrchestratorSettings
+from mixseek.utils.toml import load_toml_with_workspace
 
 UnitKind = Literal["team", "workflow", "unknown"]
 
@@ -30,11 +29,9 @@ def _detect_unit_kind(config_path: Path, workspace: Path) -> UnitKind:
         `"workflow"`: `[workflow]` のみ存在
         `"unknown"`: TOML 解析失敗 / 両セクション同居 / どちらもなし / file not found
     """
-    resolved = config_path if config_path.is_absolute() else (workspace / config_path)
     try:
-        with open(resolved, "rb") as f:
-            data = tomllib.load(f)
-    except (FileNotFoundError, tomllib.TOMLDecodeError, OSError):
+        data = load_toml_with_workspace(config_path, workspace=workspace, context="Unit config file")
+    except (FileNotFoundError, ValueError, OSError):
         return "unknown"
     has_team = "team" in data
     has_workflow = "workflow" in data

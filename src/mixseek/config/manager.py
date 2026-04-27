@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from pydantic_settings import BaseSettings
 from pydantic_settings.sources import EnvSettingsSource
 
+from mixseek.config.sources.workflow_toml_source import WorkflowTomlSource
+from mixseek.utils.toml import load_toml_with_workspace
+
 from .sources.tracing_source import SourceTrace
 
 logger = logging.getLogger(__name__)
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
         OrchestratorSettings,
         PromptBuilderSettings,
         TeamSettings,
+        WorkflowSettings,
     )
 
 # Generic type variable for settings classes
@@ -387,6 +391,78 @@ class ConfigurationManager:
             str(toml_file.name),
             **extra_kwargs,
         )
+
+    def load_workflow_settings(
+        self,
+        toml_file: Path,
+        **extra_kwargs: Any,
+    ) -> "WorkflowSettings":
+        """Workflow 設定を読み込み（トレーシング対応）。
+
+        優先順位: CLI > 環境変数 > .env > TOML > デフォルト値
+
+        Args:
+            toml_file: Workflow 設定 TOML ファイルパス
+            **extra_kwargs: 追加のキーワード引数
+
+        Returns:
+            WorkflowSettings instance（トレース情報付き）
+
+        Raises:
+            FileNotFoundError: TOML ファイルが見つからない場合
+            ValueError: TOML 構文エラー / `[workflow]` セクション欠如 / バリデーションエラー
+        """
+        # 絶対 import で循環回避（schema.py 初期化タイミング制御）
+        from mixseek.config.schema import WorkflowSettings
+
+        return self._load_settings_with_tracing(
+            WorkflowSettings,
+            WorkflowTomlSource,
+            toml_file,
+            str(toml_file.name),
+            **extra_kwargs,
+        )
+
+    def load_unit_settings(
+        self,
+        toml_file: Path,
+        **extra_kwargs: Any,
+    ) -> "TeamSettings | WorkflowSettings":
+        """TOML トップレベルの `[team]` / `[workflow]` で team/workflow を判別し dispatch。
+
+        判別用に一度パスを解決して parse するが、下流ローダーには元の `toml_file` を
+        渡す（内部 source クラスが workspace 基準で再解決するため二重解決は起きない）。
+
+        Args:
+            toml_file: unit（team or workflow）設定 TOML ファイルパス
+            **extra_kwargs: 追加のキーワード引数
+
+        Returns:
+            `TeamSettings` または `WorkflowSettings` インスタンス
+
+        Raises:
+            FileNotFoundError: TOML ファイルが見つからない場合
+            ValueError:
+                - TOML 構文エラー
+                - `[team]` と `[workflow]` の両方が存在する
+                - `[team]` / `[workflow]` のどちらも存在しない
+                - 下流ローダーのバリデーションエラー
+        """
+        # 相対パス解決は load_team_settings / load_workflow_settings 側の
+        # TOML source と同じルール (workspace 起点) に揃える。
+        # self.workspace が None のときは共通ユーティリティが MIXSEEK_WORKSPACE 経由で取得し、
+        # 判別フェーズだけ CWD 基準になる不整合を防ぐ。
+        data = load_toml_with_workspace(toml_file, workspace=self.workspace, context="Config file")
+
+        has_team = "team" in data
+        has_workflow = "workflow" in data
+        if has_team and has_workflow:
+            raise ValueError(f"Config {toml_file} contains both [team] and [workflow] sections")
+        if has_team:
+            return self.load_team_settings(toml_file, **extra_kwargs)
+        if has_workflow:
+            return self.load_workflow_settings(toml_file, **extra_kwargs)
+        raise ValueError(f"Config {toml_file} contains neither [team] nor [workflow] sections")
 
     def load_member_settings(
         self,

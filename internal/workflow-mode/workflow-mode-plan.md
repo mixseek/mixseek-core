@@ -346,7 +346,9 @@ class WorkflowContext:
     def add_step_result(self, step_id: str, result: StepResult) -> None:
         self.step_results[step_id] = result
 
-    def build_task_prompt(self, *, include_all: bool) -> str:
+    def build_task_context(self, *, include_all: bool) -> str:
+        # 旧称 `build_task_prompt` から PR2 時点で改称。function executor にも同じ
+        # JSON を渡すため「prompt」は誤解を招くため。
         previous = self._all_previous_steps() if include_all else self._last_previous_step()
         payload = {"user_prompt": self.user_prompt, "previous_steps": previous}
         return json.dumps(payload, ensure_ascii=False)
@@ -626,10 +628,10 @@ class WorkflowEngine:
                     executor_name=getattr(cfg, "name", "<unknown>"),
                     error_message=f"failed to build executable: {e}",
                 ) from e
-        task_prompt = context.build_task_prompt(include_all=self.settings.include_all_context)
+        task_context = context.build_task_context(include_all=self.settings.include_all_context)
 
         results = await asyncio.gather(
-            *[self._run_one(exe, task_prompt, deps) for exe in executables],
+            *[self._run_one(exe, task_context, deps) for exe in executables],
             return_exceptions=False,   # Executable.run は例外を漏らさない契約
         )
 
@@ -709,7 +711,7 @@ def _add_usage(a: RunUsage, b: RunUsage) -> RunUsage:
 - D (text+last): 最終ステップの `## <executor_name>` のみ
 - 並列は配列/見出し並列、全 ERROR でも本関数は呼ばれる（function hard failure は `WorkflowStepFailedError` 昇格で非呼び出し）
 
-> **NOTE**: `WorkflowContext.build_task_prompt` は step 内 agent への**入力**用 JSON（`{user_prompt, previous_steps}`）で、こちらは `user_prompt` を含めて良い。submission_history に漏れない閉じたパスのため膨張しない。
+> **NOTE**: `WorkflowContext.build_task_context`（旧 `build_task_prompt`、PR2 で改称）は step 内 agent/function への**入力**用 JSON（`{user_prompt, previous_steps}`）で、こちらは `user_prompt` を含めて良い。submission_history に漏れない閉じたパスのため膨張しない。
 
 ---
 
@@ -1012,7 +1014,7 @@ for wf in (workflow_settings_list or []):
 |-------------|-----|
 | `tests/unit/workflow/test_executable.py` | `AgentExecutable` の正常/例外、`FunctionExecutable` の sync/async/例外、`build_executable` の型分岐、`_load_function` のエラー |
 | `tests/unit/workflow/test_engine.py` | 単一/並列ステップ、include_all=true/false、fmt=json/text の 4 ケース（A/B/C/D）、agent soft failure（submission 積まれる、継続）、function hard failure（`WorkflowStepFailedError` 昇格）、submission 積み順 |
-| `tests/unit/workflow/test_models.py` | `WorkflowContext.build_task_prompt` の JSON スキーマ、`_serialize` |
+| `tests/unit/workflow/test_models.py` | `WorkflowContext.build_task_context` の JSON スキーマ、`_serialize` |
 | `tests/unit/config/test_workflow_settings.py` | `WorkflowSettings` validation（workflow_id/name 必須、step ids 重複、executor names 重複、`default_model` 省略可、agent executor の `model` 省略時 `default_model` フォールバック、type="function" で model 不要）、`team_id`/`team_name` プロパティ |
 | `tests/unit/config/test_workflow_toml_source.py` | `[workflow]` 読み込み、`[team]` 混在時の挙動 |
 | `tests/unit/config/test_unit_settings.py` | `load_unit_settings()` で team/workflow 振り分け、両方 or どちらも無い TOML は ValueError |

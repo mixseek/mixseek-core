@@ -1131,7 +1131,8 @@ def format_as_markdown(input: str) -> str:
     ...
 ```
 
-**注意**: `mypackage` は `importlib.import_module` 解決 → `PYTHONPATH=examples/workflow-sample` か `pip install -e examples/workflow-sample/` 必要（§10）。
+**注意 (MVP 当初設計)**: `module` 方式 (`importlib.import_module`) を使う場合は `PYTHONPATH=examples/workflow-sample` か `pip install -e examples/workflow-sample/` 必要（§10）。
+**PR4.5 以降**: `FunctionPluginMetadata.path` で file path から直接ロード可能 (`module` / `path` 排他)。`PYTHONPATH` 不要・cwd 起点解釈。詳細は `tasks/workflow-mode-pr5-tasks.md` および `.logs/plans/internal-workflow-mode-workflow-mode-pl-piped-dream.md` §1.2 / §1.5 を参照。
 
 ---
 
@@ -1154,7 +1155,7 @@ def format_as_markdown(input: str) -> str:
 | `AgentExecutorSettings` / `MemberAgentSettings` の二重管理 | MVP は並立、共通ベース抽出は将来 Refactor |
 | Function `Callable` 署名が `(str) -> str` から外れる | `run` 内で `str(content)` 強制。型不一致は TOML 設計者責任 |
 | 並列 executor 両方失敗 | Engine は全 executor 完了後に昇格判定。agent submission は append されるがラウンド廃棄で DB に残らない（team と同じ） |
-| `FunctionPluginMetadata.module` の import 解決 | `importlib.import_module` → `sys.path` 依存。MVP は `pip install -e .` か `PYTHONPATH` 前提。`path = "<file>"` は将来拡張 |
+| `FunctionPluginMetadata.module` の import 解決 | `importlib.import_module` → `sys.path` 依存。`pip install -e .` か `PYTHONPATH` 前提。**PR4.5 以降は `path = "<file>"` 方式が利用可** (`_load_module_from_path` で file 直読込、PYTHONPATH 不要・cwd 起点解釈)。詳細は PR5 実装計画 §1.2 / §1.5 |
 | `MemberSubmission.all_messages` 空リスト | team mode でも None/list 両方来る（custom→None、pydantic-ai→空 list）。正規化せず渡す（DB の to_jsonable_python が両方処理） |
 | Function ハング | `timeout_seconds`（default None=無制限）。設定時は `asyncio.wait_for` で包み TimeoutError → `ERROR` で即昇格 |
 | `timeout_seconds` の下限スキーマ不整合 | 既存 `MemberAgentSettings.timeout_seconds: ge=0` / `MemberAgentConfig.timeout_seconds: ge=1` のギャップが「設定段階で通るが実行段階で落ちる」遅延失敗を生んでいた。本プランで**両方 `ge=1` に統一**（`AgentExecutorSettings` および既存 `MemberAgentSettings` の両方）。既存 TOML に `timeout_seconds=0` の用例は無いため回帰なし。team/workflow 対称性も維持 |

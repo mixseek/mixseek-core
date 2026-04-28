@@ -79,9 +79,22 @@ class TestFunctionPluginMetadata:
         meta = FunctionPluginMetadata(module="mypkg.tools", function="format_as_markdown")
         assert meta.module == "mypkg.tools"
         assert meta.function == "format_as_markdown"
+        assert meta.path is None
 
-    def test_missing_module_raises(self) -> None:
-        with pytest.raises(ValidationError):
+    def test_path_only_valid(self) -> None:
+        """`path` のみ指定で作成成功（module は None）。"""
+        meta = FunctionPluginMetadata(path="/abs/path/formatters.py", function="fmt")
+        assert meta.path == "/abs/path/formatters.py"
+        assert meta.module is None
+
+    def test_both_module_and_path_raises(self) -> None:
+        """`module` と `path` の同時指定はエラー（排他制約）。"""
+        with pytest.raises(ValidationError, match="同時指定できません"):
+            FunctionPluginMetadata(module="m", path="/p", function="f")
+
+    def test_neither_module_nor_path_raises(self) -> None:
+        """`module` / `path` どちらも指定しないとエラー（必須制約）。"""
+        with pytest.raises(ValidationError, match="のいずれかが必須"):
             FunctionPluginMetadata.model_validate({"function": "fn"})
 
     def test_missing_function_raises(self) -> None:
@@ -98,6 +111,11 @@ class TestFunctionPluginMetadata:
         meta = FunctionPluginMetadata(module="  mypkg  ", function="  fn  ")
         assert meta.module == "mypkg"
         assert meta.function == "fn"
+
+    def test_path_str_strip_whitespace(self) -> None:
+        """`path` フィールドにも str_strip_whitespace=True が適用される。"""
+        meta = FunctionPluginMetadata(path="  /abs/path/formatters.py  ", function="fmt")
+        assert meta.path == "/abs/path/formatters.py"
 
 
 # ---------------------------------------------------------------------------

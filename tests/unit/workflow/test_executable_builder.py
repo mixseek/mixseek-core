@@ -6,6 +6,7 @@ invariant:
 """
 
 from contextlib import nullcontext
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -109,24 +110,121 @@ class TestBuildExecutable:
                 default_model="google-gla:gemini-2.5-flash",
             )
 
+    def test_function_settings_with_path(self, team_deps: TeamDependencies, tmp_path: Path) -> None:
+        """`path` 経由の FunctionPluginMetadata でも build_executable が通る。"""
+        from mixseek.config.schema import FunctionExecutorSettings, FunctionPluginMetadata
+
+        f = tmp_path / "fmt.py"
+        f.write_text("def fn(x):\n    return f'P:{x}'\n", encoding="utf-8")
+        cfg = FunctionExecutorSettings(
+            name="fn",
+            plugin=FunctionPluginMetadata(path=str(f), function="fn"),
+            timeout_seconds=5,
+        )
+        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-2.5-flash")
+        assert isinstance(ex, FunctionExecutable)
+        assert ex.name == "fn"
+        assert ex.executor_type == "function"
+
 
 class TestLoadFunction:
     def test_module_not_found(self) -> None:
         with pytest.raises(ValueError, match="Failed to import module"):
-            _load_function("no_such_module_xyz_abc", "foo")
+            _load_function(module="no_such_module_xyz_abc", path=None, function="foo")
 
     def test_attribute_not_found(self) -> None:
         with pytest.raises(ValueError, match="has no attribute"):
-            _load_function("tests.unit.workflow._executable_helpers", "nonexistent_attr")
+            _load_function(
+                module="tests.unit.workflow._executable_helpers",
+                path=None,
+                function="nonexistent_attr",
+            )
 
     def test_not_callable(self) -> None:
         with pytest.raises(ValueError, match="is not callable"):
             _load_function(
-                "tests.unit.workflow._executable_helpers",
-                "sample_non_callable",
+                module="tests.unit.workflow._executable_helpers",
+                path=None,
+                function="sample_non_callable",
             )
 
     def test_callable_returned(self) -> None:
-        fn = _load_function("tests.unit.workflow._executable_helpers", "sample_function")
+        fn = _load_function(
+            module="tests.unit.workflow._executable_helpers",
+            path=None,
+            function="sample_function",
+        )
         assert callable(fn)
         assert fn("x") == "sample: x"
+
+    def test_path_file_not_found(self, tmp_path: Path) -> None:
+        """`path` 指定時に file が存在しないと ValueError。"""
+        with pytest.raises(ValueError, match="FileNotFoundError"):
+            _load_function(
+                module=None,
+                path=str(tmp_path / "nonexistent.py"),
+                function="fn",
+            )
+
+    def test_path_is_directory(self, tmp_path: Path) -> None:
+        """`path` がディレクトリを指す場合、`spec_from_file_location` 失敗による
+        不透明なエラーではなく、is_file() バリデーションで ValueError として弾く。"""
+        d = tmp_path / "not_a_file"
+        d.mkdir()
+        with pytest.raises(ValueError, match="FileNotFoundError"):
+            _load_function(module=None, path=str(d), function="fn")
+
+    def test_path_attribute_not_found(self, tmp_path: Path) -> None:
+        """`path` ロードに成功しても function 名が無ければ ValueError。"""
+        f = tmp_path / "mod.py"
+        f.write_text("def existing(x):\n    return x\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="has no attribute"):
+            _load_function(module=None, path=str(f), function="missing")
+
+    def test_path_not_callable(self, tmp_path: Path) -> None:
+        """`path` 内に非 callable な属性しかなければ ValueError。"""
+        f = tmp_path / "mod.py"
+        f.write_text("VALUE = 42\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="is not callable"):
+            _load_function(module=None, path=str(f), function="VALUE")
+
+    def test_path_callable_returned(self, tmp_path: Path) -> None:
+        """絶対 path 経由で正しく callable が取得できる正常系。"""
+        f = tmp_path / "mod.py"
+        f.write_text("def fn(x):\n    return f'path: {x}'\n", encoding="utf-8")
+        out = _load_function(module=None, path=str(f), function="fn")
+        assert callable(out)
+        assert out("hello") == "path: hello"
+
+    def test_path_module_exec_failure(self, tmp_path: Path) -> None:
+        """path 経由でモジュールレベルコードが例外を出した場合に ValueError へ正規化される。
+
+        失敗時に不完全な module オブジェクトが `sys.modules` に残らないことも確認する
+        （次回 import 時にキャッシュ汚染を引き起こさないよう_load_module_from_path で
+        `sys.modules.pop` している契約）。
+        """
+        import hashlib
+        import sys as _sys
+
+        f = tmp_path / "mod.py"
+        f.write_text("raise RuntimeError('boom at import time')\n", encoding="utf-8")
+        path_hash = hashlib.sha256(str(f.resolve()).encode()).hexdigest()[:16]
+        module_name = f"custom_function_{path_hash}"
+        _sys.modules.pop(module_name, None)  # 念のため事前クリア（並列テスト耐性）
+
+        with pytest.raises(ValueError, match="Failed to execute module from path"):
+            _load_function(module=None, path=str(f), function="fn")
+
+        assert module_name not in _sys.modules, f"failed module '{module_name}' must be cleaned up from sys.modules"
+
+    def test_both_module_and_path_raises(self, tmp_path: Path) -> None:
+        """upstream を迂回した呼び出しで module / path 両方指定された場合、防御的に ValueError。"""
+        f = tmp_path / "mod.py"
+        f.write_text("def fn(x):\n    return x\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            _load_function(module="some.module", path=str(f), function="fn")
+
+    def test_neither_module_nor_path_raises(self) -> None:
+        """upstream を迂回した呼び出しで両方 None の場合、防御的に ValueError。"""
+        with pytest.raises(ValueError, match="Either 'module' or 'path'"):
+            _load_function(module=None, path=None, function="fn")

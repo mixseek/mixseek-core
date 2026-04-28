@@ -15,8 +15,11 @@ logfire はオプション依存のため、未導入環境では `_logfire_span
 """
 
 import asyncio
+import hashlib
 import importlib
+import importlib.util
 import logging
+import sys
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import AbstractContextManager, nullcontext
@@ -284,10 +287,15 @@ def build_executable(
     Raises:
         TypeError: 未知の cfg 型
         ValueError: function の module/attribute import 失敗
-            （`WorkflowEngine._execute_step` で `WorkflowStepFailedError` に昇格）
+            （`WorkflowEngine._execute_step` で `WorkflowStepFailedError` に昇格）。
+            `path` 指定時の file 不在 / spec 生成失敗も同じく `ValueError` に正規化される。
     """
     if isinstance(cfg, FunctionExecutorSettings):
-        func = _load_function(cfg.plugin.module, cfg.plugin.function)
+        func = _load_function(
+            module=cfg.plugin.module,
+            path=cfg.plugin.path,
+            function=cfg.plugin.function,
+        )
         return FunctionExecutable(
             name=cfg.name,
             func=func,
@@ -301,19 +309,85 @@ def build_executable(
     raise TypeError(f"Unsupported executor config: {type(cfg).__name__}")
 
 
-def _load_function(module: str, function: str) -> Callable[[str], Any]:
-    """`module.function` を動的解決して callable を返す。
+def _load_module_from_path(path: str) -> Any:
+    """指定 file path から Python module を読み込む（member の load_agent_from_path 同等）。
+
+    `path` は絶対 path 推奨。相対 path は cwd 起点で解釈される（member 側と同じ挙動）。
+    sys.modules には絶対 path の sha256 ハッシュ前 16 文字を suffix にした module 名で登録し、
+    member 側 `custom_agent_<hash>` と同居しても衝突しないよう `custom_function_` プレフィックスを使う。
 
     Raises:
-        ValueError: module import 失敗 / attribute 不在 / callable でない
+        ValueError: file 不在 / 通常ファイル以外（ディレクトリ等） / spec 生成失敗 /
+            モジュールレベルコードの実行失敗
     """
+    path_obj = Path(path)
+    # ディレクトリを誤って渡された場合 `spec_from_file_location` は spec=None を返し
+    # 「Failed to create module spec」という不透明なエラーになるため、is_file() で先に弾く。
+    if not path_obj.is_file():
+        raise ValueError(
+            f"Failed to load function from path '{path}'. "
+            f"FileNotFoundError: File not found or is not a regular file. Check file path in TOML config."
+        )
+
+    path_hash = hashlib.sha256(str(path_obj.resolve()).encode()).hexdigest()[:16]
+    module_name = f"custom_function_{path_hash}"
+
+    spec = importlib.util.spec_from_file_location(module_name, path_obj)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"Failed to create module spec from path '{path}'.")
+
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
+    # SECURITY: モジュールレベルコードが実行されるため信頼できるソースのみ使用すること。
+    # member 側 `load_agent_from_path` と同じ制約。
     try:
-        mod = importlib.import_module(module)
-    except ImportError as e:
-        raise ValueError(f"Failed to import module '{module}': {e}") from e
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        # モジュールレベルコード実行時の任意例外を ValueError に正規化（docstring の Raises 契約）。
+        # 不完全な module オブジェクトを sys.modules に残さないよう除去する。
+        sys.modules.pop(module_name, None)
+        raise ValueError(f"Failed to execute module from path '{path}': {e}") from e
+    return mod
+
+
+def _load_function(
+    *,
+    module: str | None,
+    path: str | None,
+    function: str,
+) -> Callable[[str], Any]:
+    """`function` を `module` (importlib) または `path` (file-based) から動的解決して返す。
+
+    `module` / `path` の排他制約は upstream の
+    `FunctionPluginMetadata._validate_module_path_exclusive` で検証済み。
+    本関数は upstream を迂回した呼び出しに備えて「両方 None」と「両方指定」の双方を
+    防御的にガードする。
+
+    Raises:
+        ValueError:
+            - module import 失敗
+            - path 指定時の file 不在 / spec 生成失敗 / モジュール実行失敗
+            - attribute 不在 / callable でない
+            - module / path 両方 None
+            - module / path 両方指定（排他制約違反）
+    """
+    if module is not None and path is not None:
+        raise ValueError("Cannot specify both 'module' and 'path' (mutually exclusive)")
+    if path is not None:
+        mod = _load_module_from_path(path)
+        source_label = f"path '{path}'"
+    elif module is not None:
+        try:
+            mod = importlib.import_module(module)
+        except ImportError as e:
+            raise ValueError(f"Failed to import module '{module}': {e}") from e
+        source_label = f"module '{module}'"
+    else:
+        raise ValueError("Either 'module' or 'path' must be specified")
+
     if not hasattr(mod, function):
-        raise ValueError(f"Module '{module}' has no attribute '{function}'")
+        raise ValueError(f"{source_label.capitalize()} has no attribute '{function}'")
     fn: Callable[[str], Any] = getattr(mod, function)
     if not callable(fn):
-        raise ValueError(f"'{module}.{function}' is not callable")
+        raise ValueError(f"'{function}' in {source_label} is not callable")
     return fn

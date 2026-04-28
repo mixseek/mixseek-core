@@ -1194,12 +1194,17 @@ class FunctionPluginMetadata(BaseModel):
 
     Note:
         agent 用 `PluginMetadata` は流用不可（フィールド不一致 + extra=forbid）。
-        `module` / `function` のみを持つ軽量構造。
+        `module` / `path` / `function` のみを持つ軽量構造。
+        `module` と `path` は排他で、いずれか一方を必ず指定する必要がある。
     """
 
-    module: str = Field(
-        ...,
-        description="Python module path（例: 'mypackage.formatters'）",
+    module: str | None = Field(
+        default=None,
+        description="Python module path（sys.path 経由、例: 'mypackage.formatters'）",
+    )
+    path: str | None = Field(
+        default=None,
+        description="Python ファイルパス（絶対 path 推奨、相対は cwd 起点で解釈）",
     )
     function: str = Field(
         ...,
@@ -1210,6 +1215,19 @@ class FunctionPluginMetadata(BaseModel):
         extra="forbid",
         str_strip_whitespace=True,
     )
+
+    @model_validator(mode="after")
+    def _validate_module_path_exclusive(self) -> "FunctionPluginMetadata":
+        """`module` と `path` の排他制約を検証する。
+
+        - 両方 None: ロード元が決まらないため不正
+        - 両方指定: try-then-fallback の意味が薄く TOML の読みにくさを招くため禁止
+        """
+        if self.module is None and self.path is None:
+            raise ValueError("FunctionPluginMetadata は 'module' または 'path' のいずれかが必須です")
+        if self.module is not None and self.path is not None:
+            raise ValueError("FunctionPluginMetadata の 'module' と 'path' は同時指定できません（排他）")
+        return self
 
 
 class AgentExecutorSettings(MixSeekBaseSettings):

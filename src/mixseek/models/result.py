@@ -53,4 +53,14 @@ class InitResult(BaseModel):
             typer.echo(f"Created directories: {len(self.created_dirs)}")
             typer.echo(f"Created files: {len(self.created_files)}")
         else:
-            typer.echo(self.message, err=True)
+            # エラーは mixseek.cli logger 経由で stderr 出力 + JSON モード構造化。
+            from mixseek.observability import get_cli_logger
+
+            get_cli_logger().error(
+                self.message,
+                extra={
+                    "event": "init.result_error",
+                    "workspace_path": str(self.workspace_path),
+                    "error": self.error,
+                },
+            )

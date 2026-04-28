@@ -155,28 +155,41 @@ class TestLogfireConfigPriority:
             assert config.capture_http is True
             assert config.enabled is True
 
-    def test_setup_logfire_from_cli_error_handling(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Logfire初期化失敗時にグレースフルに警告を出力して継続する"""
+    def test_setup_logfire_from_cli_error_handling(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Logfire初期化失敗時にグレースフルに警告を出力して継続する (cli_logger 経由)。"""
+        import logging
         from unittest.mock import patch
 
         monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
 
-        with (
-            patch("mixseek.cli.utils.setup_logfire", side_effect=RuntimeError("init failed")),
-            patch("mixseek.cli.utils.typer.secho") as mock_secho,
-        ):
-            from mixseek.cli.utils import setup_logfire_from_cli
+        # ``mixseek.cli`` logger は root への leak 防止のため ``propagate=False`` に
+        # 設定されるため、caplog の root handler では records が取れない。
+        # caplog.handler を直接 attach してキャプチャする。
+        cli_logger = logging.getLogger("mixseek.cli")
+        cli_logger.addHandler(caplog.handler)
+        try:
+            with (
+                patch("mixseek.cli.utils.setup_logfire", side_effect=RuntimeError("init failed")),
+                caplog.at_level(logging.WARNING, logger="mixseek.cli"),
+            ):
+                from mixseek.cli.utils import setup_logfire_from_cli
 
-            # 例外が外に漏れないことを検証
-            setup_logfire_from_cli(
-                logfire=True,
-                logfire_metadata=False,
-                logfire_http=False,
-                verbose=False,
-            )
+                # 例外が外に漏れないことを検証
+                setup_logfire_from_cli(
+                    logfire=True,
+                    logfire_metadata=False,
+                    logfire_http=False,
+                    verbose=False,
+                )
 
-            # 警告メッセージがstderrに出力されることを検証
-            mock_secho.assert_called_once()
-            warning_msg = mock_secho.call_args[0][0]
-            assert "WARNING" in warning_msg
-            assert "init failed" in warning_msg
+                # 警告メッセージが mixseek.cli logger に記録されることを検証。
+                # typer.secho 直呼びから cli_logger.warning 経由に移行済み。
+                warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
+                assert warning_records, "Expected a WARNING log record but none found"
+                warning_msg = warning_records[0].getMessage()
+                assert "WARNING" in warning_msg
+                assert "init failed" in warning_msg
+        finally:
+            cli_logger.removeHandler(caplog.handler)

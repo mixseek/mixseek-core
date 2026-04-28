@@ -45,11 +45,12 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
+from mixseek.observability import get_cli_logger
 from mixseek.storage.aggregation_store import AggregationStore
 
 
@@ -94,6 +95,10 @@ def team(
 
         mixseek team "Question" --config team.toml --logfire-http
     """
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
+    ensure_log_format_env(log_format)
+    cli_logger = get_cli_logger()
+
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
@@ -105,15 +110,17 @@ def team(
             orchestrator_settings: OrchestratorSettings = config_manager.load_settings(OrchestratorSettings)
             workspace_resolved = orchestrator_settings.workspace_path
         except Exception as e:
-            typer.secho(
+            cli_logger.error(
                 f"ERROR: Failed to resolve workspace path: {e}",
-                fg=typer.colors.RED,
-                err=True,
+                extra={
+                    "event": "team.workspace_resolve_failed",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
             )
-            typer.secho(
+            cli_logger.warning(
                 "Please specify workspace via --workspace option or MIXSEEK_WORKSPACE environment variable",
-                fg=typer.colors.YELLOW,
-                err=True,
+                extra={"event": "team.workspace_resolve_hint"},
             )
             raise typer.Exit(code=1)
 
@@ -135,12 +142,10 @@ def team(
     )
 
     # 開発・テスト専用警告表示
-    typer.secho(
+    cli_logger.warning(
         "⚠️  Development/Testing only - Not for production use",
-        fg=typer.colors.YELLOW,
-        err=True,
+        extra={"event": "team.dev_warning"},
     )
-    typer.echo("", err=True)
 
     try:
         asyncio.run(
@@ -159,9 +164,19 @@ def team(
         # typer.Exitは再raiseして、元のexit codeを保持
         raise
     except Exception as e:
-        typer.secho(f"ERROR: {e}", fg=typer.colors.RED, err=True)
+        cli_logger.error(
+            f"ERROR: {e}",
+            extra={
+                "event": "team.unexpected_error",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
         if verbose:
-            typer.echo(traceback.format_exc(), err=True)
+            cli_logger.error(
+                traceback.format_exc(),
+                extra={"event": "team.unexpected_error_traceback"},
+            )
         raise typer.Exit(code=1)
 
 
@@ -176,6 +191,8 @@ async def _execute_team_command(
     verbose: bool,
 ) -> None:
     """チーム実行ロジック（イベントループ内で実行）"""
+    cli_logger = get_cli_logger()
+
     # ファイル存在チェックはTeamTomlSource内で実行されるため、
     # ここでの重複チェックは削除（相対パス解決前のチェックは不正確）
     # Use ConfigurationManager to load TeamSettings
@@ -183,8 +200,18 @@ async def _execute_team_command(
     team_settings = config_manager.load_team_settings(config)
 
     if verbose:
-        typer.echo(f"Team: {team_settings.team_name} ({team_settings.team_id})", err=True)
-        typer.echo(f"Members: {len(team_settings.members)} agents", err=True)
+        cli_logger.info(
+            f"Team: {team_settings.team_name} ({team_settings.team_id})",
+            extra={
+                "event": "team.info_loaded",
+                "team_name": team_settings.team_name,
+                "team_id": team_settings.team_id,
+            },
+        )
+        cli_logger.info(
+            f"Members: {len(team_settings.members)} agents",
+            extra={"event": "team.members_info", "member_count": len(team_settings.members)},
+        )
 
     member_agents: dict[str, BaseMemberAgent] = {}
 
@@ -211,7 +238,14 @@ async def _execute_team_command(
     )
 
     if verbose:
-        typer.echo("\n=== Executing Leader Agent (Agent Delegation) ===", err=True)
+        cli_logger.info(
+            "\n=== Executing Leader Agent (Agent Delegation) ===",
+            extra={
+                "event": "team.leader_execution_start",
+                "team_id": team_config.team_id,
+                "execution_id": execution_id,
+            },
+        )
 
     result = await leader_agent.run(prompt, deps=deps)
 
@@ -307,25 +341,41 @@ async def _execute_team_command(
 
     if save_db:
         if verbose:
-            typer.echo("\nSaving to database...", err=True)
+            cli_logger.info(
+                "\nSaving to database...",
+                extra={
+                    "event": "team.saving_to_db",
+                    "execution_id": execution_id,
+                    "team_id": team_config.team_id,
+                },
+            )
 
         store = AggregationStore(workspace=workspace)
         messages = result.all_messages()
         await store.save_aggregation(execution_id, record, messages)
 
         if verbose:
-            typer.echo(
+            cli_logger.info(
                 f"✓ Saved to database: execution_id={execution_id}, "
                 f"team_id={team_config.team_id}, round={record.round_number}",
-                err=True,
+                extra={
+                    "event": "team.saved_to_db",
+                    "execution_id": execution_id,
+                    "team_id": team_config.team_id,
+                    "round_number": record.round_number,
+                },
             )
 
     # Member Agent 0件の場合は正常終了
     if record.total_count > 0 and record.failure_count == record.total_count:
-        typer.secho(
+        cli_logger.error(
             "ERROR: All member agents failed. No successful submissions.",
-            fg=typer.colors.RED,
-            err=True,
+            extra={
+                "event": "team.all_members_failed",
+                "team_id": team_config.team_id,
+                "total_count": record.total_count,
+                "failure_count": record.failure_count,
+            },
         )
         raise typer.Exit(code=2)
 

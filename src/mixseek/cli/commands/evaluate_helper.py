@@ -14,6 +14,7 @@ from mixseek.evaluator import Evaluator
 from mixseek.models.evaluation_config import EvaluationConfig  # noqa: F401
 from mixseek.models.evaluation_request import EvaluationRequest
 from mixseek.models.evaluation_result import EvaluationResult
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_for_config
 
 # Rebuild EvaluationRequest model after EvaluationConfig is imported
@@ -49,12 +50,26 @@ def _create_evaluator(
     """
     workspace_path = get_workspace_for_config(workspace)
     manager = ConfigurationManager(workspace=workspace_path)
+    cli_logger = get_cli_logger()
 
     if verbose:
         if evaluate_config:
-            typer.echo(f"Loading custom config: {evaluate_config}", err=True)
+            cli_logger.info(
+                f"Loading custom config: {evaluate_config}",
+                extra={
+                    "event": "evaluate.config_custom_loaded",
+                    "config_path": str(evaluate_config),
+                },
+            )
         else:
-            typer.echo(f"Using default config: {workspace_path}/configs/evaluator.toml", err=True)
+            default_config_path = f"{workspace_path}/configs/evaluator.toml"
+            cli_logger.info(
+                f"Using default config: {default_config_path}",
+                extra={
+                    "event": "evaluate.config_default_loaded",
+                    "config_path": default_config_path,
+                },
+            )
 
     # get_evaluator_settings() でフォールバックロジックを共通化
     settings = manager.get_evaluator_settings(evaluate_config)
@@ -94,11 +109,21 @@ async def evaluate_content(
         >>> if result:
         ...     print(f"Overall score: {result.overall_score}")
     """
+    cli_logger = get_cli_logger()
     try:
         if verbose:
-            typer.echo("\n=== Evaluating Response ===", err=True)
-            typer.echo(f"Query: {user_query}", err=True)
-            typer.echo(f"Submission: {submission}", err=True)
+            cli_logger.info(
+                "\n=== Evaluating Response ===",
+                extra={"event": "evaluate.start", "team_id": team_id},
+            )
+            cli_logger.info(
+                f"Query: {user_query}",
+                extra={"event": "evaluate.query", "query": user_query},
+            )
+            cli_logger.info(
+                f"Submission: {submission}",
+                extra={"event": "evaluate.submission", "submission": submission},
+            )
 
         # Evaluator の初期化（共通ヘルパー関数を使用）
         evaluator = _create_evaluator(workspace, evaluate_config, verbose)
@@ -118,21 +143,40 @@ async def evaluate_content(
         result = await evaluator.evaluate(request)
 
         if verbose:
-            typer.echo(f"✓ Evaluation completed: {result.overall_score}", err=True)
+            cli_logger.info(
+                f"✓ Evaluation completed: {result.overall_score}",
+                extra={"event": "evaluate.completed", "overall_score": result.overall_score},
+            )
 
         return result
 
     except FileNotFoundError as e:
-        typer.secho(f"⚠️  Evaluation config file not found: {e}", fg=typer.colors.YELLOW, err=True)
+        cli_logger.error(
+            f"⚠️  Evaluation config file not found: {e}",
+            extra={"event": "evaluate.config_not_found", "error": str(e)},
+        )
         if verbose:
-            typer.echo("Hint: Use --evaluate-config to specify a custom config file", err=True)
+            cli_logger.info(
+                "Hint: Use --evaluate-config to specify a custom config file",
+                extra={"event": "evaluate.config_not_found_hint"},
+            )
         return None
     except Exception as e:
-        typer.secho(f"⚠️  Evaluation failed: {e}", fg=typer.colors.YELLOW, err=True)
+        cli_logger.error(
+            f"⚠️  Evaluation failed: {e}",
+            extra={
+                "event": "evaluate.failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
         if verbose:
             import traceback
 
-            typer.echo(traceback.format_exc(), err=True)
+            cli_logger.error(
+                traceback.format_exc(),
+                extra={"event": "evaluate.failed_traceback"},
+            )
         return None
     finally:
         # Cleanup: Close all HTTP clients in the same event loop

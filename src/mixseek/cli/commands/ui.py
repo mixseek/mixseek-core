@@ -16,9 +16,11 @@ from mixseek.cli.common_options import (
     NO_LOG_FILE_OPTION,
     WORKSPACE_OPTION,
 )
+from mixseek.cli.utils import ensure_log_format_env
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
+from mixseek.observability import get_cli_logger
 
 
 def ui(
@@ -62,12 +64,23 @@ def ui(
 
         mixseek ui --no-log-console
     """
+    # log_format を最初に解決し、環境変数 + CLI logger を早期初期化する。
+    # これにより、以降の cli_logger が JSON モードを正しく判定できる
+    # (ui コマンドは setup_logging を自プロセスで呼ばず Streamlit サブプロセスに委ねるため)。
+    ensure_log_format_env(log_format)
+    cli_logger = get_cli_logger()
+
     # 排他的チェック（複数のlogfireフラグは指定できない）
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:
-        typer.echo(
+        cli_logger.error(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            err=True,
+            extra={
+                "event": "ui.logfire_flags_exclusive_violation",
+                "logfire": logfire,
+                "logfire_metadata": logfire_metadata,
+                "logfire_http": logfire_http,
+            },
         )
         raise typer.Exit(1)
 
@@ -80,11 +93,15 @@ def ui(
         final_port = port if port is not None else ui_settings.port
 
     except Exception as e:
-        typer.echo(f"Error: Failed to load configuration: {e}", err=True)
+        cli_logger.error(
+            f"Error: Failed to load configuration: {e}",
+            extra={
+                "event": "ui.config_load_failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
         raise typer.Exit(1)
-
-    # log_format 解決
-    effective_log_format = log_format if log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
 
     # Logfire設定（CLIフラグが指定された場合のみ）
     if logfire or logfire_metadata or logfire_http:
@@ -123,15 +140,18 @@ def ui(
     os.environ[WORKSPACE_ENV_VAR] = str(ui_settings.workspace_path)
 
     # ロギング設定（環境変数経由でStreamlitに渡す）
+    # MIXSEEK_LOG_FORMAT は関数先頭で既に設定済み
     os.environ["MIXSEEK_LOG_LEVEL"] = log_level
     os.environ["MIXSEEK_LOG_CONSOLE"] = "0" if no_log_console else "1"
     os.environ["MIXSEEK_LOG_FILE"] = "0" if no_log_file else "1"
-    os.environ["MIXSEEK_LOG_FORMAT"] = effective_log_format
 
     app_path = Path(__file__).parent.parent.parent / "ui" / "app.py"
 
     if not app_path.exists():
-        typer.echo(f"Error: Streamlit app not found at {app_path}", err=True)
+        cli_logger.error(
+            f"Error: Streamlit app not found at {app_path}",
+            extra={"event": "ui.app_not_found", "app_path": str(app_path)},
+        )
         raise typer.Exit(1)
 
     try:
@@ -141,8 +161,18 @@ def ui(
     except SystemExit as e:
         # Streamlit may raise SystemExit(0) or SystemExit(None) on normal termination
         if e.code:
-            typer.echo(f"Error: Streamlit exited with code {e.code}", err=True)
+            cli_logger.error(
+                f"Error: Streamlit exited with code {e.code}",
+                extra={"event": "ui.streamlit_exit_error", "exit_code": e.code},
+            )
             raise typer.Exit(1)
     except Exception as e:
-        typer.echo(f"Error: Streamlit failed to start: {e}", err=True)
+        cli_logger.error(
+            f"Error: Streamlit failed to start: {e}",
+            extra={
+                "event": "ui.streamlit_start_failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
         raise typer.Exit(1)

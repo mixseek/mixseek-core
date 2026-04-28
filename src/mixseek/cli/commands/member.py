@@ -24,6 +24,7 @@ from mixseek.cli.common_options import (
 )
 from mixseek.cli.formatters import ResultFormatter
 from mixseek.cli.utils import (
+    ensure_log_format_env,
     initialize_observability,
     mutually_exclusive_group,
     show_development_warning,
@@ -34,6 +35,7 @@ from mixseek.config.manager import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.models.member_agent import MemberAgentConfig, MemberAgentResult
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
 
 
@@ -47,7 +49,14 @@ def display_result(result: MemberAgentResult, execution_time_ms: int, output_for
             formatter = ResultFormatter.get_formatter(output_format)
             formatter(result, execution_time_ms, verbose)
     except ValueError as e:
-        typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
+        get_cli_logger().error(
+            f"Error: {e}",
+            extra={
+                "event": "member.display_formatter_invalid",
+                "error": str(e),
+                "output_format": output_format,
+            },
+        )
         # Fallback to structured format
         ResultFormatter.format_structured(result, execution_time_ms, verbose)
 
@@ -69,11 +78,25 @@ async def execute_agent_from_config(
     Raises:
         asyncio.TimeoutError: If execution exceeds timeout
     """
+    cli_logger = get_cli_logger()
     try:
         if verbose:
-            typer.echo(f"Loaded configuration: {config.name} ({config.type})", err=True)
-            typer.echo(f"Model: {config.model}", err=True)
-            typer.echo(f"Timeout: {timeout}s", err=True)
+            cli_logger.info(
+                f"Loaded configuration: {config.name} ({config.type})",
+                extra={
+                    "event": "member.config_loaded",
+                    "agent_name": config.name,
+                    "agent_type": config.type,
+                },
+            )
+            cli_logger.info(
+                f"Model: {config.model}",
+                extra={"event": "member.config_model", "model": config.model},
+            )
+            cli_logger.info(
+                f"Timeout: {timeout}s",
+                extra={"event": "member.config_timeout", "timeout_seconds": timeout},
+            )
 
         # Create and execute agent
         agent = MemberAgentFactory.create_agent(config)
@@ -153,6 +176,10 @@ def member(
 
         mixseek member "質問" --agent plain --log-level debug --verbose
     """
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
+    ensure_log_format_env(log_format)
+    cli_logger = get_cli_logger()
+
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
@@ -176,7 +203,10 @@ def member(
 
     # Validate at least one option is provided
     if not config and not agent:
-        typer.echo("Error: Either --config or --agent must be specified", err=True)
+        cli_logger.error(
+            "Error: Either --config or --agent must be specified",
+            extra={"event": "member.missing_required_option"},
+        )
         raise typer.Exit(1)
 
     # Execute agent
@@ -216,7 +246,14 @@ def member(
             effective_timeout = timeout if timeout is not None else (loaded_config.timeout_seconds or 30)
             result = asyncio.run(execute_agent_from_config(loaded_config, prompt, verbose, effective_timeout))
         except BundledMemberAgentError as e:
-            typer.echo(f"Error: {e}", err=True)
+            cli_logger.error(
+                f"Error: {e}",
+                extra={
+                    "event": "member.bundled_agent_error",
+                    "error": str(e),
+                    "agent_name": agent,
+                },
+            )
             raise typer.Exit(1)
 
         execution_time_ms = int((time.time() - start_time) * 1000)
@@ -231,8 +268,18 @@ def member(
         # Re-raise typer.Exit to preserve intended exit code
         raise
     except KeyboardInterrupt:
-        typer.echo("\n⚠️  Interrupted by user", err=True)
+        cli_logger.warning(
+            "\n⚠️  Interrupted by user",
+            extra={"event": "member.interrupted_by_user"},
+        )
         raise typer.Exit(130)
     except Exception as e:
-        typer.echo(f"Unexpected error: {e}", err=True)
+        cli_logger.error(
+            f"Unexpected error: {e}",
+            extra={
+                "event": "member.unexpected_error",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
         raise typer.Exit(1)

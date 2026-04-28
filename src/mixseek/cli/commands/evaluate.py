@@ -19,7 +19,8 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
+from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
 
 
@@ -65,6 +66,9 @@ def evaluate(
 
         mixseek evaluate "質問" "回答" --log-level debug --verbose
     """
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
+    ensure_log_format_env(log_format)
+
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
@@ -110,5 +114,8 @@ def evaluate(
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        typer.echo("\n⚠️  Interrupted by user", err=True)
+        get_cli_logger().warning(
+            "\n⚠️  Interrupted by user",
+            extra={"event": "evaluate.interrupted_by_user"},
+        )
         sys.exit(130)

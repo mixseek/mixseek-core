@@ -9,12 +9,18 @@ import traceback
 from pathlib import Path
 from typing import Any, NoReturn, TypeVar, cast
 
+import click
 import typer
 from pydantic import ValidationError
 
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
 from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
-from mixseek.observability import setup_logfire, setup_logging
+from mixseek.observability import (
+    early_setup_cli_logger_from_env,
+    get_cli_logger,
+    setup_logfire,
+    setup_logging,
+)
 
 # Exit code constants
 EXIT_SUCCESS = 0
@@ -31,8 +37,10 @@ def show_development_warning() -> None:
     This warning is displayed for all development/testing commands to remind
     users that these commands are not intended for production use.
     """
-    warning_message = "⚠️  Development/Testing only - Not for production use\n"
-    print(warning_message, file=sys.stderr, end="")
+    get_cli_logger().warning(
+        "⚠️  Development/Testing only - Not for production use",
+        extra={"event": "cli.dev_warning"},
+    )
 
 
 def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
@@ -45,7 +53,10 @@ def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
     Raises:
         SystemExit: Always raises to exit the program
     """
-    print(f"Error: {message}", file=sys.stderr)
+    get_cli_logger().error(
+        f"Error: {message}",
+        extra={"event": "cli.exit_with_error", "error": message, "exit_code": code},
+    )
     sys.exit(code)
 
 
@@ -139,6 +150,7 @@ def setup_logfire_from_cli(
         console_enabled: コンソール出力有効化フラグ
     """
     logfire_config = None
+    cli_logger = get_cli_logger()
 
     if logfire or logfire_metadata or logfire_http:
         # 環境変数から基本設定を読み取る（project_name/send_to_logfire の継承用）
@@ -183,15 +195,25 @@ def setup_logfire_from_cli(
                 file_enabled=file_enabled,
             )
             if verbose:
-                typer.secho("✓ Logfire observability enabled", fg=typer.colors.GREEN, err=True)
+                # 成功通知の GREEN は text モードのみ視認される構造色 (click.style 直書き)。
+                cli_logger.info(
+                    click.style("✓ Logfire observability enabled", fg="green"),
+                    extra={"event": "logfire.enabled"},
+                )
         except Exception as e:
-            typer.secho(
+            cli_logger.warning(
                 f"WARNING: Logfire initialization failed: {e}",
-                fg=typer.colors.YELLOW,
-                err=True,
+                extra={
+                    "event": "logfire.init_failed",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
             )
             if verbose:
-                typer.echo(traceback.format_exc(), err=True)
+                cli_logger.warning(
+                    traceback.format_exc(),
+                    extra={"event": "logfire.init_failed_traceback"},
+                )
 
 
 def setup_logging_from_cli(
@@ -214,6 +236,8 @@ def setup_logging_from_cli(
         verbose: 詳細ログ表示フラグ
         log_format: ログ出力形式（text/json）
     """
+    cli_logger = get_cli_logger()
+
     try:
         config = LoggingConfig(
             logfire_enabled=logfire_enabled,
@@ -223,26 +247,72 @@ def setup_logging_from_cli(
             log_format=cast(LogFormatType, log_format),
         )
     except ValidationError as e:
-        typer.echo(f"Error: ログ設定が不正です: {e}", err=True)
+        cli_logger.error(
+            f"Error: ログ設定が不正です: {e}",
+            extra={"event": "logging.config_invalid", "error": str(e)},
+        )
         raise typer.Exit(code=2)
 
     try:
         setup_logging(config, workspace)
         if verbose:
-            typer.secho(
-                f"✓ Logging configured (level={log_level}, format={log_format}, "
-                f"console={not no_log_console}, file={not no_log_file})",
-                fg=typer.colors.GREEN,
-                err=True,
+            cli_logger.info(
+                click.style(
+                    f"✓ Logging configured (level={log_level}, format={log_format}, "
+                    f"console={not no_log_console}, file={not no_log_file})",
+                    fg="green",
+                ),
+                extra={
+                    "event": "logging.configured",
+                    "log_level": log_level,
+                    "log_format": log_format,
+                    "console_enabled": not no_log_console,
+                    "file_enabled": not no_log_file,
+                },
             )
     except Exception as e:
-        typer.secho(
+        cli_logger.warning(
             f"WARNING: Logging setup failed: {e}",
-            fg=typer.colors.YELLOW,
-            err=True,
+            extra={
+                "event": "logging.setup_failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         if verbose:
-            typer.echo(traceback.format_exc(), err=True)
+            cli_logger.warning(
+                traceback.format_exc(),
+                extra={"event": "logging.setup_failed_traceback"},
+            )
+
+
+def ensure_log_format_env(cli_log_format: str | None) -> str:
+    """CLI引数の log_format を解決し、環境変数 MIXSEEK_LOG_FORMAT に反映する。
+
+    ``setup_logging()`` 呼び出し前の CLI 出力 (例: ``validate_logfire_flags``) が
+    正しいフォーマット (text / json) で出力されるように、env var を確定した直後に
+    ``mixseek.cli`` logger を早期初期化する。
+
+    値は小文字に正規化し、``{"json", "text"}`` 以外は ``"text"`` に fallback する。
+    これにより "JSON"/"Json" 等の表記揺れや不正値が env と戻り値に伝搬しないようにする。
+
+    Args:
+        cli_log_format: CLI ``--log-format`` の値。None の場合は既存の環境変数または
+            "text" を fallback に採用する。
+
+    Returns:
+        実効的に採用した log_format ("text" または "json")。
+    """
+    effective = cli_log_format if cli_log_format is not None else os.getenv("MIXSEEK_LOG_FORMAT", "text")
+    effective = effective.lower()
+    if effective not in {"json", "text"}:
+        effective = "text"
+    os.environ["MIXSEEK_LOG_FORMAT"] = effective
+    # env var 確定後に CLI logger を (再) 初期化。
+    # setup_logging() は initialize_observability() で後から呼ばれるが、
+    # それより前の cli_logger 呼び出しも適切なフォーマットで出力するため。
+    early_setup_cli_logger_from_env()
+    return effective
 
 
 def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: bool) -> None:
@@ -258,10 +328,14 @@ def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: 
     """
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:
-        typer.secho(
+        get_cli_logger().error(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
-            fg=typer.colors.RED,
-            err=True,
+            extra={
+                "event": "logfire.flags_exclusive_violation",
+                "logfire": logfire,
+                "logfire_metadata": logfire_metadata,
+                "logfire_http": logfire_http,
+            },
         )
         raise typer.Exit(1)
 

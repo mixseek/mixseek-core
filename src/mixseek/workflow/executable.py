@@ -317,13 +317,16 @@ def _load_module_from_path(path: str) -> Any:
     member 側 `custom_agent_<hash>` と同居しても衝突しないよう `custom_function_` プレフィックスを使う。
 
     Raises:
-        ValueError: file 不在 / spec 生成失敗 / モジュールレベルコードの実行失敗
+        ValueError: file 不在 / 通常ファイル以外（ディレクトリ等） / spec 生成失敗 /
+            モジュールレベルコードの実行失敗
     """
     path_obj = Path(path)
-    if not path_obj.exists():
+    # ディレクトリを誤って渡された場合 `spec_from_file_location` は spec=None を返し
+    # 「Failed to create module spec」という不透明なエラーになるため、is_file() で先に弾く。
+    if not path_obj.is_file():
         raise ValueError(
             f"Failed to load function from path '{path}'. "
-            f"FileNotFoundError: File not found. Check file path in TOML config."
+            f"FileNotFoundError: File not found or is not a regular file. Check file path in TOML config."
         )
 
     path_hash = hashlib.sha256(str(path_obj.resolve()).encode()).hexdigest()[:16]

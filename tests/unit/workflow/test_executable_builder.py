@@ -166,6 +166,14 @@ class TestLoadFunction:
                 function="fn",
             )
 
+    def test_path_is_directory(self, tmp_path: Path) -> None:
+        """`path` がディレクトリを指す場合、`spec_from_file_location` 失敗による
+        不透明なエラーではなく、is_file() バリデーションで ValueError として弾く。"""
+        d = tmp_path / "not_a_file"
+        d.mkdir()
+        with pytest.raises(ValueError, match="FileNotFoundError"):
+            _load_function(module=None, path=str(d), function="fn")
+
     def test_path_attribute_not_found(self, tmp_path: Path) -> None:
         """`path` ロードに成功しても function 名が無ければ ValueError。"""
         f = tmp_path / "mod.py"

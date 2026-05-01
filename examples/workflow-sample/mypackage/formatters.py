@@ -36,7 +36,8 @@ def format_as_markdown(input: str) -> str:
     """
     payload = json.loads(input)
     user_prompt: str = payload.get("user_prompt", "")
-    previous: dict[str, list[dict[str, Any]]] = payload.get("previous_steps", {}) or {}
+    # `or {}` を付けない: 空辞書 {} は「前段なし」を表す有意味値で、上書きしない。
+    previous: dict[str, list[dict[str, Any]]] = payload.get("previous_steps", {})
 
     gather_outputs = previous.get("gather", [])
     if not gather_outputs:

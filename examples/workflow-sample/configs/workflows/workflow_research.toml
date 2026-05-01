@@ -1,0 +1,83 @@
+# Research Pipeline workflow サンプル
+#
+# 3 ステップ構成:
+#   1. gather:    web_search + plain agent を並列実行 (情報収集)
+#   2. format:    Python function (`mypackage/formatters.py`) で Markdown 整形
+#   3. synthesize: plain agent で最終回答を生成
+#
+# function plugin は `path` 方式で指定している。
+#   - `path = "mypackage/formatters.py"` は相対 path のため cwd 起点で解決される
+#   - 実行時は事前に `cd "$MIXSEEK_WORKSPACE"` してから `mixseek exec` を呼ぶこと
+#   - PYTHONPATH の設定や pip install は不要 (詳細は ./README.md §path 方式)
+
+[workflow]
+workflow_id = "research-pipeline"
+workflow_name = "Research Pipeline"
+
+# 各 executor の `model` 省略時のフォールバック。本サンプルは全て gemini-2.5-flash を使う。
+default_model = "google-gla:gemini-2.5-flash"
+
+# 後続ステップに過去の全ステップを渡す (false の場合は直前 1 ステップのみ)。
+include_all_context = false
+
+# 最終 submission_content の整形フォーマット (json / text)。
+final_output_format = "text"
+
+# ---------------------------------------------------------------------------
+# Step 1: gather - web 検索 + 学術要約を並列実行
+# ---------------------------------------------------------------------------
+[[workflow.steps]]
+id = "gather"
+
+[[workflow.steps.executors]]
+name = "web-searcher"
+type = "web_search"
+system_instruction = """
+あなたは Web 検索担当のエージェントです。
+入力は `{user_prompt, previous_steps}` 形式の JSON 文字列なので、まず `json.loads` 相当の解釈を行い `user_prompt` の値だけを検索クエリとして使ってください。
+信頼できる一次情報源を優先し、検索結果の要点を簡潔にまとめてください。
+"""
+
+[workflow.steps.executors.tool_settings.web_search]
+max_results = 10
+timeout = 60
+
+[[workflow.steps.executors]]
+name = "academic-summarizer"
+type = "plain"
+system_instruction = """
+あなたは学術的な観点から情報を整理する専門家です。
+入力は `{user_prompt, previous_steps}` 形式の JSON 文字列なので、まず `json.loads` 相当の解釈を行い `user_prompt` と `previous_steps` を取り出してください。`user_prompt` を読み、関連する基礎概念・主要研究・学術的論点を箇条書きで整理してください。
+他のエージェントの結果はまだ存在しない前提 (`previous_steps` は空想定) で、自分の知識のみで回答してください。
+"""
+
+# ---------------------------------------------------------------------------
+# Step 2: format - Python function で Markdown に整形
+# ---------------------------------------------------------------------------
+[[workflow.steps]]
+id = "format"
+
+[[workflow.steps.executors]]
+name = "markdown-formatter"
+type = "function"
+timeout_seconds = 30
+
+# path 方式で plugin を指定。
+# 相対 path は cwd 起点で解決されるため、実行時は `cd "$MIXSEEK_WORKSPACE"` 必須。
+[workflow.steps.executors.plugin]
+path = "mypackage/formatters.py"
+function = "format_as_markdown"
+
+# ---------------------------------------------------------------------------
+# Step 3: synthesize - plain agent で最終回答を組み立てる
+# ---------------------------------------------------------------------------
+[[workflow.steps]]
+id = "synthesize"
+
+[[workflow.steps.executors]]
+name = "synthesizer"
+type = "plain"
+system_instruction = """
+あなたは複数の入力を統合してユーザに回答するシンセサイザーです。
+入力は `{user_prompt, previous_steps}` 形式の JSON 文字列なので、まず `json.loads` 相当の解釈を行い `user_prompt` と `previous_steps` を取り出してください。`previous_steps` には gather (web-searcher / academic-summarizer) と format (markdown-formatter) の出力が入っているため、Markdown 整形済みの内容を尊重しつつ、ユーザの質問 (`user_prompt`) に対する最終的な回答を日本語でまとめてください。
+"""

@@ -1,0 +1,29 @@
+# MixSeek Workflow Mode サンプル orchestrator 設定
+#
+# このサンプルは workflow mode (固定ステップで agent / function を順次・並列実行)
+# の最小構成です。1 つの workflow TOML だけを `[[orchestrator.teams]]` に登録します。
+#
+# 使用方法 (詳細は ./README.md):
+#   cp -rp examples/workflow-sample workspaces/
+#   export MIXSEEK_WORKSPACE="$PWD/workspaces/workflow-sample"
+#   export GOOGLE_API_KEY="..."
+#   cd "$MIXSEEK_WORKSPACE"   # function plugin の path 方式 (cwd 起点) のため必須
+#   mixseek exec --dry-run --config configs/orchestrator.toml
+#   mixseek exec "量子コンピュータの最新動向をまとめて" --config configs/orchestrator.toml
+
+[orchestrator]
+# チーム単位タイムアウト (秒)。LLM API 呼び出しを考慮して長めに設定。
+timeout_per_team_seconds = 600
+
+max_rounds = 3
+min_rounds = 2
+
+# Evaluator / Judgment / PromptBuilder の設定ファイル指定はオプション。
+# 未指定の場合はデフォルト動作 (`ConfigurationManager.get_*_settings(None)`) が使われる。
+# evaluator_config = "configs/evaluator.toml"
+# judgment_config = "configs/judgment.toml"
+
+# Workflow を 1 件登録。`[team]` ではなく `[workflow]` セクションを持つ TOML を指す。
+# 相対パスは `MIXSEEK_WORKSPACE` を起点に解釈される。
+[[orchestrator.teams]]
+config = "configs/workflows/workflow_research.toml"

@@ -16,7 +16,7 @@
 timeout_per_team_seconds = 600
 
 max_rounds = 3
-min_rounds = 1
+min_rounds = 2
 
 # Evaluator / Judgment / PromptBuilder の設定ファイル指定はオプション。
 # 未指定の場合はデフォルト動作 (`ConfigurationManager.get_*_settings(None)`) が使われる。

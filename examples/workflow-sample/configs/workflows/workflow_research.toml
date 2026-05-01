@@ -18,10 +18,10 @@ workflow_name = "Research Pipeline"
 default_model = "google-gla:gemini-2.5-flash"
 
 # 後続ステップに過去の全ステップを渡す (false の場合は直前 1 ステップのみ)。
-include_all_context = true
+include_all_context = false
 
 # 最終 submission_content の整形フォーマット (json / text)。
-final_output_format = "json"
+final_output_format = "text"
 
 # ---------------------------------------------------------------------------
 # Step 1: gather - web 検索 + 学術要約を並列実行

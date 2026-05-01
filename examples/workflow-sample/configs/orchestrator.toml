@@ -15,7 +15,6 @@
 # チーム単位タイムアウト (秒)。LLM API 呼び出しを考慮して長めに設定。
 timeout_per_team_seconds = 600
 
-# 1 ラウンドで完了させ、E2E 動作確認時の API 呼び出し数を最小化する。
 max_rounds = 3
 min_rounds = 1
 

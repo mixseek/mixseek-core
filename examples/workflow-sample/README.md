@@ -4,7 +4,7 @@
 の最小構成です。3 ステップの research pipeline を題材に、
 
 - workflow TOML の書き方 (`[workflow]` / `[[workflow.steps]]` / `[[workflow.steps.executors]]`)
-- function executor の **path 方式** (PYTHONPATH 不要)
+- function executor のプラグイン指定方式 (**`path`** / **`module`** / カスタムメンバーエージェントと同じ流儀)
 - DuckDB に保存される workflow 実行履歴の確認方法
 - logfire span の確認方法
 
@@ -68,11 +68,22 @@ mixseek exec "量子コンピュータの最新動向をまとめて" --config c
 > 相対 path で書かれています。相対 path は **cwd を起点に解決される** ため、
 > workspace 以外のディレクトリで `mixseek exec` を呼ぶと
 > `Failed to load function from path 'mypackage/formatters.py'` で実行時エラーになります。
-> 詳細は下記の「path 方式と作業ディレクトリ」セクション参照。
+> 詳細は下記の「Function plugin の指定方式」セクション参照。
 
-## 🔧 path 方式と作業ディレクトリ
+## 🔧 Function plugin の指定方式
 
-`workflow_research.toml` の function plugin は `path` 方式で書かれています:
+Function executor は `[workflow.steps.executors.plugin]` で **`path`** または **`module`** を排他指定で渡します。
+カスタムメンバーエージェント (`examples/custom_agents/`) と同じく、ファイルパス指定とモジュール指定の
+2 通りに対応しているため、用途に応じて使い分けてください。`function` は呼び出す関数名です。
+
+| 方式 | TOML 例 | 何を指定するか | 使いどころ |
+|---|---|---|---|
+| `path` | `path = "mypackage/formatters.py"` | Python ファイルへのパス (絶対 / 相対) | サンプルや単発スクリプト。`PYTHONPATH` / `pip install` 不要 |
+| `module` | `module = "mypackage.formatters"` | `sys.path` から解決可能な Python module | `pip install -e .` 済みのパッケージや本番運用 |
+
+排他制約は `FunctionPluginMetadata` (`src/mixseek/config/schema.py`) で検証されます。
+
+### `path` 方式 (本サンプルで採用)
 
 ```toml
 [workflow.steps.executors.plugin]
@@ -97,6 +108,26 @@ function = "format_as_markdown"
   Quick start の `cd "$MIXSEEK_WORKSPACE"` は必須です。
 - **SECURITY**: `_load_module_from_path` は module レベルコードを実行するため、
   信頼できないファイルを `path` に指定しないでください (member 側の制約と同じ)。
+
+### `module` 方式 (代替)
+
+`pip install -e .` などで `sys.path` 上に置いてあるパッケージから関数をロードしたい場合は
+`path` の代わりに `module` を指定します。カスタムメンバーエージェントの `agent_module` と
+同じ感覚で書けます。
+
+```toml
+[workflow.steps.executors.plugin]
+module = "mypackage.formatters"
+function = "format_as_markdown"
+```
+
+- ロード処理: `importlib.import_module(module)` で解決します。
+- `module` 方式では対象を Python package として import 可能にする必要があるため、
+  `mypackage/__init__.py` を用意してください (`path` 方式では不要)。
+- cwd への依存がなくなるため、`cd "$MIXSEEK_WORKSPACE"` は必須ではありません。代わりに
+  `mypackage` を `sys.path` から import 可能にする責務がユーザ側に移ります
+  (`pip install -e .` / `PYTHONPATH` 等)。
+- `module` と `path` は同時指定不可です（`FunctionPluginMetadata` で排他検証）。
 
 ## 📊 DuckDB で実行結果を確認
 

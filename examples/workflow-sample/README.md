@@ -216,10 +216,8 @@ FileNotFoundError: File not found or is not a regular file. Check file path in T
 
 ## 📚 関連ドキュメント
 
-- 設計: `internal/workflow-mode/workflow-mode-plan.md`
-- PR5 計画: `.logs/plans/internal-workflow-mode-workflow-mode-pl-piped-dream.md`
-- function plugin の path 方式: PR4.5 (`FunctionPluginMetadata.path`) で追加
 - team mode サンプル: `examples/orchestrator-sample/`
+- カスタムメンバーエージェントのサンプル: `examples/custom_agents/`
 
 ---
 

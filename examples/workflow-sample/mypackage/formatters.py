@@ -31,20 +31,20 @@ def format_as_markdown(input: str) -> str:
         input: `WorkflowContext.build_task_context` が生成する JSON 文字列。
 
     Returns:
-        Markdown 文字列。`previous_steps` が空 (Step 1 で呼ばれた等) なら
-        `# {user_prompt}\n` のみ返す。
+        Markdown 文字列。`previous_steps` が空 (Step 1 で呼ばれた等) なら空文字列を返す。
+        `user_prompt` は `WorkflowContext.build_task_context` が後段 executor の入力 JSON に
+        トップレベルキーとして自動挿入するため、本関数の出力には含めない (二重挿入回避)。
     """
     payload = json.loads(input)
-    user_prompt: str = payload.get("user_prompt", "")
     # `or {}` を付けない: 空辞書 {} は「前段なし」を表す有意味値で、上書きしない。
     previous: dict[str, list[dict[str, Any]]] = payload.get("previous_steps", {})
 
     gather_outputs = previous.get("gather", [])
     if not gather_outputs:
         # まだ前段が走っていない (Step 1 で呼ばれた等)
-        return f"# {user_prompt}\n"
+        return ""
 
-    lines: list[str] = [f"# {user_prompt}", ""]
+    lines: list[str] = []
     for output in gather_outputs:
         executor_name = output.get("executor_name", "<unknown>")
         status = output.get("status", "")

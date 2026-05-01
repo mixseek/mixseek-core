@@ -4,7 +4,7 @@
 の最小構成です。3 ステップの research pipeline を題材に、
 
 - workflow TOML の書き方 (`[workflow]` / `[[workflow.steps]]` / `[[workflow.steps.executors]]`)
-- function executor の **path 方式** (PR4.5 で追加。PYTHONPATH 不要)
+- function executor の **path 方式** (PYTHONPATH 不要)
 - DuckDB に保存される workflow 実行履歴の確認方法
 - logfire span の確認方法
 
@@ -40,7 +40,7 @@ examples/workflow-sample/
     └── formatters.py                    # function executor 実装 (path 方式)
 ```
 
-`mypackage/__init__.py` は **作成しません**。PR4.5 で追加された `path` 方式
+`mypackage/__init__.py` は **作成しません**。`path` 方式
 (`_load_module_from_path`) は `importlib.util.spec_from_file_location` でファイルを
 直接ロードするため、`mypackage/` を Python package にする必要がありません。
 
@@ -72,8 +72,7 @@ mixseek exec "量子コンピュータの最新動向をまとめて" --config c
 
 ## 🔧 path 方式と作業ディレクトリ
 
-`workflow_research.toml` の function plugin は PR4.5 で追加された `path` 方式で
-書かれています:
+`workflow_research.toml` の function plugin は `path` 方式で書かれています:
 
 ```toml
 [workflow.steps.executors.plugin]

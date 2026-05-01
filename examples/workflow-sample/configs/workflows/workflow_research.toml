@@ -5,7 +5,7 @@
 #   2. format:    Python function (`mypackage/formatters.py`) で Markdown 整形
 #   3. synthesize: plain agent で最終回答を生成
 #
-# function plugin の指定方式は PR4.5 で追加された `path` 方式を採用している。
+# function plugin は `path` 方式で指定している。
 #   - `path = "mypackage/formatters.py"` は相対 path のため cwd 起点で解決される
 #   - 実行時は事前に `cd "$MIXSEEK_WORKSPACE"` してから `mixseek exec` を呼ぶこと
 #   - PYTHONPATH の設定や pip install は不要 (詳細は ./README.md §path 方式)
@@ -62,7 +62,7 @@ name = "markdown-formatter"
 type = "function"
 timeout_seconds = 30
 
-# PR4.5 で追加された path 方式で plugin を指定。
+# path 方式で plugin を指定。
 # 相対 path は cwd 起点で解決されるため、実行時は `cd "$MIXSEEK_WORKSPACE"` 必須。
 [workflow.steps.executors.plugin]
 path = "mypackage/formatters.py"

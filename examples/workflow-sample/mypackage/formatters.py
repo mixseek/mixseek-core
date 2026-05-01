@@ -14,7 +14,7 @@
     `WorkflowEngine._execute_step` が `WorkflowStepFailedError` に昇格させる。
 
 Note:
-    PR4.5 の `path` 方式で `_load_module_from_path` から直接読み込まれるため、
+    `path` 方式で `_load_module_from_path` から直接読み込まれるため、
     本ファイルは Python package である必要はない (`__init__.py` 不要)。
 """
 

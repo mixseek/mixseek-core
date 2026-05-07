@@ -1,10 +1,14 @@
-"""reasoning_effort のプロバイダ別ディスパッチ。
+"""reasoning_effort / enable_thinking のプロバイダ別ディスパッチ。
 
-モデル prefix に応じて Pydantic AI の ModelSettings へ reasoning 指定を注入する。
+モデル prefix に応じて Pydantic AI の ModelSettings へ reasoning / thinking 指定を注入する。
 
-- openai:  → OpenAIChatModelSettings の openai_reasoning_effort（固有キー）
-- qwen:    → ModelSettings.extra_body["reasoning"]["effort"]（OpenRouter 経由）
-- その他   → ValueError（フォールバック禁止）
+- reasoning_effort
+  - openai:  → OpenAIChatModelSettings の openai_reasoning_effort（固有キー）
+  - qwen:    → ModelSettings.extra_body["reasoning"]["effort"]（OpenRouter 経由）
+  - その他   → ValueError（フォールバック禁止）
+- enable_thinking (Qwen3 系の thinking モード制御)
+  - qwen:    → ModelSettings.extra_body["chat_template_kwargs"]["enable_thinking"]
+  - その他   → ValueError（フォールバック禁止）
 """
 
 from typing import Literal, cast
@@ -61,3 +65,46 @@ def apply_reasoning_effort(
         f"reasoning_effort is not supported for model '{model_id}'. "
         f"Supported model prefixes: {_OPENAI_PREFIXES + _OPENROUTER_PREFIXES}."
     )
+
+
+def apply_enable_thinking(
+    settings: ModelSettings,
+    model_id: str,
+    enable_thinking: bool | None,
+) -> ModelSettings:
+    """enable_thinking を qwen: プレフィックス時のみ ModelSettings に注入する。
+
+    Qwen3 系モデルの thinking モード (default) と non-thinking (instruct) を切り替える。
+    OpenAI 互換エンドポイント (OpenRouter 等) では
+    extra_body.chat_template_kwargs.enable_thinking が正規パス。
+
+    Args:
+        settings: 対象の ModelSettings（破壊的に更新）
+        model_id: モデル識別子（例: "qwen:qwen3.5-35b-a3b"）
+        enable_thinking: True で thinking on、False で off。None の場合は何もしない
+
+    Returns:
+        同一の settings オブジェクト（チェーン用）
+
+    Raises:
+        ValueError: qwen: 以外のプレフィックスで enable_thinking が指定された場合
+    """
+    if enable_thinking is None:
+        return settings
+
+    if not model_id.startswith(_OPENROUTER_PREFIXES):
+        raise ValueError(
+            f"enable_thinking is supported only for 'qwen:' models, got '{model_id}'. "
+            f"Supported model prefixes: {_OPENROUTER_PREFIXES}."
+        )
+
+    existing_extra = settings.get("extra_body")
+    extra_body: dict[str, object] = dict(existing_extra) if isinstance(existing_extra, dict) else {}
+    chat_template_kwargs_raw = extra_body.get("chat_template_kwargs")
+    chat_template_kwargs: dict[str, object] = (
+        dict(chat_template_kwargs_raw) if isinstance(chat_template_kwargs_raw, dict) else {}
+    )
+    chat_template_kwargs["enable_thinking"] = enable_thinking
+    extra_body["chat_template_kwargs"] = chat_template_kwargs
+    settings["extra_body"] = extra_body
+    return settings

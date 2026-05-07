@@ -42,8 +42,8 @@ def load_toml_with_workspace(
     if not resolved_path.is_absolute():
         resolved_path = workspace / resolved_path
 
-    if not resolved_path.exists():
-        raise FileNotFoundError(f"{context} not found: {resolved_path}")
+    if not resolved_path.is_file():
+        raise FileNotFoundError(f"{context} not found or is not a file: {resolved_path}")
 
     try:
         with resolved_path.open("rb") as f:

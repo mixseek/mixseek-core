@@ -340,7 +340,7 @@ max_tokens = 1024
         assert result.exit_code == 1
         output = result.stdout  # CliRunner mixes stdout and stderr by default
         # 正確なエラーメッセージ文言を確認（TeamTomlSourceから出力される）
-        assert "ERROR: Team config file not found:" in output or "ERROR: Failed to resolve workspace path:" in output
+        assert "ERROR: Team config file not found" in output or "ERROR: Failed to resolve workspace path:" in output
 
     def test_cli_toml_validation_error(self, runner: CliRunner, tmp_path: Path) -> None:
         """TOML設定バリデーションエラー"""

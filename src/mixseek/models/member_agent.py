@@ -305,6 +305,16 @@ class MemberAgentConfig(BaseModel):
             "Other providers raise ValueError at runtime."
         ),
     )
+    enable_thinking: bool | None = Field(
+        default=None,
+        description=(
+            "Qwen3 系モデルの thinking モード制御。'qwen:' プレフィックス利用時のみ "
+            "extra_body.chat_template_kwargs.enable_thinking として注入される。"
+            "None のときは何も注入せず、モデル側の既定挙動に従う。"
+            "True で thinking on、False で off。"
+            "qwen: 以外のプレフィックスで指定すると実行時 ValueError。"
+        ),
+    )
     timeout_seconds: int | None = Field(
         default=None,
         ge=1,

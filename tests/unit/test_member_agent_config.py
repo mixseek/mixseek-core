@@ -314,6 +314,20 @@ class TestMemberAgentConfig:
                 reasoning_effort="max",  # type: ignore[arg-type]
             )
 
+    @pytest.mark.parametrize("value", [True, False, None])
+    def test_enable_thinking_accepts_bool_or_none(self, value: bool | None) -> None:
+        """enable_thinking は True / False / None を受理する."""
+        config = MemberAgentConfig(
+            name="test-agent",
+            type=AgentType.PLAIN,
+            enable_thinking=value,
+        )
+        assert config.enable_thinking is value
+
+    def test_enable_thinking_defaults_to_none(self) -> None:
+        config = MemberAgentConfig(name="test-agent", type=AgentType.PLAIN)
+        assert config.enable_thinking is None
+
 
 class TestEnvironmentConfig:
     """Test EnvironmentConfig model validation and environment variable handling."""

@@ -47,6 +47,15 @@ class LeaderAgentConfig(BaseModel):
             "その他のprefix指定時は実行時に ValueError"
         ),
     )
+    enable_thinking: bool | None = Field(
+        default=None,
+        description=(
+            "Qwen3 系モデルの thinking モード制御。'qwen:' プレフィックス利用時のみ "
+            "extra_body.chat_template_kwargs.enable_thinking として注入される。"
+            "None のときは何も注入せず、モデル側の既定挙動に従う。True で thinking on、False で off。"
+            "qwen: 以外のプレフィックスで指定すると実行時 ValueError。"
+        ),
+    )
 
     @field_validator("system_instruction")
     @classmethod
@@ -98,6 +107,15 @@ class TeamMemberAgentConfig(BaseModel):
         default=None,
         description=(
             "Reasoning/thinking強度。openai:（OpenAI reasoningモデル）と qwen:（OpenRouter経由）のみサポート"
+        ),
+    )
+    enable_thinking: bool | None = Field(
+        default=None,
+        description=(
+            "Qwen3 系モデルの thinking モード制御。'qwen:' プレフィックス利用時のみ "
+            "extra_body.chat_template_kwargs.enable_thinking として注入される。"
+            "None のときは何も注入せず、モデル側の既定挙動に従う。True で thinking on、False で off。"
+            "qwen: 以外のプレフィックスで指定すると実行時 ValueError。"
         ),
     )
     config: str | None = Field(default=None, description="参照形式パス")

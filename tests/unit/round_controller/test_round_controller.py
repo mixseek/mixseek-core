@@ -712,7 +712,7 @@ async def test_best_score_submission_identification(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_judge_on_final_round_false_skips_llm(
@@ -791,7 +791,7 @@ async def test_judge_on_final_round_false_skips_llm(
 
 
 @pytest.mark.asyncio
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_judge_on_final_round_true_default_calls_llm(

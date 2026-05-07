@@ -451,8 +451,8 @@ class RoundController:
             if self.store is not None:
                 await self.store.save_round_status(
                     execution_id=self.task.execution_id,
-                    team_id=self.team_config.team_id,
-                    team_name=self.team_config.team_name,
+                    team_id=self.team_id,
+                    team_name=self.team_name,
                     round_number=current_round,
                     should_continue=False,
                     reasoning=reasoning,

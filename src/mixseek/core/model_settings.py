@@ -8,7 +8,11 @@ from typing import Protocol
 
 from pydantic_ai.settings import ModelSettings
 
-from mixseek.core.reasoning import ReasoningEffort, apply_reasoning_effort
+from mixseek.core.reasoning import (
+    ReasoningEffort,
+    apply_enable_thinking,
+    apply_reasoning_effort,
+)
 
 
 class _HasLLMParams(Protocol):
@@ -25,12 +29,14 @@ class _HasLLMParams(Protocol):
     seed: int | None
     timeout_seconds: int | None
     reasoning_effort: ReasoningEffort | None
+    enable_thinking: bool | None
 
 
 def build_model_settings(config: _HasLLMParams) -> ModelSettings:
     """config から Pydantic AI の ModelSettings を構築する。
 
-    None の値は含めず、reasoning_effort はプロバイダ別にディスパッチして注入する。
+    None の値は含めず、reasoning_effort と enable_thinking はプロバイダ別に
+    ディスパッチして注入する。
 
     Args:
         config: LLM パラメータを持つ agent config
@@ -53,4 +59,5 @@ def build_model_settings(config: _HasLLMParams) -> ModelSettings:
     if config.timeout_seconds is not None:
         settings["timeout"] = float(config.timeout_seconds)
 
-    return apply_reasoning_effort(settings, config.model, config.reasoning_effort)
+    settings = apply_reasoning_effort(settings, config.model, config.reasoning_effort)
+    return apply_enable_thinking(settings, config.model, config.enable_thinking)

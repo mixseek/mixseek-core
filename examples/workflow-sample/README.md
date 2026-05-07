@@ -56,7 +56,7 @@ export GOOGLE_API_KEY="..."   # GEMINI_API_KEY でも可
 cd "$MIXSEEK_WORKSPACE"
 
 # 3. 設定ファイルの dry-run (preflight) で TOML 構文 / schema を検証
-mixseek exec --dry-run --config configs/orchestrator.toml
+mixseek exec "test" --dry-run --config configs/orchestrator.toml
 
 # 4. 本実行
 mixseek exec "量子コンピュータの最新動向をまとめて" --config configs/orchestrator.toml

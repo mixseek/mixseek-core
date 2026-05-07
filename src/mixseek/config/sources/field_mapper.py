@@ -63,6 +63,7 @@ def normalize_member_agent_fields(agent_data: dict[str, Any]) -> dict[str, Any]:
         "top_p": agent_data.get("top_p"),
         "seed": agent_data.get("seed"),
         "reasoning_effort": agent_data.get("reasoning_effort"),
+        "enable_thinking": agent_data.get("enable_thinking"),
         # カスタムAgent設定 (Issue #146)
         "plugin": agent_data.get("plugin"),
         # 直接指定を優先、未指定時はmetadata内のネスト指定を参照（後方互換性）

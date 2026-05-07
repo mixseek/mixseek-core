@@ -367,6 +367,27 @@ class TestMemberAgentConfigGenerationE2E:
         # Note: retry_config and usage_limits have been removed (delegated to pydantic_ai)
         # tool_settings is now optional (None by default) per PR#155 refactoring
 
+    def test_member_settings_to_config_propagates_enable_thinking(self) -> None:
+        """enable_thinking が MemberAgentSettings → MemberAgentConfig に伝播する。
+
+        配線層 (field_mapper / member_agent_loader) の漏れを保険として検出する。
+        """
+        from mixseek.config.member_agent_loader import member_settings_to_config
+        from mixseek.config.schema import MemberAgentSettings
+
+        member_settings = MemberAgentSettings(
+            agent_name="qwen_agent",
+            agent_type="plain",
+            model="qwen:qwen3.5-35b-a3b",
+            tool_description="Qwen test agent",
+            system_instruction="test",
+            enable_thinking=True,
+        )
+
+        member_config = member_settings_to_config(member_settings, agent_data=None)
+
+        assert member_config.enable_thinking is True
+
     def test_team_command_preserves_member_agent_details(self, tmp_path: Path) -> None:
         """team commandがMember Agent詳細設定を保持する（Issue #146対応）。"""
         from mixseek.config import ConfigurationManager

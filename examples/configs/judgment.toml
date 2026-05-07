@@ -14,6 +14,11 @@ max_retries = 3
 # Timeout in seconds for judgment API calls
 timeout_seconds = 60
 
+# Whether to run LLM Judgement on the final round (default: true)
+# When false, the LLM call is skipped once current_round >= max_rounds and the
+# continuation decision is forced to False (useful for reducing API cost).
+judge_on_final_round = true
+
 # Optional: Custom system instruction (leave commented to use default)
 # system_instruction = """
 # Your custom instruction here...

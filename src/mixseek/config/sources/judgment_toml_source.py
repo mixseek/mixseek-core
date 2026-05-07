@@ -27,6 +27,7 @@ class JudgmentTomlSource(PydanticBaseSettingsSource):
         top_p = 0.9  # optional
         seed = 42  # optional (OpenAI/Gemini only)
         system_instruction = "..."  # optional
+        judge_on_final_round = true  # optional (default: true)
     """
 
     def __init__(
@@ -88,6 +89,7 @@ class JudgmentTomlSource(PydanticBaseSettingsSource):
             "top_p": data.get("top_p"),
             "seed": data.get("seed"),
             "system_instruction": data.get("system_instruction"),
+            "judge_on_final_round": data.get("judge_on_final_round"),
         }
 
         # Noneの値を除去（デフォルト値を使用）

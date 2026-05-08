@@ -67,7 +67,9 @@ def evaluate(
         mixseek evaluate "質問" "回答" --log-level debug --verbose
     """
     # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
-    ensure_log_format_env(log_format)
+    # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
+    # (env var サイドチャネルへの暗黙依存を避ける)。
+    log_format = ensure_log_format_env(log_format)
 
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)

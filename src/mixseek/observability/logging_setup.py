@@ -284,15 +284,19 @@ def setup_cli_logger(log_format: LogFormatType) -> logging.Logger:
 
 
 def _ensure_cli_safe_default(logger: logging.Logger) -> None:
-    """handler 未設定の CLI logger を「propagate=False + NullHandler」の安全な既定値に揃える。
+    """CLI logger を leak しない安全な既定値に揃える。
 
     ``logging.getLogger`` の既定 (``propagate=True`` + handler 無し) のままだと、
     ``setup_cli_logger()`` 前のアクセス直後に root logger / ``lastResort`` handler
     (stderr, WARNING 以上) へ leak してしまう。
-    すでに handler が付いている (= setup 済み) 場合は何もしない。
+
+    ``propagate=False`` は handler の有無にかかわらず常に強制する
+    (外部が ``logging.getLogger("mixseek.cli")`` で直接 handler を attach した場合でも
+    親 ``mixseek`` への伝播を防ぐため)。``NullHandler`` の付与だけを handler 未設定時に
+    限定する。
     """
+    logger.propagate = False
     if not logger.handlers:
-        logger.propagate = False
         logger.addHandler(logging.NullHandler())
 
 

@@ -39,38 +39,6 @@ LOG_LEVEL_MAP: dict[str, int] = {
     "critical": logging.CRITICAL,
 }
 
-# 現在の log_format を保持するモジュール変数。setup_logging() で更新される。
-# 未初期化時は環境変数 MIXSEEK_LOG_FORMAT を fallback として参照し、それも無ければ
-# "text" を返す。これにより setup_logging() 呼び出し前の早期エラー出力でも
-# --log-format json / MIXSEEK_LOG_FORMAT=json を反映できる。
-_current_log_format: LogFormatType = "text"
-_setup_logging_called: bool = False
-
-
-def get_log_format() -> LogFormatType:
-    """現在の log_format を返す。
-
-    setup_logging() 呼び出し後は config の値を返す。呼び出し前は
-    環境変数 ``MIXSEEK_LOG_FORMAT`` (``"json"`` / ``"text"``) を参照し、
-    未設定時は ``"text"``。``team`` コマンドが空行の視認性区切りを JSON モードで
-    抑止する判定などに使用する。
-    """
-    if _setup_logging_called:
-        return _current_log_format
-    env_value = os.getenv("MIXSEEK_LOG_FORMAT", "").lower()
-    return "json" if env_value == "json" else "text"
-
-
-def is_logger_initialized() -> bool:
-    """setup_logging() が呼ばれ、"mixseek" logger が使用可能かを返す。
-
-    現状は後方互換のために残しているが、CLI 出力は ``mixseek.cli`` 専用 logger
-    (本モジュールの ``setup_cli_logger()`` / ``early_setup_cli_logger_from_env()``
-    で早期初期化される) 経由で出力されるため、通常は参照されない。
-    """
-    return _setup_logging_called
-
-
 # テキストフォーマット文字列
 TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
@@ -151,8 +119,6 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     Returns:
         設定済みの "mixseek" ロガー
     """
-    global _current_log_format, _setup_logging_called
-
     logger = logging.getLogger("mixseek")
 
     # FDリーク防止: 既存ハンドラをクローズしてからクリア
@@ -218,12 +184,6 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     # ハンドラなしの場合は NullHandler（サイレントモード）
     if not logger.handlers:
         logger.addHandler(logging.NullHandler())
-
-    # 全ハンドラ設定完了後に初期化フラグを立てる。
-    # 途中で例外 (FileHandler 作成失敗など) が発生した場合に
-    # is_logger_initialized() が誤って True にならないようにするため、最後に立てる。
-    _current_log_format = config.log_format
-    _setup_logging_called = True
 
     return logger
 

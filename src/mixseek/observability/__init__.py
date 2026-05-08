@@ -18,8 +18,6 @@ from mixseek.observability.logfire import setup_logfire
 from mixseek.observability.logging_setup import (
     early_setup_cli_logger_from_env,
     get_cli_logger,
-    get_log_format,
-    is_logger_initialized,
     setup_cli_logger,
     setup_logging,
 )
@@ -29,8 +27,6 @@ __all__ = [
     "TeeWriter",
     "early_setup_cli_logger_from_env",
     "get_cli_logger",
-    "get_log_format",
-    "is_logger_initialized",
     "setup_cli_logger",
     "setup_logfire",
     "setup_logging",

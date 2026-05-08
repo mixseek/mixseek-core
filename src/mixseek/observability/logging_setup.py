@@ -89,8 +89,13 @@ class JsonFormatter(logging.Formatter):
             "message": message,
         }
         # extra fields をトップレベルに追加。スキーマ不変キーの上書きは防ぐ。
-        extra = {k: v for k, v in record.__dict__.items() if k not in _STANDARD_FIELDS and not k.startswith("_")}
-        log_entry.update({k: v for k, v in extra.items() if k not in log_entry})
+        # CLIJsonFormatter と同じく 1 パスでフィルタリングして中間辞書の生成を抑える。
+        extra = {
+            k: v
+            for k, v in record.__dict__.items()
+            if k not in _STANDARD_FIELDS and not k.startswith("_") and k not in log_entry
+        }
+        log_entry.update(extra)
         return json.dumps(log_entry, ensure_ascii=False, default=str)
 
 

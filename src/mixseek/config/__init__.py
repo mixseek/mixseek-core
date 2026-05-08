@@ -7,7 +7,10 @@ agent configurations.
 from mixseek.config.constants import DEFAULT_PROJECT_NAME, WORKSPACE_ENV_VAR
 from mixseek.config.manager import ConfigurationManager
 from mixseek.config.schema import (
+    AgentExecutorSettings,
     EvaluatorSettings,
+    FunctionExecutorSettings,
+    FunctionPluginMetadata,
     JudgmentSettings,
     LeaderAgentSettings,
     MemberAgentSettings,
@@ -15,6 +18,8 @@ from mixseek.config.schema import (
     OrchestratorSettings,
     PromptBuilderSettings,
     UISettings,
+    WorkflowSettings,
+    WorkflowStepSettings,
 )
 from mixseek.config.sources.tracing_source import SourceTrace, TracingSourceWrapper
 
@@ -22,15 +27,20 @@ __all__ = [
     "DEFAULT_PROJECT_NAME",
     "WORKSPACE_ENV_VAR",
     "agents",
+    "AgentExecutorSettings",
     "ConfigurationManager",
-    "MixSeekBaseSettings",
+    "EvaluatorSettings",
+    "FunctionExecutorSettings",
+    "FunctionPluginMetadata",
+    "JudgmentSettings",
     "LeaderAgentSettings",
     "MemberAgentSettings",
-    "EvaluatorSettings",
-    "JudgmentSettings",
+    "MixSeekBaseSettings",
     "OrchestratorSettings",
     "PromptBuilderSettings",
-    "UISettings",
     "SourceTrace",
     "TracingSourceWrapper",
+    "UISettings",
+    "WorkflowSettings",
+    "WorkflowStepSettings",
 ]

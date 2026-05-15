@@ -11,6 +11,7 @@ build_model_settings は TOML pass-through 設定 (model_settings / google_model
 - 未知のモデル ID（プレフィックスが不明）でも google_model_settings は無視
 """
 
+from typing import Any, cast
 from unittest.mock import patch
 
 from mixseek.core.model_settings import build_model_settings
@@ -119,14 +120,16 @@ class TestGoogleModelSettings:
             model_id="google-gla:gemini-2.5-pro",
             google_model_settings={"google_thinking_config": {"thinking_level": "HIGH"}},
         )
-        assert result["google_thinking_config"] == {"thinking_level": "HIGH"}
+        # google_thinking_config は GoogleModelSettings 固有キーのため、
+        # 戻り値型 ModelSettings には含まれない。dict として参照する。
+        assert cast(dict[str, Any], result)["google_thinking_config"] == {"thinking_level": "HIGH"}
 
     def test_google_vertex_applies_google_settings(self) -> None:
         result = build_model_settings(
             model_id="google-vertex:gemini-2.5-pro",
             google_model_settings={"google_thinking_config": {"include_thoughts": True}},
         )
-        assert result["google_thinking_config"] == {"include_thoughts": True}
+        assert cast(dict[str, Any], result)["google_thinking_config"] == {"include_thoughts": True}
 
     def test_non_google_model_warns_and_ignores(self) -> None:
         with patch("mixseek.core.model_settings.logger") as mock_logger:
@@ -173,8 +176,9 @@ class TestCombinedScenarios:
             temperature=0.0,
             max_tokens=2048,
         )
-        assert result["parallel_tool_calls"] is True
-        assert result["google_thinking_config"] == {"thinking_level": "HIGH", "include_thoughts": True}
+        as_dict = cast(dict[str, Any], result)
+        assert as_dict["parallel_tool_calls"] is True
+        assert as_dict["google_thinking_config"] == {"thinking_level": "HIGH", "include_thoughts": True}
         assert result["temperature"] == 0.0
         assert result["max_tokens"] == 2048
 

@@ -62,6 +62,9 @@ def normalize_member_agent_fields(agent_data: dict[str, Any]) -> dict[str, Any]:
         "stop_sequences": agent_data.get("stop_sequences"),
         "top_p": agent_data.get("top_p"),
         "seed": agent_data.get("seed"),
+        # pydantic-ai pass-through 設定 (TypedDict)
+        "model_settings": agent_data.get("model_settings"),
+        "google_model_settings": agent_data.get("google_model_settings"),
         # カスタムAgent設定 (Issue #146)
         "plugin": agent_data.get("plugin"),
         # 直接指定を優先、未指定時はmetadata内のネスト指定を参照（後方互換性）

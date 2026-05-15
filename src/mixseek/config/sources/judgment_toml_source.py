@@ -88,6 +88,8 @@ class JudgmentTomlSource(PydanticBaseSettingsSource):
             "stop_sequences": data.get("stop_sequences"),
             "top_p": data.get("top_p"),
             "seed": data.get("seed"),
+            "model_settings": data.get("model_settings"),
+            "google_model_settings": data.get("google_model_settings"),
             "system_instruction": data.get("system_instruction"),
             "judge_on_final_round": data.get("judge_on_final_round"),
         }

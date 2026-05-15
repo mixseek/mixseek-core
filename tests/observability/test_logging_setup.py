@@ -1,13 +1,17 @@
-"""setup_logging() 統一ロガーのテスト。
+"""setup_logging() / setup_cli_logger() ロガーのテスト。
 
-"mixseek" named loggerを使用する4モード（logfire有無 x text/json）対応。
-TextFormatter, JsonFormatter, SkipTracesFilter のユニットテストを含む。
+- ``mixseek`` named logger (4 モード = logfire 有無 x text/json) のセットアップ
+- ``mixseek.cli`` 補助 logger のセットアップ・早期 bootstrap・未初期化時の safe default
+- TextFormatter / JsonFormatter / SkipTracesFilter のユニットテスト
 """
 
+import io
 import json
 import logging
+import sys
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,10 +20,15 @@ from mixseek.observability.logging_setup import (
     JsonFormatter,
     SkipTracesFilter,
     TextFormatter,
+    _force_reset_cli_logger,
+    early_setup_cli_logger_from_env,
+    get_cli_logger,
+    setup_cli_logger,
     setup_logging,
 )
 
 LOGGER_NAME = "mixseek"
+_CLI_LOGGER_NAME = "mixseek.cli"
 
 
 @pytest.fixture
@@ -43,6 +52,22 @@ def reset_logging() -> Generator[None]:
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(logging.WARNING)
+
+
+@pytest.fixture(autouse=True)
+def _reset_cli_logger(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+    """各テスト前後で mixseek.cli logger の状態を初期化する。"""
+    monkeypatch.delenv("MIXSEEK_LOG_FORMAT", raising=False)
+    _force_reset_cli_logger()
+    yield
+    _force_reset_cli_logger()
+
+
+def _swap_stderr(buf: io.StringIO) -> Any:
+    """sys.stderr を buf に差し替え、元の stderr を返す。"""
+    original = sys.stderr
+    sys.stderr = buf
+    return original
 
 
 class TestSetupLoggingNamedLogger:
@@ -528,3 +553,114 @@ class TestSkipTracesFilter:
             exc_info=None,
         )
         assert f.filter(record) is True
+
+
+# ---------------------------------------------------------------------------
+# mixseek.cli logger セットアップ
+# ---------------------------------------------------------------------------
+
+
+class TestSetupCliLogger:
+    """``mixseek.cli`` logger のセットアップ挙動を検証。"""
+
+    def test_text_mode_uses_text_formatter(self) -> None:
+        logger = setup_cli_logger("text")
+        assert logger.name == _CLI_LOGGER_NAME
+        assert logger.propagate is False
+        assert len(logger.handlers) == 1
+        handler = logger.handlers[0]
+        assert isinstance(handler, logging.StreamHandler)
+        assert isinstance(handler.formatter, TextFormatter)
+
+    def test_json_mode_uses_json_formatter(self) -> None:
+        logger = setup_cli_logger("json")
+        assert len(logger.handlers) == 1
+        handler = logger.handlers[0]
+        assert isinstance(handler.formatter, JsonFormatter)
+
+    def test_reinit_clears_previous_handlers(self) -> None:
+        """2 度目の setup_cli_logger で handler が重複しない。"""
+        setup_cli_logger("text")
+        setup_cli_logger("json")
+        logger = get_cli_logger()
+        assert len(logger.handlers) == 1
+        assert isinstance(logger.handlers[0].formatter, JsonFormatter)
+
+    def test_text_mode_output_reaches_stderr(self) -> None:
+        """text モード: ``asctime - name - level - message`` 形式で stderr に届く。"""
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            setup_cli_logger("text")
+            get_cli_logger().error("boom")
+        finally:
+            sys.stderr = original
+        output = buf.getvalue()
+        # TextFormatter のプレフィックス + メッセージが 1 行で stderr に届く
+        assert "boom" in output
+        assert " - mixseek.cli - ERROR - " in output
+        assert output.endswith("\n")
+
+    def test_json_mode_output_reaches_stderr(self) -> None:
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            setup_cli_logger("json")
+            get_cli_logger().error("boom", extra={"event": "test.event", "k": "v"})
+        finally:
+            sys.stderr = original
+        payload = json.loads(buf.getvalue().rstrip("\n"))
+        assert payload["type"] == "log"
+        assert payload["level"] == "ERROR"
+        assert payload["logger"] == "mixseek.cli"
+        assert payload["message"] == "boom"
+        assert payload["event"] == "test.event"
+        assert payload["k"] == "v"
+
+    def test_propagate_is_false(self) -> None:
+        """mixseek.cli は親 mixseek logger の handler (Logfire/File) に伝播しない。"""
+        logger = setup_cli_logger("text")
+        assert logger.propagate is False
+
+
+class TestEarlySetupCliLoggerFromEnv:
+    """env var ベースの bootstrap 初期化を検証。"""
+
+    def test_no_env_defaults_to_text(self) -> None:
+        early_setup_cli_logger_from_env()
+        handler = get_cli_logger().handlers[0]
+        assert isinstance(handler.formatter, TextFormatter)
+
+    @pytest.mark.parametrize("env_value", ["json", "JSON", "Json"])
+    def test_env_json_is_case_insensitive(self, monkeypatch: pytest.MonkeyPatch, env_value: str) -> None:
+        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", env_value)
+        early_setup_cli_logger_from_env()
+        handler = get_cli_logger().handlers[0]
+        assert isinstance(handler.formatter, JsonFormatter)
+
+    @pytest.mark.parametrize("invalid_value", ["Jsno", "yaml", "", " "])
+    def test_invalid_env_falls_back_to_text(self, monkeypatch: pytest.MonkeyPatch, invalid_value: str) -> None:
+        """不正値や表記揺れ (json 以外) は text に fallback する。"""
+        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", invalid_value)
+        early_setup_cli_logger_from_env()
+        handler = get_cli_logger().handlers[0]
+        assert isinstance(handler.formatter, TextFormatter)
+
+
+class TestGetCliLoggerSafeDefault:
+    """setup_cli_logger 前の get_cli_logger アクセスが安全であることを検証。"""
+
+    def test_unconfigured_logger_has_null_handler(self) -> None:
+        logger = get_cli_logger()
+        assert logger.propagate is False
+        assert any(isinstance(h, logging.NullHandler) for h in logger.handlers)
+
+    def test_unconfigured_logger_does_not_leak_to_stderr(self) -> None:
+        """未初期化時に logger.error を呼んでも stderr には何も出ない。"""
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            get_cli_logger().error("should not appear")
+        finally:
+            sys.stderr = original
+        assert buf.getvalue() == ""

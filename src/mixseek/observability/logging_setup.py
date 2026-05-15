@@ -5,8 +5,8 @@
 - ``mixseek``: アプリケーション本体のログ。4 モード (logfire 有無 x text/json) に対応し、
     stderr / ``workspace/logs/mixseek.log`` / Logfire cloud への出力を扱う。
     ``setup_logging(config, workspace)`` で初期化される。
-- ``mixseek.cli``: CLI UI / 操作イベント / エラー通知専用。常に stderr へ 1 行 JSON
-    (json モード) またはメッセージ本文のみ (text モード) で出力する。
+- ``mixseek.cli``: CLI UI / 操作イベント / エラー通知専用。常に stderr へ
+    ``TextFormatter`` (text モード) または ``JsonFormatter`` (json モード) で出力する。
     ``propagate=False`` で ``mixseek`` 親ロガーとは独立動作し、Logfire / FileHandler
     には流入させない。``setup_cli_logger(log_format)`` または
     ``early_setup_cli_logger_from_env()`` で初期化され、未初期化時は
@@ -25,8 +25,6 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
-import click
 
 from mixseek.config.logging import LogFormatType, LoggingConfig
 
@@ -89,7 +87,7 @@ class JsonFormatter(logging.Formatter):
             "message": message,
         }
         # extra fields をトップレベルに追加。スキーマ不変キーの上書きは防ぐ。
-        # CLIJsonFormatter と同じく 1 パスでフィルタリングして中間辞書の生成を抑える。
+        # 1 パスでフィルタリングして中間辞書の生成を抑える。
         extra = {
             k: v
             for k, v in record.__dict__.items()
@@ -208,46 +206,6 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
 _CLI_LOGGER_NAME = "mixseek.cli"
 
 
-class CLITextFormatter(logging.Formatter):
-    """CLI text モード用フォーマッタ。
-
-    メッセージ本文のみを出力 (timestamp / logger 名 / level プレフィックスなし)。
-    呼び出し側や caller が ``click.style(...)`` で付加した ANSI は
-    ``click.unstyle()`` で除去し、装飾なしのプレーンテキストに揃える。
-    """
-
-    def format(self, record: logging.LogRecord) -> str:
-        return click.unstyle(record.getMessage())
-
-
-class CLIJsonFormatter(logging.Formatter):
-    """CLI json モード用フォーマッタ。
-
-    ``{"timestamp":..., "type":"log", "level":..., "logger":..., "message":...}``
-    形式の 1 行 JSON を出力する。``click.style`` 由来の ANSI は message から除去。
-    extra fields はトップレベルに追加されるが、スキーマ不変キー
-    (``timestamp``/``type``/``level``/``logger``/``message``) と衝突するキーは
-    破棄して運用側のクエリが安定するようにする。
-    """
-
-    def format(self, record: logging.LogRecord) -> str:
-        message = click.unstyle(record.getMessage())
-        log_entry: dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
-            "type": "log",
-            "level": record.levelname,
-            "logger": record.name,
-            "message": message,
-        }
-        extra = {
-            k: v
-            for k, v in record.__dict__.items()
-            if k not in _STANDARD_FIELDS and not k.startswith("_") and k not in log_entry
-        }
-        log_entry.update(extra)
-        return json.dumps(log_entry, ensure_ascii=False, default=str)
-
-
 def _clear_cli_handlers(logger: logging.Logger) -> None:
     """FD リーク防止のため既存 handler を close してからクリアする。"""
     for handler in logger.handlers:
@@ -262,8 +220,10 @@ def setup_cli_logger(log_format: LogFormatType) -> logging.Logger:
     ``propagate=False`` で親 ``mixseek`` logger への伝播を防ぎ、Logfire / FileHandler
     とは独立動作する。
 
-    - text モード: ``CLITextFormatter`` (メッセージ本文のみ、ANSI 除去)
-    - json モード: ``CLIJsonFormatter`` (1 行 JSON、ANSI 除去)
+    - text モード: ``TextFormatter`` (``asctime - name - level - message`` 形式、
+      extra fields は別行で可視化)
+    - json モード: ``JsonFormatter`` (1 行 JSON、extra fields はトップレベル展開、
+      スキーマ不変キー保護)
 
     Args:
         log_format: ``"text"`` または ``"json"``。
@@ -279,9 +239,9 @@ def setup_cli_logger(log_format: LogFormatType) -> logging.Logger:
 
     handler = logging.StreamHandler(sys.stderr)
     if log_format == "json":
-        handler.setFormatter(CLIJsonFormatter())
+        handler.setFormatter(JsonFormatter())
     else:
-        handler.setFormatter(CLITextFormatter())
+        handler.setFormatter(TextFormatter(TEXT_FORMAT))
     handler.setLevel(logging.DEBUG)
     logger.addHandler(handler)
 

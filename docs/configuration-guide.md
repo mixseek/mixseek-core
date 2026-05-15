@@ -46,6 +46,15 @@ mixseek exec "タスク" --config orch.toml  # → 300秒（環境変数優先�
 mixseek exec "タスク" --config orch.toml  # → 120秒（TOML設定）
 ```
 
+```{admonition} `model_settings` / `google_model_settings` の合成順序
+各エージェント (`leader` / `member` / `evaluator` / `judgment`) で pydantic-ai 互換の
+`model_settings` / `google_model_settings` (dict pass-through) を指定できます。
+これらと既存の個別フィールドが両方設定された場合、構築時の合成は **後勝ち** で次の順序です:
+`model_settings` → `google_model_settings`（Google モデルのみ） → 個別フィールド (`temperature` 等)。
+個別フィールドが最優先のため、TOML の dict 内に同じキーがあっても個別フィールドが上書きします。
+詳細は [高度な機能](advanced-features.md) の「ModelSettings の透過設定」を参照。
+```
+
 ## Configuration Manager
 
 ### 基本的な使い方

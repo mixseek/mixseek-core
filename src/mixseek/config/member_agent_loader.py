@@ -135,6 +135,8 @@ def member_settings_to_config(
         stop_sequences=settings.stop_sequences,
         top_p=settings.top_p,
         seed=settings.seed,
+        model_settings=settings.model_settings,
+        google_model_settings=settings.google_model_settings,
         system_instruction=system_instruction_text,
         system_prompt=settings.system_prompt,
         description=description,

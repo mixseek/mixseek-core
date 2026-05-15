@@ -30,6 +30,8 @@ Leader Agentは複数のMember Agentを統括し、タスクを分配・集約�
 | stop_sequences | list[str] \| None | None | TOML/定数 | team.leader.stop_sequences | - | - | オプション | 生成を停止するシーケンスのリスト |
 | top_p | float \| None | None | TOML/定数 | team.leader.top_p | - | - | オプション | Top-pサンプリングパラメータ（0.0-1.0、Noneの場合はモデルデフォルト） |
 | seed | int \| None | None | TOML/定数 | team.leader.seed | - | - | オプション | ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート） |
+| model_settings | dict[str, Any] \| None | None | TOML/定数 | team.leader.model_settings | - | - | オプション | pydantic-ai `ModelSettings` (TypedDict) に素通しする dict。Provider 共通の追加設定を直接記述できる。`temperature` 等の個別フィールドが両方設定された場合は個別フィールドが優先 |
+| google_model_settings | dict[str, Any] \| None | None | TOML/定数 | team.leader.google_model_settings | - | - | オプション | pydantic-ai `GoogleModelSettings` (TypedDict) に素通しする dict。Google モデル（`google-gla:` / `google-vertex:`）のみ有効。他 Provider では警告ログを出し無視 |
 
 **設定例（TOML）**:
 ```toml
@@ -38,6 +40,15 @@ model = "openai:gpt-4o"
 system_instruction = "You are a helpful team leader coordinating multiple agents."
 temperature = 0.7
 timeout_seconds = 300
+
+# pydantic-ai ModelSettings に渡す追加設定（Provider 共通）
+[team.leader.model_settings]
+parallel_tool_calls = true
+
+# Google モデル固有設定の例（Gemini Thinking）
+# 上記 model を "google-gla:gemini-2.5-pro" 等に切り替えたときに有効化される
+[team.leader.google_model_settings]
+google_thinking_config = { thinking_level = "HIGH", include_thoughts = true }
 ```
 
 ---
@@ -61,6 +72,8 @@ Member Agentは特定のタスクを実行する専門エージェントです�
 | system_instruction | str \| None | None | TOML | agent.system_instruction | - | - | オプション | システム指示テキスト |
 | system_prompt | str \| None | None | TOML/定数 | agent.system_prompt | - | - | オプション | システムプロンプト |
 | metadata | dict[str, Any] | {} | TOML/定数 | agent.metadata | - | - | オプション | カスタムプラグイン用メタデータ |
+| model_settings | dict[str, Any] \| None | None | TOML/定数 | agent.model_settings | - | - | オプション | pydantic-ai `ModelSettings` (TypedDict) に素通しする dict。Provider 共通の追加設定。個別フィールドが両方設定された場合は個別フィールド優先 |
+| google_model_settings | dict[str, Any] \| None | None | TOML/定数 | agent.google_model_settings | - | - | オプション | pydantic-ai `GoogleModelSettings` (TypedDict) に素通しする dict。Google モデルのみ有効、他は警告のうえ無視 |
 
 **Tool設定（Web Search）**:
 
@@ -95,6 +108,14 @@ timeout = 30
 [agent.metadata]
 created_by = "user"
 version = "1.0.0"
+
+# pydantic-ai ModelSettings に渡す追加設定（Provider 共通）
+[agent.model_settings]
+parallel_tool_calls = true
+
+# Google モデル固有設定の例（Gemini Thinking）
+[agent.google_model_settings]
+google_thinking_config = { thinking_level = "HIGH", include_thoughts = true }
 ```
 
 ---
@@ -177,6 +198,8 @@ Evaluatorは複数のメトリクスを使用してAgent出力を評価します
 | stop_sequences | list[str] \| None | None | TOML/定数 | stop_sequences | - | - | オプション | 生成を停止するシーケンスのリスト |
 | top_p | float \| None | None | TOML/定数 | top_p | - | - | オプション | Top-pサンプリングパラメータ（0.0-1.0、Noneの場合はモデルデフォルト） |
 | seed | int \| None | None | TOML/定数 | seed | - | - | オプション | ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート） |
+| model_settings | dict[str, Any] \| None | None | TOML/定数 | model_settings | - | - | オプション | pydantic-ai `ModelSettings` (TypedDict) に素通しする dict。Provider 共通の追加設定。個別フィールド優先 |
+| google_model_settings | dict[str, Any] \| None | None | TOML/定数 | google_model_settings | - | - | オプション | pydantic-ai `GoogleModelSettings` (TypedDict) に素通しする dict。Google モデルのみ有効 |
 
 **Metrics設定**:
 
@@ -193,6 +216,8 @@ Evaluatorは複数のメトリクスを使用してAgent出力を評価します
 | metrics[].stop_sequences | list[str] \| None | None | TOML | metrics[].stop_sequences | - | - | オプション | メトリクス固有の生成停止シーケンス（Noneの場合はllm_default.stop_sequencesを使用） |
 | metrics[].top_p | float \| None | None | TOML | metrics[].top_p | - | - | オプション | メトリクス固有のTop-pサンプリング（0.0-1.0、Noneの場合はllm_default.top_pを使用） |
 | metrics[].seed | int \| None | None | TOML | metrics[].seed | - | - | オプション | メトリクス固有のランダムシード（Noneの場合はllm_default.seedを使用） |
+| metrics[].model_settings | dict[str, Any] \| None | None | TOML | metrics[].model_settings | - | - | オプション | メトリクス固有の ModelSettings pass-through dict（Noneの場合はllm_default.model_settingsを使用） |
+| metrics[].google_model_settings | dict[str, Any] \| None | None | TOML | metrics[].google_model_settings | - | - | オプション | メトリクス固有の GoogleModelSettings pass-through dict（Noneの場合はllm_default.google_model_settingsを使用） |
 
 **設定例（TOML）**:
 ```toml
@@ -218,6 +243,15 @@ weight = 0.333
 name = "Relevance"
 weight = 0.333
 model = "openai:gpt-5"  # このメトリクスだけ異なるモデルを使用
+model_settings = { extra_headers = { "x-priority" = "high" } }  # pass-through 追加設定
+
+# llm_default にも model_settings / google_model_settings を直接記述できる
+[llm_default.model_settings]
+parallel_tool_calls = true
+
+# Google モデル使用時に Thinking を有効化する例
+[llm_default.google_model_settings]
+google_thinking_config = { thinking_level = "HIGH" }
 ```
 
 ---
@@ -236,6 +270,8 @@ JudgmentはLLM-as-a-Judgeによるラウンド継続判定機能を提供しま�
 | stop_sequences | list[str] \| None | None | TOML/定数 | stop_sequences | MIXSEEK_JUDGMENT__STOP_SEQUENCES | - | オプション | 生成を停止するシーケンスのリスト |
 | top_p | float \| None | None | TOML/定数 | top_p | MIXSEEK_JUDGMENT__TOP_P | - | オプション | Top-pサンプリングパラメータ（0.0-1.0、Noneの場合はLLM側のデフォルト値） |
 | seed | int \| None | None | TOML/定数 | seed | MIXSEEK_JUDGMENT__SEED | - | オプション | ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート） |
+| model_settings | dict[str, Any] \| None | None | TOML/定数 | model_settings | - | - | オプション | pydantic-ai `ModelSettings` (TypedDict) に素通しする dict。Provider 共通の追加設定。個別フィールド優先 |
+| google_model_settings | dict[str, Any] \| None | None | TOML/定数 | google_model_settings | - | - | オプション | pydantic-ai `GoogleModelSettings` (TypedDict) に素通しする dict。Google モデルのみ有効 |
 | system_instruction | str \| None | None | TOML/定数 | system_instruction | MIXSEEK_JUDGMENT__SYSTEM_INSTRUCTION | - | オプション | システム指示（Noneの場合はデフォルト指示を使用） |
 | judge_on_final_round | bool | True | TOML/定数 | judge_on_final_round | MIXSEEK_JUDGMENT__JUDGE_ON_FINAL_ROUND | - | オプション | 最終ラウンド（current_round >= max_rounds）でLLM Judgementを実行するかどうか。Falseの場合、最終ラウンドではLLM呼び出しをスキップし、継続判定を直接Falseにする。次ラウンドに進めない最終ラウンドでの無意味な判定を省くことが主目的 |
 
@@ -288,6 +324,14 @@ system_instruction = """
 スコアのトレンドと提出物の品質を総合的に評価し、
 次のラウンドに進むべきかを判定してください。
 """
+
+# pydantic-ai ModelSettings に渡す追加設定（Provider 共通、検証なし）
+[model_settings]
+parallel_tool_calls = true
+
+# Google モデル固有設定の例（model を google-* 系に切り替えたとき有効化される）
+[google_model_settings]
+google_thinking_config = { thinking_level = "MEDIUM" }
 ```
 
 **環境変数設定例**:

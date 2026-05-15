@@ -412,6 +412,19 @@ class LeaderAgentSettings(MixSeekBaseSettings):
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
     )
 
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     @field_validator("system_instruction")
     @classmethod
     def validate_system_instruction(cls, v: str | None) -> str | None:
@@ -554,6 +567,19 @@ class MemberAgentSettings(MixSeekBaseSettings):
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
     )
 
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     # Custom Agent設定（Issue #146対応）
     plugin: "PluginMetadata | None" = Field(
         default=None,
@@ -688,6 +714,19 @@ class EvaluatorSettings(MixSeekBaseSettings):
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
     )
 
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     # 動的配列（TeamSettingsパターン）
     metrics: list[dict[str, Any]] = Field(
         default_factory=lambda: [
@@ -788,6 +827,19 @@ class JudgmentSettings(MixSeekBaseSettings):
     seed: int | None = Field(
         default=None,
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
+    )
+
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
     )
 
     # システムプロンプト設定（カスタマイズ可能）
@@ -1320,6 +1372,18 @@ class AgentExecutorSettings(MixSeekBaseSettings):
         description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
     )
 
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     # Plugin / Tool 設定
     plugin: "PluginMetadata | None" = Field(
         default=None,
@@ -1395,6 +1459,8 @@ class AgentExecutorSettings(MixSeekBaseSettings):
             stop_sequences=self.stop_sequences,
             top_p=self.top_p,
             seed=self.seed,
+            model_settings=self.model_settings,
+            google_model_settings=self.google_model_settings,
             system_instruction=resolved_instruction,
             system_prompt=self.system_prompt,
             # description は Leader tool 登録用の説明文。workflow mode は Leader tool を介さず

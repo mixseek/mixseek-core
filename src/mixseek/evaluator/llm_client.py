@@ -1,12 +1,13 @@
 """Pydantic AI Agentを使用したLLMクライアントラッパー。"""
 
 import logging
+from typing import Any
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
-from pydantic_ai.settings import ModelSettings
 
 from mixseek.core.auth import create_authenticated_model
+from mixseek.core.model_settings import build_model_settings
 from mixseek.evaluator.exceptions import EvaluatorAPIError
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ async def evaluate_with_llm(
     stop_sequences: list[str] | None = None,
     top_p: float | None = None,
     seed: int | None = None,
+    model_settings: dict[str, Any] | None = None,
+    google_model_settings: dict[str, Any] | None = None,
 ) -> BaseModel:
     """構造化された出力を持つLLM-as-a-Judgeを使用して評価します。
 
@@ -101,25 +104,25 @@ async def evaluate_with_llm(
             retry_count=0,
         ) from e
 
-    # ModelSettings作成
-    model_settings = ModelSettings(temperature=temperature)
-    if max_tokens is not None:
-        model_settings["max_tokens"] = max_tokens
-    if timeout_seconds is not None:
-        model_settings["timeout"] = timeout_seconds
-    if stop_sequences is not None:
-        model_settings["stop_sequences"] = stop_sequences
-    if top_p is not None:
-        model_settings["top_p"] = top_p
-    if seed is not None:
-        model_settings["seed"] = seed
+    # ModelSettings作成（TOML pass-through + 個別フィールドの合成、個別フィールド優先）
+    merged_model_settings = build_model_settings(
+        model_id=model,
+        model_settings=model_settings,
+        google_model_settings=google_model_settings,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        stop_sequences=stop_sequences,
+        top_p=top_p,
+        seed=seed,
+        timeout_seconds=timeout_seconds,
+    )
 
     # Agent作成（構造化出力とリトライ設定）
     agent = Agent(
         authenticated_model,
         output_type=response_model,  # 構造化出力を自動的に実現
         instructions=instruction,  # システムプロンプト
-        model_settings=model_settings,  # temperature, max_tokens
+        model_settings=merged_model_settings,  # LLM設定
         retries=max_retries,  # 自動リトライ
     )
 

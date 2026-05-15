@@ -39,6 +39,16 @@ class LeaderAgentConfig(BaseModel):
     seed: int | None = Field(
         default=None, description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）"
     )
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
 
     @field_validator("system_instruction")
     @classmethod
@@ -85,6 +95,16 @@ class TeamMemberAgentConfig(BaseModel):
     )
     seed: int | None = Field(
         default=None, description="ランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）"
+    )
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
     )
     config: str | None = Field(default=None, description="参照形式パス")
 

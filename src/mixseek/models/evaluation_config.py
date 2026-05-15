@@ -144,6 +144,18 @@ class MetricConfig(BaseModel):
         examples=[42, 12345],
     )
 
+    model_settings: dict[str, Any] | None = Field(
+        None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     @field_validator("name")
     @classmethod
     def validate_name_not_empty(cls, v: str) -> str:
@@ -309,6 +321,18 @@ class LLMDefaultConfig(BaseModel):
         default=None,
         description="デフォルトランダムシード（OpenAI/Geminiでサポート、Anthropicでは非サポート）",
         examples=[42, 12345],
+    )
+
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
     )
 
     @field_validator("model")
@@ -747,6 +771,30 @@ class EvaluationConfig(BaseModel):
         # フォールバック階層
         return metric.seed if metric.seed is not None else self.llm_default.seed
 
+    def get_model_settings_for_metric(self, metric_name: str) -> dict[str, Any] | None:
+        """特定のメトリクスの model_settings (pass-through dict) を取得します（フォールバックロジック）。
+
+        フォールバック階層:
+        1. メトリクスレベルの model_settings 設定
+        2. [llm_default] の model_settings 設定
+        """
+        metric = self._get_metric_config(metric_name)
+        return metric.model_settings if metric.model_settings is not None else self.llm_default.model_settings
+
+    def get_google_model_settings_for_metric(self, metric_name: str) -> dict[str, Any] | None:
+        """特定のメトリクスの google_model_settings (pass-through dict) を取得します（フォールバックロジック）。
+
+        フォールバック階層:
+        1. メトリクスレベルの google_model_settings 設定
+        2. [llm_default] の google_model_settings 設定
+        """
+        metric = self._get_metric_config(metric_name)
+        return (
+            metric.google_model_settings
+            if metric.google_model_settings is not None
+            else self.llm_default.google_model_settings
+        )
+
     model_config = {
         "json_schema_extra": {
             "examples": [
@@ -807,6 +855,8 @@ def evaluator_settings_to_evaluation_config(
         stop_sequences=evaluator_settings.stop_sequences,
         top_p=evaluator_settings.top_p,
         seed=evaluator_settings.seed,
+        model_settings=evaluator_settings.model_settings,
+        google_model_settings=evaluator_settings.google_model_settings,
     )
 
     # metrics配列をlist[dict[str, Any]]からlist[MetricConfig]に変換

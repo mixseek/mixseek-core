@@ -10,7 +10,7 @@ pydantic-ai の TypedDict 設計と同じ思想（実行時検証なし、エラ
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pydantic_ai.settings import ModelSettings
 
@@ -102,5 +102,6 @@ def build_model_settings(
     if timeout_seconds is not None:
         result["timeout"] = float(timeout_seconds)
 
-    # TypedDict は実体が dict なので cast 不要だが、mypy 用にコメントを付ける
-    return result  # type: ignore[return-value]
+    # TypedDict は実行時 dict なので変換コストはないが、型チェッカに対しては
+    # 明示的に ModelSettings 型へキャストする（typing.cast で意図を表現）。
+    return cast(ModelSettings, result)

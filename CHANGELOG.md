@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a16 (2026-05-15)
+
+### Feat
+
+- **model-settings**: pydantic-ai ModelSettings/GoogleModelSettings の TOML 設定を追加
+- **workflow**: workflow mode の E2E サンプル一式を追加
+- **workflow**: function plugin に path ロード方式を追加
+- **preflight**: workflow mode 設定の検証に対応
+- **workflow**: add ExecutionStrategy/LeaderStrategy/WorkflowStrategy
+- **config**: add load_workflow_settings and load_unit_settings
+- **config**: add WorkflowTomlSource for workflow TOML loading
+- **workflow**: add workflow execution package
+- **config**: workflow-mode 用 Pydantic スキーマを追加
+
+### Fix
+
+- **config/sources**: model_settings/google_model_settings が TOML 変換で落ちていた問題を修正
+- **tests**: TypedDict 厳密チェック対応で google_thinking_config 参照を cast 経由に
+- **docs**: admonition のレンダリング崩れを修正
+- **round_controller**: develop マージ後の team_config 参照を修正
+- **workflow-sample**: format_as_markdown 出力から user_prompt を削除
+- **workflow-sample**: exampleのパラメータ変更
+- **workflow-sample**: previous_steps の or {} フォールバックを削除
+
+### Refactor
+
+- **core/model_settings**: type:ignore を typing.cast に置き換え
+- **utils/toml**: ファイルパス検証を is_file() に変更
+- **workflow**: function plugin の path 検証を is_file() で厳密化
+- **preflight**: _validate_teams の内部不整合検出メッセージを明確化
+- **preflight**: unit_kind.py を util.py にリネームし共通 TOML ヘルパーを再利用
+- **preflight**: _validate_auth の workflow_settings_list を必須引数化
+- **preflight**: unit_kinds 引数を廃止し各 validator が個別判定
+- **round_controller**: 未使用の self.team_config 属性を削除
+- **orchestrator**: load_unit_settings の重複呼び出しを解消
+- **orchestrator**: switch load_team_config to load_unit_settings
+- **round_controller**: delegate team mode to Strategy and switch to load_unit_settings
+- **workflow**: tighten _logfire_span return type
+- **workflow**: expose WorkflowContext step builder methods
+- **workflow**: remove PR/design-doc references from comments
+- **test**: split workflow test files into focused modules
+- **config**: extract TOML path resolution into load_toml_with_workspace
+- **config**: workflow スキーマの重複検出を Counter で O(N) 化
+- **config**: _resolve_bundled_system_instruction ヘルパーを抽出
+
 ## v0.1.0a15 (2026-04-24)
 
 ### Feat

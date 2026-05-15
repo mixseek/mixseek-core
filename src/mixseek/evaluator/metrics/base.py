@@ -1,7 +1,7 @@
 """評価メトリクスの基底メトリクスインターフェース。"""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
@@ -209,6 +209,8 @@ class LLMJudgeMetric(BaseMetric):
         stop_sequences: list[str] | None = None,
         top_p: float | None = None,
         seed: int | None = None,
+        model_settings: dict[str, Any] | None = None,
+        google_model_settings: dict[str, Any] | None = None,
         execution_id: str | None = None,
         team_id: str | None = None,
         round_number: int | None = None,
@@ -285,6 +287,8 @@ class LLMJudgeMetric(BaseMetric):
             stop_sequences=stop_sequences,
             top_p=top_p,
             seed=seed,
+            model_settings=model_settings,
+            google_model_settings=google_model_settings,
         )
         # BaseLLMEvaluation型として扱う
         assert isinstance(raw_result, BaseLLMEvaluation)

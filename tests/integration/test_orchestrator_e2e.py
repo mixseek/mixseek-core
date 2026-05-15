@@ -59,7 +59,7 @@ def test_mixseek_exec_json_output(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_single_round_e2e_with_new_schema(
@@ -167,7 +167,7 @@ async def test_single_round_e2e_with_new_schema(
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-@patch("mixseek.round_controller.controller.create_leader_agent")
+@patch("mixseek.round_controller.strategy.create_leader_agent")
 @patch("mixseek.round_controller.controller.Evaluator")
 @patch("mixseek.round_controller.controller.JudgmentClient")
 async def test_multi_round_e2e_iterative_improvement(

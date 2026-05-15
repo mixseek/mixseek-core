@@ -105,6 +105,11 @@ class EvaluationTomlSource(PydanticBaseSettingsSource):
             "max_tokens": llm_default.get("max_tokens"),
             "max_retries": max_retries,
             "timeout_seconds": timeout_seconds,
+            "stop_sequences": llm_default.get("stop_sequences"),
+            "top_p": llm_default.get("top_p"),
+            "seed": llm_default.get("seed"),
+            "model_settings": llm_default.get("model_settings"),
+            "google_model_settings": llm_default.get("google_model_settings"),
             # 動的配列をそのまま格納（TeamSettingsパターン）
             "metrics": data.get("metrics", []),
             "custom_metrics": data.get("custom_metrics", {}),

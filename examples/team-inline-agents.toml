@@ -46,6 +46,16 @@ system_instruction = """
 model = "google-gla:gemini-2.5-flash-lite"
 temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
 
+# pydantic-ai ModelSettings (TypedDict) に渡す追加設定（Provider 共通、検証なし）
+# 個別フィールド (temperature 等) が両方設定された場合は個別フィールドが優先される
+# [team.leader.model_settings]
+# parallel_tool_calls = true
+
+# Google モデル固有設定（GoogleModelSettings、Google モデル時のみ有効）
+# Gemini 2.5 系で Thinking を有効化したい場合の例
+# [team.leader.google_model_settings]
+# google_thinking_config = { thinking_level = "HIGH", include_thoughts = true }
+
 # ==========================================================================
 # Member Agent設定（インライン定義）
 # ==========================================================================

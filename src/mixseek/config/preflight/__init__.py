@@ -7,6 +7,7 @@
 from mixseek.config.preflight.models import CategoryResult, CheckResult, CheckStatus, PreflightResult
 from mixseek.config.preflight.runner import run_preflight_check
 from mixseek.config.preflight.validators import (
+    _detect_unit_kind,
     _validate_auth,
     _validate_custom_metrics,
     _validate_evaluator,
@@ -15,6 +16,7 @@ from mixseek.config.preflight.validators import (
     _validate_orchestrator,
     _validate_prompt_builder,
     _validate_teams,
+    _validate_workflows,
     _validate_workspace_writable,
 )
 
@@ -27,8 +29,10 @@ __all__ = [
     # 公開API
     "run_preflight_check",
     # 個別検証関数（テストから使用）
+    "_detect_unit_kind",
     "_validate_orchestrator",
     "_validate_teams",
+    "_validate_workflows",
     "_validate_evaluator",
     "_validate_judgment",
     "_validate_prompt_builder",

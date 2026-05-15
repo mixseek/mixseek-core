@@ -30,7 +30,7 @@ async def test_round_controller_run_round(tmp_path: Path) -> None:
 
     # モックでLeader AgentとEvaluatorを差し替え
     with (
-        patch("mixseek.round_controller.controller.create_leader_agent") as mock_leader,
+        patch("mixseek.round_controller.strategy.create_leader_agent") as mock_leader,
         patch("mixseek.round_controller.controller.Evaluator") as mock_eval_class,
         patch("mixseek.round_controller.controller.AggregationStore") as mock_store,
         patch("mixseek.round_controller.controller.JudgmentClient") as mock_judgment_client_class,

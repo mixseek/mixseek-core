@@ -10,7 +10,7 @@ Note: これらはMemberAgentSettingsスキーマに含まれないため、別�
 
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from mixseek.models.member_agent import (
     EnvironmentConfig,
@@ -22,6 +22,46 @@ if TYPE_CHECKING:
     from mixseek.config.schema import MemberAgentSettings
 
 __all__ = ["MemberAgentLoader", "EnvironmentConfig", "member_settings_to_config"]
+
+
+def _resolve_bundled_system_instruction(
+    agent_type: str,
+    system_instruction: str | None,
+    workspace: Path | None,
+) -> str:
+    """bundled agent の system_instruction を解決（team / workflow 共通ヘルパー）。
+
+    Args:
+        agent_type: agent_type 文字列（"plain" / "web_search" / "code_execution" / "custom" 等）
+        system_instruction: 明示指定された system_instruction（未指定なら None）
+        workspace: workspace パス（bundled TOML 解決に使用、省略可）
+
+    Returns:
+        解決された system_instruction 文字列（常に str、None が返ることはない）
+
+    Note:
+        - system_instruction が非 None ならそのまま返す
+        - None かつ agent_type が {plain, web_search, code_execution} なら bundled TOML から読み込む
+        - それ以外（custom 等 bundled 未提供）は空文字列
+    """
+    if system_instruction is not None:
+        return system_instruction
+
+    agent_type_map: dict[str, Literal["plain", "web-search", "code-exec"]] = {
+        "plain": "plain",
+        "web_search": "web-search",
+        "code_execution": "code-exec",
+    }
+    bundled_name = agent_type_map.get(agent_type)
+    if bundled_name is None:
+        return ""
+
+    # 遅延 import（循環回避）
+    from mixseek.config.bundled_member_agents import BundledMemberAgentLoader
+
+    loader = BundledMemberAgentLoader(workspace=workspace)
+    bundled_settings = loader.load(bundled_name)
+    return bundled_settings.system_instruction or ""
 
 
 def member_settings_to_config(
@@ -51,31 +91,10 @@ def member_settings_to_config(
     if agent_data is None:
         agent_data = {}
 
-    # system_instructionフィールドの変換
-    # settings.system_instructionが未定義（None）の場合、デフォルトTOMLから読み込む
-    if settings.system_instruction is None:
-        # agent_type を bundled agent name にマッピング
-        from typing import Literal
-
-        agent_type_map: dict[str, Literal["plain", "web-search", "code-exec"]] = {
-            "plain": "plain",
-            "web_search": "web-search",
-            "code_execution": "code-exec",
-        }
-        bundled_name = agent_type_map.get(settings.agent_type)
-
-        if bundled_name is None:
-            # カスタムエージェント等、デフォルトTOMLが存在しない場合は空文字列
-            system_instruction_text = ""
-        else:
-            # 標準エージェントの場合、BundledMemberAgentLoaderで読み込み
-            from mixseek.config.bundled_member_agents import BundledMemberAgentLoader
-
-            loader = BundledMemberAgentLoader(workspace=workspace)
-            bundled_settings = loader.load(bundled_name)  # 例外発生時はそのまま伝播
-            system_instruction_text = bundled_settings.system_instruction or ""  # str | None → str
-    else:
-        system_instruction_text = settings.system_instruction
+    # bundled system_instruction 解決は team/workflow 共通ヘルパーに委譲
+    system_instruction_text = _resolve_bundled_system_instruction(
+        settings.agent_type, settings.system_instruction, workspace
+    )
 
     # Issue #146完全対応: plugin, tool_settingsはMemberAgentSettingsから直接取得
     # TOMLのteam.membersセクションで[[team.members.plugin]]として定義可能
@@ -116,6 +135,8 @@ def member_settings_to_config(
         stop_sequences=settings.stop_sequences,
         top_p=settings.top_p,
         seed=settings.seed,
+        model_settings=settings.model_settings,
+        google_model_settings=settings.google_model_settings,
         system_instruction=system_instruction_text,
         system_prompt=settings.system_prompt,
         description=description,

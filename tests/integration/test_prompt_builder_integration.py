@@ -141,7 +141,7 @@ class TestPromptBuilderIntegration:
 
     @pytest.mark.asyncio
     @pytest.mark.integration
-    @patch("mixseek.round_controller.controller.create_leader_agent")
+    @patch("mixseek.round_controller.strategy.create_leader_agent")
     @patch("mixseek.round_controller.controller.Evaluator")
     @patch("mixseek.round_controller.controller.JudgmentClient")
     async def test_round_controller_with_prompt_builder(

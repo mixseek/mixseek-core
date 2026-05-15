@@ -305,6 +305,18 @@ class MemberAgentConfig(BaseModel):
         description="Maximum retries for LLM API calls (passed to Agent's retries parameter, 0 means no retries)",
     )
 
+    # pydantic-ai pass-through 設定（dict のまま素通し、実行時検証なし）
+    model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description="pydantic-ai ModelSettings (TypedDict) に渡す dict（検証なし、Provider 共通設定）",
+    )
+    google_model_settings: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "pydantic-ai GoogleModelSettings (TypedDict) に渡す dict（Google モデルのみ有効、他は警告のうえ無視）"
+        ),
+    )
+
     # Instructions and behavior
     system_instruction: str | None = Field(default=None, description="Agent system instruction (str or None)")
     system_prompt: str | None = Field(

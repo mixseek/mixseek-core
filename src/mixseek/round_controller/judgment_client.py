@@ -8,13 +8,12 @@ Responsibility: Agent呼び出しとsystem_interaction生成のみ
 """
 
 import textwrap
-from typing import Any
 
 from pydantic_ai import Agent
-from pydantic_ai.settings import ModelSettings
 
 from mixseek.config.schema import JudgmentSettings
 from mixseek.core.auth import create_authenticated_model
+from mixseek.core.model_settings import build_model_settings
 from mixseek.round_controller.exceptions import JudgmentAPIError
 from mixseek.round_controller.models import ImprovementJudgment
 
@@ -87,20 +86,18 @@ class JudgmentClient:
         # 認証済みモデル作成（DRY準拠）
         authenticated_model = create_authenticated_model(self.settings.model)
 
-        # ModelSettings作成（settings から取得、None値はスキップ）
-        model_settings_dict: dict[str, Any] = {
-            "temperature": self.settings.temperature,
-            "timeout": self.settings.timeout_seconds,
-        }
-        if self.settings.max_tokens is not None:
-            model_settings_dict["max_tokens"] = self.settings.max_tokens
-        if self.settings.top_p is not None:
-            model_settings_dict["top_p"] = self.settings.top_p
-        if self.settings.stop_sequences is not None:
-            model_settings_dict["stop"] = self.settings.stop_sequences
-        if self.settings.seed is not None:
-            model_settings_dict["seed"] = self.settings.seed
-        model_settings = ModelSettings(**model_settings_dict)  # type: ignore[typeddict-item]
+        # ModelSettings作成（TOML pass-through + 個別フィールドの合成、個別フィールド優先）
+        model_settings = build_model_settings(
+            model_id=self.settings.model,
+            model_settings=self.settings.model_settings,
+            google_model_settings=self.settings.google_model_settings,
+            temperature=self.settings.temperature,
+            max_tokens=self.settings.max_tokens,
+            stop_sequences=self.settings.stop_sequences,
+            top_p=self.settings.top_p,
+            seed=self.settings.seed,
+            timeout_seconds=self.settings.timeout_seconds,
+        )
 
         # Agent作成（構造化出力とリトライ設定）
         agent = Agent(

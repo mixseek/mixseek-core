@@ -183,6 +183,8 @@ class Evaluator:
                     stop_sequences = config.get_stop_sequences_for_metric(metric_name)
                     top_p = config.get_top_p_for_metric(metric_name)
                     seed = config.get_seed_for_metric(metric_name)
+                    model_settings = config.get_model_settings_for_metric(metric_name)
+                    google_model_settings = config.get_google_model_settings_for_metric(metric_name)
                     # LLM-as-a-Judgeメトリクスの場合はLLMパラメータを渡す
                     score = await metric.evaluate(
                         user_query=request.user_query,
@@ -196,6 +198,8 @@ class Evaluator:
                         stop_sequences=stop_sequences,
                         top_p=top_p,
                         seed=seed,
+                        model_settings=model_settings,
+                        google_model_settings=google_model_settings,
                         prompt_builder_settings=self.prompt_builder_settings,
                         execution_id=request.execution_id,
                         team_id=request.team_id,

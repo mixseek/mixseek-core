@@ -4,6 +4,7 @@ This module provides helper functions to integrate the Evaluator
 with team commands for Leader Agent evaluation.
 """
 
+import logging
 from pathlib import Path
 
 import typer
@@ -14,8 +15,9 @@ from mixseek.evaluator import Evaluator
 from mixseek.models.evaluation_config import EvaluationConfig  # noqa: F401
 from mixseek.models.evaluation_request import EvaluationRequest
 from mixseek.models.evaluation_result import EvaluationResult
-from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_for_config
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 # Rebuild EvaluationRequest model after EvaluationConfig is imported
 # This is required because EvaluationRequest uses TYPE_CHECKING for forward reference
@@ -50,7 +52,6 @@ def _create_evaluator(
     """
     workspace_path = get_workspace_for_config(workspace)
     manager = ConfigurationManager(workspace=workspace_path)
-    cli_logger = get_cli_logger()
 
     if verbose:
         if evaluate_config:
@@ -109,7 +110,6 @@ async def evaluate_content(
         >>> if result:
         ...     print(f"Overall score: {result.overall_score}")
     """
-    cli_logger = get_cli_logger()
     try:
         if verbose:
             cli_logger.info(

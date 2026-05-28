@@ -3,6 +3,7 @@
 Provides common CLI functionality including exit codes and warning messages.
 """
 
+import logging
 import os
 import sys
 import traceback
@@ -16,11 +17,12 @@ from pydantic import ValidationError
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
 from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
 from mixseek.observability import (
-    early_setup_cli_logger_from_env,
-    get_cli_logger,
+    early_setup_logging_from_env,
     setup_logfire,
     setup_logging,
 )
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 # Exit code constants
 EXIT_SUCCESS = 0
@@ -37,7 +39,7 @@ def show_development_warning() -> None:
     This warning is displayed for all development/testing commands to remind
     users that these commands are not intended for production use.
     """
-    get_cli_logger().warning(
+    cli_logger.warning(
         "⚠️  Development/Testing only - Not for production use",
         extra={"event": "cli.dev_warning"},
     )
@@ -53,7 +55,7 @@ def exit_with_error(message: str, code: int = EXIT_ERROR) -> NoReturn:
     Raises:
         SystemExit: Always raises to exit the program
     """
-    get_cli_logger().error(
+    cli_logger.error(
         f"Error: {message}",
         extra={"event": "cli.exit_with_error", "error": message, "exit_code": code},
     )
@@ -150,7 +152,6 @@ def setup_logfire_from_cli(
         console_enabled: コンソール出力有効化フラグ
     """
     logfire_config = None
-    cli_logger = get_cli_logger()
 
     if logfire or logfire_metadata or logfire_http:
         # 環境変数から基本設定を読み取る（project_name/send_to_logfire の継承用）
@@ -236,8 +237,6 @@ def setup_logging_from_cli(
         verbose: 詳細ログ表示フラグ
         log_format: ログ出力形式（text/json）
     """
-    cli_logger = get_cli_logger()
-
     try:
         config = LoggingConfig(
             logfire_enabled=logfire_enabled,
@@ -308,10 +307,10 @@ def ensure_log_format_env(cli_log_format: str | None) -> str:
     if effective not in {"json", "text"}:
         effective = "text"
     os.environ["MIXSEEK_LOG_FORMAT"] = effective
-    # env var 確定後に CLI logger を (再) 初期化。
-    # setup_logging() は initialize_observability() で後から呼ばれるが、
-    # それより前の cli_logger 呼び出しも適切なフォーマットで出力するため。
-    early_setup_cli_logger_from_env()
+    # env var 確定後に "mixseek" logger を bootstrap。
+    # setup_logging() は initialize_observability() で後から本呼び出しされるが、
+    # それより前の cli_logger 呼び出しも適切なフォーマットで stderr 出力するため。
+    early_setup_logging_from_env()
     return effective
 
 
@@ -328,7 +327,7 @@ def validate_logfire_flags(logfire: bool, logfire_metadata: bool, logfire_http: 
     """
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:
-        get_cli_logger().error(
+        cli_logger.error(
             "ERROR: Only one of --logfire, --logfire-metadata, or --logfire-http can be specified.",
             extra={
                 "event": "logfire.flags_exclusive_violation",

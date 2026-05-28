@@ -164,9 +164,9 @@ class TestLogfireConfigPriority:
 
         monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
 
-        # ``mixseek.cli`` logger は root への leak 防止のため ``propagate=False`` に
-        # 設定されるため、caplog の root handler では records が取れない。
-        # caplog.handler を直接 attach してキャプチャする。
+        # ``mixseek.cli`` は親 ``mixseek`` に伝搬するが、``mixseek`` は root への
+        # leak 防止のため ``propagate=False`` に設定される。そのため caplog の root
+        # handler では records が取れない。caplog.handler を直接 attach してキャプチャする。
         cli_logger = logging.getLogger("mixseek.cli")
         cli_logger.addHandler(caplog.handler)
         try:

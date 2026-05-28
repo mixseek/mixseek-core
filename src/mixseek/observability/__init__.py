@@ -5,6 +5,7 @@
 1. 標準ロギング統合 (Path 1):
    - setup_logging(): Python標準loggingの設定
    - コンソール、ファイル、Logfireへの出力
+   - ``mixseek.cli`` などの子ロガーも親 "mixseek" に伝搬し本セットアップを共有する
 
 2. Logfireスパン出力 (Path 2):
    - setup_logfire(): Logfire observabilityの初期化
@@ -16,18 +17,14 @@
 
 from mixseek.observability.logfire import setup_logfire
 from mixseek.observability.logging_setup import (
-    early_setup_cli_logger_from_env,
-    get_cli_logger,
-    setup_cli_logger,
+    early_setup_logging_from_env,
     setup_logging,
 )
 from mixseek.observability.tee_writer import TeeWriter
 
 __all__ = [
     "TeeWriter",
-    "early_setup_cli_logger_from_env",
-    "get_cli_logger",
-    "setup_cli_logger",
+    "early_setup_logging_from_env",
     "setup_logfire",
     "setup_logging",
 ]

@@ -12,6 +12,7 @@ Compliance:
 - Environment management via ConfigurationManager
 """
 
+import logging
 from pathlib import Path
 
 import typer
@@ -19,7 +20,9 @@ import typer
 from mixseek.cli.common_options import WORKSPACE_OPTION
 from mixseek.config import ConfigurationManager
 from mixseek.config.views import ConfigViewService
-from mixseek.observability import early_setup_cli_logger_from_env, get_cli_logger
+from mixseek.observability import early_setup_logging_from_env
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 app = typer.Typer(help="Manage configuration settings")
 
@@ -86,8 +89,7 @@ def config_show(
         mixseek config show --config orchestrator.toml --workspace /path/to/workspace --environment prod
     """
     # config コマンドは setup_logging を呼ばないため、CLI logger を env var ベースで早期初期化する。
-    early_setup_cli_logger_from_env()
-    cli_logger = get_cli_logger()
+    early_setup_logging_from_env()
 
     try:
         # Validate output format
@@ -244,8 +246,7 @@ def config_list(
         # Show in JSON format (for programmatic use)
         mixseek config list --output-format json
     """
-    early_setup_cli_logger_from_env()
-    cli_logger = get_cli_logger()
+    early_setup_logging_from_env()
 
     try:
         # Validate format option
@@ -344,8 +345,7 @@ def config_init(
         # Overwrite existing template
         mixseek config init --component orchestrator --force
     """
-    early_setup_cli_logger_from_env()
-    cli_logger = get_cli_logger()
+    early_setup_logging_from_env()
 
     try:
         from mixseek.config.template import TemplateGenerator

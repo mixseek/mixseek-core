@@ -72,17 +72,20 @@ def _extract_json(text: str) -> str:
 
 @pytest.fixture(autouse=True)
 def _suppress_loggers():
-    """テスト中にログ出力を抑制し、CliRunner のstdout汚染を防止。"""
+    """テスト中の library 内部ログ (mixseek.config.manager 等) を抑制し CliRunner のstdout汚染を防止。
+
+    フル統合方針により ``mixseek.cli`` の親 ``mixseek`` の handler に descendant logger
+    (``mixseek.config.manager`` 等) の WARNING/INFO が流れ込み JSON 出力にノイズが混じる。
+    ``logging.disable(WARNING)`` で WARNING 以下を一律抑止しつつ、CLI が出す ERROR は通す。
+
+    CLI コマンドが ``early_setup_logging_from_env()`` 経由で ``mixseek.setLevel(INFO)`` を
+    上書きするため、per-logger の ``setLevel`` だけでは不十分でグローバル disable が必要。
+    """
     import logging
 
-    # "mixseek" ロガーとroot ロガーの両方を抑制
-    for logger_name in ("mixseek", ""):
-        logger = logging.getLogger(logger_name)
-        logger.setLevel(logging.CRITICAL + 1)  # すべてのログを抑制
+    logging.disable(logging.WARNING)
     yield
-    for logger_name in ("mixseek", ""):
-        logger = logging.getLogger(logger_name)
-        logger.setLevel(logging.WARNING)
+    logging.disable(logging.NOTSET)
 
 
 class TestConfigShowCommand:

@@ -1,5 +1,6 @@
 """UI command for launching Streamlit app."""
 
+import logging
 import os
 from pathlib import Path
 
@@ -20,7 +21,8 @@ from mixseek.cli.utils import ensure_log_format_env
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
-from mixseek.observability import get_cli_logger
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def ui(
@@ -70,7 +72,6 @@ def ui(
     # 戻り値は本コマンドでは使わないが、他コマンドとの一貫性のため明示的に受ける
     # (ui は env var を Streamlit サブプロセスへ渡す経路に統一済み)。
     log_format = ensure_log_format_env(log_format)
-    cli_logger = get_cli_logger()
 
     # 排他的チェック（複数のlogfireフラグは指定できない）
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])

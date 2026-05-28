@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 import sys
 from pathlib import Path
 
@@ -20,8 +21,9 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
-from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def evaluate(
@@ -116,7 +118,7 @@ def evaluate(
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        get_cli_logger().warning(
+        cli_logger.warning(
             "\n⚠️  Interrupted by user",
             extra={"event": "evaluate.interrupted_by_user"},
         )

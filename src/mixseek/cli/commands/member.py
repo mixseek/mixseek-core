@@ -5,6 +5,7 @@ of Member Agents. This command is for development purposes only.
 """
 
 import asyncio
+import logging
 import time
 from pathlib import Path
 
@@ -35,8 +36,9 @@ from mixseek.config.manager import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.models.member_agent import MemberAgentConfig, MemberAgentResult
-from mixseek.observability import get_cli_logger
 from mixseek.utils.env import get_workspace_path
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def display_result(result: MemberAgentResult, execution_time_ms: int, output_format: str, verbose: bool) -> None:
@@ -49,7 +51,7 @@ def display_result(result: MemberAgentResult, execution_time_ms: int, output_for
             formatter = ResultFormatter.get_formatter(output_format)
             formatter(result, execution_time_ms, verbose)
     except ValueError as e:
-        get_cli_logger().error(
+        cli_logger.error(
             f"Error: {e}",
             extra={
                 "event": "member.display_formatter_invalid",
@@ -78,7 +80,6 @@ async def execute_agent_from_config(
     Raises:
         asyncio.TimeoutError: If execution exceeds timeout
     """
-    cli_logger = get_cli_logger()
     try:
         if verbose:
             cli_logger.info(
@@ -180,7 +181,6 @@ def member(
     # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
     # (env var サイドチャネルへの暗黙依存を避ける)。
     log_format = ensure_log_format_env(log_format)
-    cli_logger = get_cli_logger()
 
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)

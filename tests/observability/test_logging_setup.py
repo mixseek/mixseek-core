@@ -1,7 +1,8 @@
-"""setup_logging() / setup_cli_logger() ロガーのテスト。
+"""setup_logging() / early_setup_logging_from_env() ロガーのテスト。
 
 - ``mixseek`` named logger (4 モード = logfire 有無 x text/json) のセットアップ
-- ``mixseek.cli`` 補助 logger のセットアップ・早期 bootstrap・未初期化時の safe default
+- ``mixseek.cli`` 子 logger の親 ``mixseek`` への伝搬と統合出力
+- env var ベースの早期 bootstrap
 - TextFormatter / JsonFormatter / SkipTracesFilter のユニットテスト
 """
 
@@ -20,10 +21,7 @@ from mixseek.observability.logging_setup import (
     JsonFormatter,
     SkipTracesFilter,
     TextFormatter,
-    _force_reset_cli_logger,
-    early_setup_cli_logger_from_env,
-    get_cli_logger,
-    setup_cli_logger,
+    early_setup_logging_from_env,
     setup_logging,
 )
 
@@ -40,27 +38,27 @@ def temp_workspace(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def reset_logging() -> Generator[None]:
-    """テスト後にロガーをリセット"""
+def reset_logging(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+    """テスト前後でロガーをリセット。
+
+    モジュール import 時に attach される NullHandler を再 attach することで、
+    setup_logging 未呼び出しテストでも root / lastResort への leak を防ぐ。
+    """
+    monkeypatch.delenv("MIXSEEK_LOG_FORMAT", raising=False)
+    monkeypatch.delenv("MIXSEEK_LOG_LEVEL", raising=False)
     yield
     logger = logging.getLogger(LOGGER_NAME)
     for h in logger.handlers:
         h.close()
     logger.handlers.clear()
     logger.setLevel(logging.WARNING)
+    logger.propagate = False
+    # 本番と同じ leak 防止 NullHandler を attach し直す
+    logger.addHandler(logging.NullHandler())
     # root loggerもクリア（テスト汚染防止）
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(logging.WARNING)
-
-
-@pytest.fixture(autouse=True)
-def _reset_cli_logger(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-    """各テスト前後で mixseek.cli logger の状態を初期化する。"""
-    monkeypatch.delenv("MIXSEEK_LOG_FORMAT", raising=False)
-    _force_reset_cli_logger()
-    yield
-    _force_reset_cli_logger()
 
 
 def _swap_stderr(buf: io.StringIO) -> Any:
@@ -556,57 +554,53 @@ class TestSkipTracesFilter:
 
 
 # ---------------------------------------------------------------------------
-# mixseek.cli logger セットアップ
+# mixseek.cli logger 統合
 # ---------------------------------------------------------------------------
 
 
-class TestSetupCliLogger:
-    """``mixseek.cli`` logger のセットアップ挙動を検証。"""
+class TestCliLoggerIntegration:
+    """``mixseek.cli`` が親 ``mixseek`` に伝搬し、共通ハンドラから出力されることを検証。
 
-    def test_text_mode_uses_text_formatter(self) -> None:
-        logger = setup_cli_logger("text")
-        assert logger.name == _CLI_LOGGER_NAME
-        assert logger.propagate is False
-        assert len(logger.handlers) == 1
-        handler = logger.handlers[0]
-        assert isinstance(handler, logging.StreamHandler)
-        assert isinstance(handler.formatter, TextFormatter)
+    フル統合方針: CLI イベントは独立 logger ではなく親 ``mixseek`` の handler チェーン
+    (stderr / mixseek.log / Logfire cloud) を経由する。
+    """
 
-    def test_json_mode_uses_json_formatter(self) -> None:
-        logger = setup_cli_logger("json")
-        assert len(logger.handlers) == 1
-        handler = logger.handlers[0]
-        assert isinstance(handler.formatter, JsonFormatter)
+    def test_propagates_to_parent(self) -> None:
+        """mixseek.cli は親 mixseek に伝搬する (propagate=True デフォルト)"""
+        cli_logger = logging.getLogger(_CLI_LOGGER_NAME)
+        assert cli_logger.propagate is True
+        assert cli_logger.parent is logging.getLogger(LOGGER_NAME)
 
-    def test_reinit_clears_previous_handlers(self) -> None:
-        """2 度目の setup_cli_logger で handler が重複しない。"""
-        setup_cli_logger("text")
-        setup_cli_logger("json")
-        logger = get_cli_logger()
-        assert len(logger.handlers) == 1
-        assert isinstance(logger.handlers[0].formatter, JsonFormatter)
+    def test_no_own_handlers_after_setup(self) -> None:
+        """mixseek.cli は独自 handler を持たない (親 mixseek に依存)"""
+        config = LoggingConfig()
+        setup_logging(config, workspace=None)
+        cli_logger = logging.getLogger(_CLI_LOGGER_NAME)
+        assert cli_logger.handlers == []
 
     def test_text_mode_output_reaches_stderr(self) -> None:
-        """text モード: ``asctime - name - level - message`` 形式で stderr に届く。"""
+        """text モード: cli ロガー経由のメッセージが親の stderr handler から出る"""
         buf = io.StringIO()
         original = _swap_stderr(buf)
         try:
-            setup_cli_logger("text")
-            get_cli_logger().error("boom")
+            config = LoggingConfig(log_format="text", file_enabled=False)
+            setup_logging(config, workspace=None)
+            logging.getLogger(_CLI_LOGGER_NAME).error("boom")
         finally:
             sys.stderr = original
         output = buf.getvalue()
-        # TextFormatter のプレフィックス + メッセージが 1 行で stderr に届く
         assert "boom" in output
         assert " - mixseek.cli - ERROR - " in output
         assert output.endswith("\n")
 
     def test_json_mode_output_reaches_stderr(self) -> None:
+        """json モード: cli ロガー経由のメッセージが JSON で stderr に届く"""
         buf = io.StringIO()
         original = _swap_stderr(buf)
         try:
-            setup_cli_logger("json")
-            get_cli_logger().error("boom", extra={"event": "test.event", "k": "v"})
+            config = LoggingConfig(log_format="json", file_enabled=False)
+            setup_logging(config, workspace=None)
+            logging.getLogger(_CLI_LOGGER_NAME).error("boom", extra={"event": "test.event", "k": "v"})
         finally:
             sys.stderr = original
         payload = json.loads(buf.getvalue().rstrip("\n"))
@@ -617,50 +611,84 @@ class TestSetupCliLogger:
         assert payload["event"] == "test.event"
         assert payload["k"] == "v"
 
-    def test_propagate_is_false(self) -> None:
-        """mixseek.cli は親 mixseek logger の handler (Logfire/File) に伝播しない。"""
-        logger = setup_cli_logger("text")
-        assert logger.propagate is False
+    def test_cli_events_flow_to_log_file(self, temp_workspace: Path) -> None:
+        """フル統合: CLI イベントは mixseek.log にも記録される (旧来は stderr only)"""
+        config = LoggingConfig(log_format="text")
+        setup_logging(config, temp_workspace)
+        logging.getLogger(_CLI_LOGGER_NAME).info("test cli event")
+        log_file = temp_workspace / "logs" / "mixseek.log"
+        content = log_file.read_text()
+        assert "test cli event" in content
+        assert "mixseek.cli" in content
 
 
-class TestEarlySetupCliLoggerFromEnv:
-    """env var ベースの bootstrap 初期化を検証。"""
+class TestEarlySetupLoggingFromEnv:
+    """env var ベースの ``mixseek`` bootstrap 初期化を検証。"""
+
+    def _stream_handlers(self, logger: logging.Logger) -> list[logging.Handler]:
+        """FileHandler を除く StreamHandler のみを抽出 (厳密型一致)。"""
+        return [h for h in logger.handlers if type(h) is logging.StreamHandler]
 
     def test_no_env_defaults_to_text(self) -> None:
-        early_setup_cli_logger_from_env()
-        handler = get_cli_logger().handlers[0]
-        assert isinstance(handler.formatter, TextFormatter)
+        logger = early_setup_logging_from_env()
+        handlers = self._stream_handlers(logger)
+        assert handlers
+        assert all(isinstance(h.formatter, TextFormatter) for h in handlers)
 
     @pytest.mark.parametrize("env_value", ["json", "JSON", "Json"])
     def test_env_json_is_case_insensitive(self, monkeypatch: pytest.MonkeyPatch, env_value: str) -> None:
         monkeypatch.setenv("MIXSEEK_LOG_FORMAT", env_value)
-        early_setup_cli_logger_from_env()
-        handler = get_cli_logger().handlers[0]
-        assert isinstance(handler.formatter, JsonFormatter)
+        logger = early_setup_logging_from_env()
+        handlers = self._stream_handlers(logger)
+        assert handlers
+        assert all(isinstance(h.formatter, JsonFormatter) for h in handlers)
 
-    @pytest.mark.parametrize("invalid_value", ["Jsno", "yaml", "", " "])
-    def test_invalid_env_falls_back_to_text(self, monkeypatch: pytest.MonkeyPatch, invalid_value: str) -> None:
-        """不正値や表記揺れ (json 以外) は text に fallback する。"""
-        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", invalid_value)
-        early_setup_cli_logger_from_env()
-        handler = get_cli_logger().handlers[0]
-        assert isinstance(handler.formatter, TextFormatter)
+    def test_invalid_log_level_falls_back_to_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """不正な MIXSEEK_LOG_LEVEL でも fallback して例外が漏れない"""
+        monkeypatch.setenv("MIXSEEK_LOG_LEVEL", "invalid_level")
+        logger = early_setup_logging_from_env()
+        assert logger.name == LOGGER_NAME
+        # default fallback: INFO level
+        assert logger.level == logging.INFO
 
+    def test_bootstrap_disables_file_output(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """bootstrap では file/logfire は無効 (workspace 未解決のため)"""
+        monkeypatch.setenv("MIXSEEK_LOG_FILE", "true")
+        logger = early_setup_logging_from_env()
+        assert not any(isinstance(h, logging.FileHandler) for h in logger.handlers)
 
-class TestGetCliLoggerSafeDefault:
-    """setup_cli_logger 前の get_cli_logger アクセスが安全であることを検証。"""
-
-    def test_unconfigured_logger_has_null_handler(self) -> None:
-        logger = get_cli_logger()
-        assert logger.propagate is False
-        assert any(isinstance(h, logging.NullHandler) for h in logger.handlers)
-
-    def test_unconfigured_logger_does_not_leak_to_stderr(self) -> None:
-        """未初期化時に logger.error を呼んでも stderr には何も出ない。"""
+    def test_bootstrap_cli_logger_emits_via_parent(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """bootstrap 後、cli ロガー呼び出しが親経由で stderr に届く"""
+        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", "json")
         buf = io.StringIO()
         original = _swap_stderr(buf)
         try:
-            get_cli_logger().error("should not appear")
+            early_setup_logging_from_env()
+            logging.getLogger(_CLI_LOGGER_NAME).error("early boom")
+        finally:
+            sys.stderr = original
+        payload = json.loads(buf.getvalue().rstrip("\n"))
+        assert payload["logger"] == "mixseek.cli"
+        assert payload["message"] == "early boom"
+
+
+class TestUnconfiguredLoggerSafety:
+    """setup_logging 前の logger アクセスが leak しないことを検証。"""
+
+    def test_unconfigured_does_not_leak_to_stderr(self) -> None:
+        """setup_logging 未呼び出しでも NullHandler により root / stderr に leak しない"""
+        # autouse fixture が teardown 時に NullHandler を attach する設計のため、
+        # 本テストでは明示的に NullHandler のみが付いた状態を再現する
+        logger = logging.getLogger(LOGGER_NAME)
+        for h in logger.handlers:
+            h.close()
+        logger.handlers.clear()
+        logger.addHandler(logging.NullHandler())
+
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            logging.getLogger(_CLI_LOGGER_NAME).error("should not appear")
         finally:
             sys.stderr = original
         assert buf.getvalue() == ""

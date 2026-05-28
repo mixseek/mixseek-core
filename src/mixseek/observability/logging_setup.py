@@ -1,32 +1,29 @@
-"""統一ロガー "mixseek" と CLI 補助ロガー "mixseek.cli" の初期化。
+"""統一ロガー "mixseek" の初期化。
 
-本モジュールは 2 種類のロガーをセットアップする:
+本モジュールはアプリケーション全体の logger を一元的にセットアップする:
 
 - ``mixseek``: アプリケーション本体のログ。4 モード (logfire 有無 x text/json) に対応し、
     stderr / ``workspace/logs/mixseek.log`` / Logfire cloud への出力を扱う。
     ``setup_logging(config, workspace)`` で初期化される。
-- ``mixseek.cli``: CLI UI / 操作イベント / エラー通知専用。常に stderr へ
-    ``TextFormatter`` (text モード) または ``JsonFormatter`` (json モード) で出力する。
-    ``propagate=False`` で ``mixseek`` 親ロガーとは独立動作し、Logfire / FileHandler
-    には流入させない。``setup_cli_logger(log_format)`` または
-    ``early_setup_cli_logger_from_env()`` で初期化され、未初期化時は
-    ``NullHandler`` で root / ``lastResort`` への leak を防ぐ。
+- ``mixseek.cli`` などの子ロガー: 独自ハンドラを持たず、親 ``mixseek`` に伝搬する。
+    ``logging.getLogger("mixseek.cli")`` で取得し、``logger.info(msg, extra={...})``
+    のように標準 logging API で利用する。
 
-CLI 側は ``get_cli_logger()`` でインスタンスを取得し、
-``logger.info(msg, extra={"event": ..., ...})`` のように標準 logging API で呼ぶ。
-``extra`` は JSON フォーマッタでトップレベルキーに展開され、運用クエリ
-(``logger:"mixseek.cli" @event:...``) の対象となる。
+未初期化時の leak を防ぐため、モジュール import 時に ``mixseek`` に ``NullHandler``
+を attach する。``setup_logging()`` 呼び出し時に handler は再構築される。
+
+``early_setup_logging_from_env()`` は ``workspace`` 解決前 (``validate_logfire_flags``
+等の早期エラー) でも env var ベースで stderr 出力できるようにする bootstrap 経路を提供する。
 """
 
 import json
 import logging
-import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from mixseek.config.logging import LogFormatType, LoggingConfig
+from mixseek.config.logging import LoggingConfig
 
 # ログレベルマッピング
 LOG_LEVEL_MAP: dict[str, int] = {
@@ -108,6 +105,13 @@ class SkipTracesFilter(logging.Filter):
         return not record.name.startswith("mixseek.traces")
 
 
+# モジュール import 時点で ``mixseek`` に NullHandler を attach し、
+# ``setup_logging()`` 未呼び出し時の leak (root / ``lastResort`` への伝搬) を遮断する。
+# ``setup_logging()`` は呼び出し時に handler を clear して再構築するため、
+# この NullHandler はクリーンに置き換わる。
+logging.getLogger("mixseek").addHandler(logging.NullHandler())
+
+
 def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> logging.Logger:
     """統一ロガー "mixseek" を初期化。4モードに対応。
 
@@ -115,9 +119,12 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     Mode 3 (logfire+text) では setup_logfire() 内の finalize_mode3_handlers() で
     StreamHandler/FileHandler を除去し、ConsoleOptions/TeeWriter に移行する。
 
+    ``mixseek.cli`` を含む子ロガーは独自 handler を持たず本 logger に伝搬する。
+    したがって本関数のみが CLI イベントを含む全アプリログの出力先を決定する。
+
     Args:
         config: ロギング設定
-        workspace: ワークスペースパス（ファイル出力先）
+        workspace: ワークスペースパス（ファイル出力先）。None の場合は file 出力なし。
 
     Returns:
         設定済みの "mixseek" ロガー
@@ -191,121 +198,26 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     return logger
 
 
-# ---------------------------------------------------------------------------
-# mixseek.cli 補助ロガー
-#
-# CLI UI / 操作イベント / エラー通知を stderr に構造化出力するための専用 logger。
-# 以下の設計原則を守る:
-#   - logger 名は "mixseek.cli" を維持 (運用基盤の logger: フィルタを保護)
-#   - propagate=False で親 "mixseek" logger とは独立動作
-#     (Logfire / FileHandler には流入させない)
-#   - initialize_observability() 前の早期エラーも JSON 構造化できるよう
-#     env var から bootstrap する経路を持つ
-# ---------------------------------------------------------------------------
+def early_setup_logging_from_env() -> logging.Logger:
+    """env var ベースで "mixseek" logger を bootstrap する。
 
-_CLI_LOGGER_NAME = "mixseek.cli"
+    ``ensure_log_format_env()`` から呼ばれ、``initialize_observability()`` (workspace 解決
+    後の本初期化) より前の段階でも CLI イベントが適切なフォーマットで stderr に出力できる
+    ようにする。
 
-
-def _clear_cli_handlers(logger: logging.Logger) -> None:
-    """FD リーク防止のため既存 handler を close してからクリアする。"""
-    for handler in logger.handlers:
-        handler.close()
-    logger.handlers.clear()
-
-
-def setup_cli_logger(log_format: LogFormatType) -> logging.Logger:
-    """``mixseek.cli`` logger を初期化する。
-
-    UI / 操作イベント / エラー通知を stderr に出力する logger をセットアップする。
-    ``propagate=False`` で親 ``mixseek`` logger への伝播を防ぎ、Logfire / FileHandler
-    とは独立動作する。
-
-    - text モード: ``TextFormatter`` (``asctime - name - level - message`` 形式、
-      extra fields は別行で可視化)
-    - json モード: ``JsonFormatter`` (1 行 JSON、extra fields はトップレベル展開、
-      スキーマ不変キー保護)
-
-    Args:
-        log_format: ``"text"`` または ``"json"``。
+    本関数で確立される handler は workspace 不要の stderr のみ。``setup_logging()`` 本呼び出し
+    時に上書き再構築される。env var が不正な場合は安全なデフォルトに fallback する。
 
     Returns:
-        初期化済みの ``mixseek.cli`` logger。
+        bootstrap 済みの "mixseek" ロガー
     """
-    logger = logging.getLogger(_CLI_LOGGER_NAME)
-    _clear_cli_handlers(logger)
-    logger.propagate = False
-    # level は DEBUG まで通す。verbose 判定は呼び出し側 (`if verbose:`) が行う。
-    logger.setLevel(logging.DEBUG)
+    try:
+        env_config = LoggingConfig.from_env()
+    except ValueError:
+        # 不正な env var (例: 未知の MIXSEEK_LOG_LEVEL) では default に fallback。
+        # 本呼び出し時 (initialize_observability) で再度 env を読み validation エラーを伝える。
+        env_config = LoggingConfig()
 
-    handler = logging.StreamHandler(sys.stderr)
-    if log_format == "json":
-        handler.setFormatter(JsonFormatter())
-    else:
-        handler.setFormatter(TextFormatter(TEXT_FORMAT))
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-
-    return logger
-
-
-def _ensure_cli_safe_default(logger: logging.Logger) -> None:
-    """CLI logger を leak しない安全な既定値に揃える。
-
-    ``logging.getLogger`` の既定 (``propagate=True`` + handler 無し) のままだと、
-    ``setup_cli_logger()`` 前のアクセス直後に root logger / ``lastResort`` handler
-    (stderr, WARNING 以上) へ leak してしまう。
-
-    ``propagate=False`` は handler の有無にかかわらず常に強制する
-    (外部が ``logging.getLogger("mixseek.cli")`` で直接 handler を attach した場合でも
-    親 ``mixseek`` への伝播を防ぐため)。``NullHandler`` の付与だけを handler 未設定時に
-    限定する。
-    """
-    logger.propagate = False
-    if not logger.handlers:
-        logger.addHandler(logging.NullHandler())
-
-
-def get_cli_logger() -> logging.Logger:
-    """``mixseek.cli`` logger を取得する。
-
-    ``setup_cli_logger()`` による初期化前であっても安全な既定値として
-    ``propagate=False`` + ``NullHandler`` を付与する。これにより未初期化時の
-    メッセージは root / ``lastResort`` に leak せず破棄される。
-    通常は ``early_setup_cli_logger_from_env()`` が ``ensure_log_format_env()``
-    経由で先に呼ばれているので、初期化済みの logger が返る。
-    """
-    logger = logging.getLogger(_CLI_LOGGER_NAME)
-    _ensure_cli_safe_default(logger)
-    return logger
-
-
-def early_setup_cli_logger_from_env() -> None:
-    """env var ベースで ``mixseek.cli`` logger を bootstrap する。
-
-    ``ensure_log_format_env()`` から呼ばれ、``setup_logging()`` 呼び出し前
-    (``validate_logfire_flags`` 等の早期エラー) でも logger 経由で適切な
-    フォーマットで出力できるようにする。
-
-    既に初期化済みの場合でも、env var が更新されていれば再初期化する
-    (``ensure_log_format_env()`` で env var が確定した直後に呼ばれるため)。
-    """
-    value = os.environ.get("MIXSEEK_LOG_FORMAT", "").lower()
-    log_format: LogFormatType = "json" if value == "json" else "text"
-    setup_cli_logger(log_format)
-
-
-def _force_reset_cli_logger() -> None:
-    """テスト用途: ``mixseek.cli`` logger の handler を明示的にクリアする。
-
-    pytest fixture から呼び、テスト間で handler が持ち越されてアサーションが
-    汚染されるのを防ぐ。本番コードからは呼ばれない。
-
-    ``propagate=False`` + ``NullHandler`` の安全な既定値にリセットすることで、
-    ``setup_cli_logger()`` を呼び忘れた後続テストからの偶発的な log 呼び出しが
-    root / ``lastResort`` (stderr, WARNING 以上) に leak しないようにする。
-    """
-    logger = logging.getLogger(_CLI_LOGGER_NAME)
-    _clear_cli_handlers(logger)
-    logger.propagate = False
-    logger.setLevel(logging.NOTSET)
-    logger.addHandler(logging.NullHandler())
+    # workspace 未解決のため file/logfire は無効化 (本呼び出しで設定し直す)
+    bootstrap_config = env_config.model_copy(update={"file_enabled": False, "logfire_enabled": False})
+    return setup_logging(bootstrap_config, workspace=None)

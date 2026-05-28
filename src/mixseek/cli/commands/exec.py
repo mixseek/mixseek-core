@@ -25,11 +25,11 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
 from mixseek.core.auth import close_all_auth_clients
-from mixseek.observability import get_cli_logger
 from mixseek.orchestrator import Orchestrator
 from mixseek.orchestrator.models import ExecutionSummary
 
 logger = logging.getLogger(__name__)
+cli_logger = logging.getLogger("mixseek.cli")
 
 # Typer options - 関数外で定義してB008警告を回避
 CONFIG_OPTION = typer.Option(
@@ -141,7 +141,6 @@ def exec_command(
     # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
     # (env var サイドチャネルへの暗黙依存を避ける)。
     log_format = ensure_log_format_env(log_format)
-    cli_logger = get_cli_logger()
 
     async def _execute() -> None:
         try:

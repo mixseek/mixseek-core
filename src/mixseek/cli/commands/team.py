@@ -14,6 +14,7 @@ For production use, use Orchestration Layer instead.
 
 import asyncio
 import json
+import logging
 import os
 import traceback
 from dataclasses import asdict
@@ -50,8 +51,9 @@ from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
-from mixseek.observability import get_cli_logger
 from mixseek.storage.aggregation_store import AggregationStore
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def team(
@@ -99,7 +101,6 @@ def team(
     # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
     # (env var サイドチャネルへの暗黙依存を避ける)。
     log_format = ensure_log_format_env(log_format)
-    cli_logger = get_cli_logger()
 
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
@@ -193,7 +194,6 @@ async def _execute_team_command(
     verbose: bool,
 ) -> None:
     """チーム実行ロジック（イベントループ内で実行）"""
-    cli_logger = get_cli_logger()
 
     # ファイル存在チェックはTeamTomlSource内で実行されるため、
     # ここでの重複チェックは削除（相対パス解決前のチェックは不正確）

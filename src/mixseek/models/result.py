@@ -54,9 +54,9 @@ class InitResult(BaseModel):
             typer.echo(f"Created files: {len(self.created_files)}")
         else:
             # エラーは mixseek.cli logger 経由で stderr 出力 + JSON モード構造化。
-            from mixseek.observability import get_cli_logger
+            import logging
 
-            get_cli_logger().error(
+            logging.getLogger("mixseek.cli").error(
                 self.message,
                 extra={
                     "event": "init.result_error",

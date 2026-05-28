@@ -15,10 +15,11 @@ from mixseek.exceptions import (
 )
 from mixseek.models.result import InitResult
 from mixseek.models.workspace import WorkspacePath, WorkspaceStructure
-from mixseek.observability import early_setup_cli_logger_from_env, get_cli_logger
+from mixseek.observability import early_setup_logging_from_env
 from mixseek.utils.env import get_workspace_path
 
 logger = logging.getLogger(__name__)
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def init(
@@ -39,9 +40,9 @@ def init(
         mixseek init -w ./my-workspace
         export MIXSEEK_WORKSPACE=/path/to/workspace && mixseek init
     """
-    # init コマンドは setup_logging() を呼ばない (ワークスペース自体を作る側) が、
-    # CLI logger は env var ベースで早期初期化する必要がある。
-    early_setup_cli_logger_from_env()
+    # init コマンドは setup_logging() を完全な workspace 設定では呼ばない (ワークスペース
+    # 自体を作る側) が、"mixseek" logger は env var ベースで早期初期化する必要がある。
+    early_setup_logging_from_env()
 
     # Initialize workspace_path_input to None for safe error handling
     workspace_path_input: Path | None = None
@@ -66,7 +67,7 @@ def init(
                 f"Workspace already exists at {workspace_structure.root}. Overwrite?",
                 default=False,
             ):
-                get_cli_logger().warning(
+                cli_logger.warning(
                     "Workspace initialization aborted.",
                     extra={
                         "event": "init.aborted",
@@ -120,7 +121,7 @@ def init(
     ) as e:
         handle_error(e, workspace_path_input or Path("."))
     except KeyboardInterrupt:
-        get_cli_logger().warning(
+        cli_logger.warning(
             "\nInitialization cancelled by user.",
             extra={"event": "init.cancelled_by_user"},
         )
@@ -136,7 +137,6 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
         workspace_path: The workspace path that was being processed
     """
     result = InitResult.error_result(workspace_path=workspace_path, error=str(error))
-    cli_logger = get_cli_logger()
 
     # Add solution hints based on error type
     if isinstance(error, WorkspacePermissionError):

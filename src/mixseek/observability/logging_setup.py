@@ -43,6 +43,10 @@ _STANDARD_FIELDS: frozenset[str] = frozenset(logging.LogRecord("", 0, "", 0, "",
     "asctime",
 }
 
+# JsonSpanProcessor が出力するスパン由来レコードのロガー名 prefix。
+# 信頼された内部プロデューサとして扱い、SkipTracesFilter / JsonFormatter で共通参照する。
+_TRACES_LOGGER_PREFIX = "mixseek.traces"
+
 
 class TextFormatter(logging.Formatter):
     """extra fields を別行 key: value 形式で表示するフォーマッタ。
@@ -84,11 +88,15 @@ class JsonFormatter(logging.Formatter):
             "message": message,
         }
         # extra fields をトップレベルに追加。スキーマ不変キーの上書きは防ぐ。
+        # ただし mixseek.traces (JsonSpanProcessor) は信頼された内部プロデューサであり、
+        # extra={"type": "span_start"/"span_end"} で discriminator を載せるため、type のみ上書きを許可する。
+        # アプリログ (mixseek / mixseek.cli) からの type は引き続き保護する。
         # 1 パスでフィルタリングして中間辞書の生成を抑える。
+        protected = log_entry.keys() - {"type"} if record.name.startswith(_TRACES_LOGGER_PREFIX) else log_entry.keys()
         extra = {
             k: v
             for k, v in record.__dict__.items()
-            if k not in _STANDARD_FIELDS and not k.startswith("_") and k not in log_entry
+            if k not in _STANDARD_FIELDS and not k.startswith("_") and k not in protected
         }
         log_entry.update(extra)
         return json.dumps(log_entry, ensure_ascii=False, default=str)
@@ -102,7 +110,7 @@ class SkipTracesFilter(logging.Filter):
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
-        return not record.name.startswith("mixseek.traces")
+        return not record.name.startswith(_TRACES_LOGGER_PREFIX)
 
 
 # モジュール import 時点で ``mixseek`` に NullHandler を attach し、

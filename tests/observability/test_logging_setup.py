@@ -506,6 +506,39 @@ class TestJsonFormatter:
         assert data["timestamp"] != "overwritten"
         assert "T" in data["timestamp"]
 
+    def test_traces_logger_type_preserved(self) -> None:
+        """mixseek.traces 由来レコードは extra の type (span_start/span_end) を維持する。
+
+        JsonSpanProcessor は信頼された内部プロデューサで、``extra={"type": "span_start"}``
+        により discriminator を載せる。アプリログ (mixseek / mixseek.cli) の type 保護とは別に、
+        traces ロガーのみ type の上書きを許可し、ログとスパンの区別を JSON 上で保つ。
+        """
+        fmt = JsonFormatter()
+        for span_type in ("span_start", "span_end"):
+            record = logging.LogRecord(
+                name="mixseek.traces",
+                level=logging.INFO,
+                pathname="",
+                lineno=0,
+                msg="myspan started",
+                args=(),
+                exc_info=None,
+            )
+            # JsonSpanProcessor の extra={"type": ...} 相当
+            record.type = span_type
+            record.trace_id = "abc"
+
+            output = fmt.format(record)
+            data = json.loads(output)
+
+            # discriminator が維持される
+            assert data["type"] == span_type
+            # type 以外のスキーマキーは formatter 制御のまま
+            assert data["level"] == "INFO"
+            assert data["logger"] == "mixseek.traces"
+            assert data["message"] == "myspan started"
+            assert data["trace_id"] == "abc"
+
 
 class TestSkipTracesFilter:
     """SkipTracesFilter のユニットテスト"""

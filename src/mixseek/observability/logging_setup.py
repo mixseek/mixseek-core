@@ -115,9 +115,15 @@ class SkipTracesFilter(logging.Filter):
 
 # モジュール import 時点で ``mixseek`` に NullHandler を attach し、
 # ``setup_logging()`` 未呼び出し時の leak (root / ``lastResort`` への伝搬) を遮断する。
+# NullHandler 単体では ``found > 0`` となり ``lastResort`` への leak は防げるが、
+# ``propagate`` がデフォルト True のままだと root に handler を持つホストアプリへ
+# レコードが伝搬してしまう。そのため propagate=False を併用して root への leak も遮断する。
+# (``setup_logging()`` も同様に propagate=False を設定するため挙動は一貫する。)
 # ``setup_logging()`` は呼び出し時に handler を clear して再構築するため、
 # この NullHandler はクリーンに置き換わる。
-logging.getLogger("mixseek").addHandler(logging.NullHandler())
+_mixseek_logger = logging.getLogger("mixseek")
+_mixseek_logger.propagate = False
+_mixseek_logger.addHandler(logging.NullHandler())
 
 
 def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> logging.Logger:

@@ -9,7 +9,9 @@
 import io
 import json
 import logging
+import subprocess
 import sys
+import textwrap
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -725,3 +727,41 @@ class TestUnconfiguredLoggerSafety:
         finally:
             sys.stderr = original
         assert buf.getvalue() == ""
+
+    def test_import_blocks_propagation_to_root(self) -> None:
+        """setup_logging 未呼び出しでも root の handler に leak しない (propagate=False)。
+
+        NullHandler 単体では ``found > 0`` となり lastResort への leak は防げるが、
+        ``propagate`` がデフォルト True のままだと root に handler を持つホストアプリへ
+        ``mixseek`` / ``mixseek.cli`` レコードが伝搬してしまう。import 時に propagate=False
+        を設定することで root への leak も遮断することを検証する。
+
+        autouse fixture や他テストが live logger の propagate を変更するため、import 時の
+        素の状態を忠実に検証する目的で別プロセス (fresh interpreter) で実行する。
+        """
+        code = textwrap.dedent(
+            """
+            import io, logging
+            import mixseek.observability.logging_setup  # noqa: F401  (import 時 setup を発火)
+
+            mix = logging.getLogger("mixseek")
+            assert mix.propagate is False, f"propagate={mix.propagate}"
+
+            # ホストアプリが root に handler を設定したケースを再現
+            buf = io.StringIO()
+            root = logging.getLogger()
+            root.addHandler(logging.StreamHandler(buf))
+            root.setLevel(logging.DEBUG)
+
+            logging.getLogger("mixseek.cli").error("should not leak to root")
+            assert buf.getvalue() == "", repr(buf.getvalue())
+            print("OK")
+            """
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+        assert "OK" in result.stdout

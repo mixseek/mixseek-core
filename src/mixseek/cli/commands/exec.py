@@ -194,7 +194,7 @@ def exec_command(
             # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
                 cli_logger.error(
-                    "Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
+                    "Error: [Internal Inconsistency] プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
                     extra={"event": "exec.preflight_inconsistent"},
                 )
                 raise typer.Exit(code=2)

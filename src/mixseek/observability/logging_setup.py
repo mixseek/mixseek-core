@@ -227,9 +227,11 @@ def early_setup_logging_from_env() -> logging.Logger:
     """
     try:
         env_config = LoggingConfig.from_env()
-    except ValueError:
-        # 不正な env var (例: 未知の MIXSEEK_LOG_LEVEL) では default に fallback。
-        # 本呼び出し時 (initialize_observability) で再度 env を読み validation エラーを伝える。
+    except Exception:
+        # bootstrap は CLI 起動前の best-effort 経路。ここでの失敗で CLI 自体を落とさないため、
+        # 想定外の例外も含め広く捕捉し安全なデフォルトに fallback する (例: 不正な MIXSEEK_LOG_LEVEL)。
+        # 設定の確定的な検証・エラー通知は本呼び出しの initialize_observability が担う。
+        # pydantic v2 の ValidationError は ValueError サブクラスだが、その関係に依存せず広く受ける。
         env_config = LoggingConfig()
 
     # workspace 未解決のため file/logfire は無効化 (本呼び出しで設定し直す)

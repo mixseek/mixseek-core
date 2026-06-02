@@ -710,22 +710,42 @@ class TestEarlySetupLoggingFromEnv:
 class TestUnconfiguredLoggerSafety:
     """setup_logging 前の logger アクセスが leak しないことを検証。"""
 
-    def test_unconfigured_does_not_leak_to_stderr(self) -> None:
-        """setup_logging 未呼び出しでも NullHandler により root / stderr に leak しない"""
-        # autouse fixture が teardown 時に NullHandler を attach する設計のため、
-        # 本テストでは明示的に NullHandler のみが付いた状態を再現する
+    def test_unconfigured_does_not_leak_to_root_or_stderr(self) -> None:
+        """setup_logging 未呼び出しでも root handler / stderr (lastResort) の双方に leak しない。
+
+        import 時に確立される「安全な未初期化状態」(= NullHandler + propagate=False) を
+        忠実に再現し、2 つの leak 経路を 1 つの buffer で同時に検証する:
+
+        - NullHandler により ``found > 0`` となり ``lastResort`` (stderr) への leak を防ぐ
+        - propagate=False により root に handler を持つホストアプリへの伝搬を防ぐ
+
+        NullHandler は lastResort のみ、propagate=False は root 伝搬のみを遮断する別個の機構
+        であり、どちらか一方では "root / stderr" 双方を満たせない。そのため本テストは ambient な
+        propagate 状態に依存せず明示的に NullHandler + propagate=False を再現し、さらに root に
+        StreamHandler を付与して root 経由の leak も検出する。
+        """
+        # autouse fixture が teardown 時に再現する安全状態を、本テスト内でも明示的に再現する
         logger = logging.getLogger(LOGGER_NAME)
         for h in logger.handlers:
             h.close()
         logger.handlers.clear()
         logger.addHandler(logging.NullHandler())
+        logger.propagate = False
 
+        # 単一の buffer で stderr (lastResort) と root handler 双方への leak を捕捉する。
         buf = io.StringIO()
+        # ホストアプリが root に handler を設定したケースを再現
+        root = logging.getLogger()
+        root_handler = logging.StreamHandler(buf)
+        root.addHandler(root_handler)
+        root.setLevel(logging.DEBUG)
         original = _swap_stderr(buf)
         try:
             logging.getLogger(_CLI_LOGGER_NAME).error("should not appear")
         finally:
             sys.stderr = original
+            root.removeHandler(root_handler)
+            root_handler.close()
         assert buf.getvalue() == ""
 
     def test_import_blocks_propagation_to_root(self) -> None:

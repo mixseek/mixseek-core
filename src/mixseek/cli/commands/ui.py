@@ -150,7 +150,7 @@ def ui(
 
     app_path = Path(__file__).parent.parent.parent / "ui" / "app.py"
 
-    if not app_path.exists():
+    if not app_path.is_file():
         cli_logger.error(
             f"Error: Streamlit app not found at {app_path}",
             extra={"event": "ui.app_not_found", "app_path": str(app_path)},

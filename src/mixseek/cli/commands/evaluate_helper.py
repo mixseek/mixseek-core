@@ -63,12 +63,12 @@ def _create_evaluator(
                 },
             )
         else:
-            default_config_path = f"{workspace_path}/configs/evaluator.toml"
+            default_config_path = workspace_path / "configs" / "evaluator.toml"
             cli_logger.info(
                 f"Using default config: {default_config_path}",
                 extra={
                     "event": "evaluate.config_default_loaded",
-                    "config_path": default_config_path,
+                    "config_path": str(default_config_path),
                 },
             )
 

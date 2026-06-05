@@ -20,7 +20,7 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.preflight import PreflightResult, run_preflight_check
@@ -29,6 +29,7 @@ from mixseek.orchestrator import Orchestrator
 from mixseek.orchestrator.models import ExecutionSummary
 
 logger = logging.getLogger(__name__)
+cli_logger = logging.getLogger("mixseek.cli")
 
 # Typer options - 関数外で定義してB008警告を回避
 CONFIG_OPTION = typer.Option(
@@ -136,6 +137,10 @@ def exec_command(
         no_log_console: コンソールログ出力無効化
         no_log_file: ファイルログ出力無効化
     """
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
+    # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
+    # (env var サイドチャネルへの暗黙依存を避ける)。
+    log_format = ensure_log_format_env(log_format)
 
     async def _execute() -> None:
         try:
@@ -172,7 +177,10 @@ def exec_command(
 
             # 4. config必須チェック（dry-run/通常の両方で必要）
             if config is None:
-                typer.echo("Error: --config オプションは必須です", err=True)
+                cli_logger.error(
+                    "Error: --config オプションは必須です",
+                    extra={"event": "exec.config_required"},
+                )
                 raise typer.Exit(code=2)
 
             # 5. プリフライトチェック（dry-run/通常で共通、1回のみ実行）
@@ -185,7 +193,10 @@ def exec_command(
 
             # 6. プリフライトで読み込み済みの設定を再利用（二重ロード回避）
             if preflight_result.orchestrator_settings is None:
-                typer.echo("Error: プリフライト成功にもかかわらずorchestrator_settingsがNoneです", err=True)
+                cli_logger.error(
+                    "Error: [Internal Inconsistency] プリフライト成功にもかかわらずorchestrator_settingsがNoneです",
+                    extra={"event": "exec.preflight_inconsistent"},
+                )
                 raise typer.Exit(code=2)
             orchestrator_settings = preflight_result.orchestrator_settings
 
@@ -217,7 +228,14 @@ def exec_command(
         except typer.Exit:
             raise
         except Exception as e:
-            typer.echo(f"Error: {e}", err=True)
+            cli_logger.error(
+                f"Error: {e}",
+                extra={
+                    "event": "exec.unexpected_error",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+            )
             raise typer.Exit(code=2) from e
         finally:
             # Cleanup: Close all HTTP clients

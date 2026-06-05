@@ -1,7 +1,19 @@
 """統一ロガー "mixseek" の初期化。
 
-4モード（logfire有無 x text/json）に対応する setup_logging() を提供。
-root logger ではなく "mixseek" named logger を使用し、propagate=False で独立動作する。
+本モジュールはアプリケーション全体の logger を一元的にセットアップする:
+
+- ``mixseek``: アプリケーション本体のログ。4 モード (logfire 有無 x text/json) に対応し、
+    stderr / ``workspace/logs/mixseek.log`` / Logfire cloud への出力を扱う。
+    ``setup_logging(config, workspace)`` で初期化される。
+- ``mixseek.cli`` などの子ロガー: 独自ハンドラを持たず、親 ``mixseek`` に伝搬する。
+    ``logging.getLogger("mixseek.cli")`` で取得し、``logger.info(msg, extra={...})``
+    のように標準 logging API で利用する。
+
+未初期化時の leak を防ぐため、モジュール import 時に ``mixseek`` に ``NullHandler``
+を attach する。``setup_logging()`` 呼び出し時に handler は再構築される。
+
+``early_setup_logging_from_env()`` は ``workspace`` 解決前 (``validate_logfire_flags``
+等の早期エラー) でも env var ベースで stderr 出力できるようにする bootstrap 経路を提供する。
 """
 
 import json
@@ -31,6 +43,10 @@ _STANDARD_FIELDS: frozenset[str] = frozenset(logging.LogRecord("", 0, "", 0, "",
     "asctime",
 }
 
+# JsonSpanProcessor が出力するスパン由来レコードのロガー名 prefix。
+# 信頼された内部プロデューサとして扱い、SkipTracesFilter / JsonFormatter で共通参照する。
+_TRACES_LOGGER_PREFIX = "mixseek.traces"
+
 
 class TextFormatter(logging.Formatter):
     """extra fields を別行 key: value 形式で表示するフォーマッタ。
@@ -54,6 +70,10 @@ class JsonFormatter(logging.Formatter):
     """stdlib のみで実装する JSON フォーマッタ。
 
     extra fields をトップレベルキーとして出力。type: "log" で標準ログを識別。
+    スキーマ不変キー (``timestamp`` / ``type`` / ``level`` / ``logger`` / ``message``)
+    は extra で上書きさせず、衝突する extra キーは破棄する (``_emit_json`` と同じポリシー)。
+    これにより ``logger.info(msg, extra={"type": "foo"})`` のような呼び出しでも
+    ``type: "log"`` 等のスキーマが常に安定する。
     """
 
     def format(self, record: logging.LogRecord) -> str:
@@ -67,8 +87,17 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": message,
         }
-        # extra fields をトップレベルに追加
-        extra = {k: v for k, v in record.__dict__.items() if k not in _STANDARD_FIELDS and not k.startswith("_")}
+        # extra fields をトップレベルに追加。スキーマ不変キーの上書きは防ぐ。
+        # ただし mixseek.traces (JsonSpanProcessor) は信頼された内部プロデューサであり、
+        # extra={"type": "span_start"/"span_end"} で discriminator を載せるため、type のみ上書きを許可する。
+        # アプリログ (mixseek / mixseek.cli) からの type は引き続き保護する。
+        # 1 パスでフィルタリングして中間辞書の生成を抑える。
+        protected = log_entry.keys() - {"type"} if record.name.startswith(_TRACES_LOGGER_PREFIX) else log_entry.keys()
+        extra = {
+            k: v
+            for k, v in record.__dict__.items()
+            if k not in _STANDARD_FIELDS and not k.startswith("_") and k not in protected
+        }
         log_entry.update(extra)
         return json.dumps(log_entry, ensure_ascii=False, default=str)
 
@@ -81,7 +110,20 @@ class SkipTracesFilter(logging.Filter):
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
-        return not record.name.startswith("mixseek.traces")
+        return not record.name.startswith(_TRACES_LOGGER_PREFIX)
+
+
+# モジュール import 時点で ``mixseek`` に NullHandler を attach し、
+# ``setup_logging()`` 未呼び出し時の leak (root / ``lastResort`` への伝搬) を遮断する。
+# NullHandler 単体では ``found > 0`` となり ``lastResort`` への leak は防げるが、
+# ``propagate`` がデフォルト True のままだと root に handler を持つホストアプリへ
+# レコードが伝搬してしまう。そのため propagate=False を併用して root への leak も遮断する。
+# (``setup_logging()`` も同様に propagate=False を設定するため挙動は一貫する。)
+# ``setup_logging()`` は呼び出し時に handler を clear して再構築するため、
+# この NullHandler はクリーンに置き換わる。
+_mixseek_logger = logging.getLogger("mixseek")
+_mixseek_logger.propagate = False
+_mixseek_logger.addHandler(logging.NullHandler())
 
 
 def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> logging.Logger:
@@ -91,9 +133,12 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
     Mode 3 (logfire+text) では setup_logfire() 内の finalize_mode3_handlers() で
     StreamHandler/FileHandler を除去し、ConsoleOptions/TeeWriter に移行する。
 
+    ``mixseek.cli`` を含む子ロガーは独自 handler を持たず本 logger に伝搬する。
+    したがって本関数のみが CLI イベントを含む全アプリログの出力先を決定する。
+
     Args:
         config: ロギング設定
-        workspace: ワークスペースパス（ファイル出力先）
+        workspace: ワークスペースパス（ファイル出力先）。None の場合は file 出力なし。
 
     Returns:
         設定済みの "mixseek" ロガー
@@ -165,3 +210,30 @@ def setup_logging(config: LoggingConfig, workspace: Path | None = None) -> loggi
         logger.addHandler(logging.NullHandler())
 
     return logger
+
+
+def early_setup_logging_from_env() -> logging.Logger:
+    """env var ベースで "mixseek" logger を bootstrap する。
+
+    ``ensure_log_format_env()`` から呼ばれ、``initialize_observability()`` (workspace 解決
+    後の本初期化) より前の段階でも CLI イベントが適切なフォーマットで stderr に出力できる
+    ようにする。
+
+    本関数で確立される handler は workspace 不要の stderr のみ。``setup_logging()`` 本呼び出し
+    時に上書き再構築される。env var が不正な場合は安全なデフォルトに fallback する。
+
+    Returns:
+        bootstrap 済みの "mixseek" ロガー
+    """
+    try:
+        env_config = LoggingConfig.from_env()
+    except Exception:
+        # bootstrap は CLI 起動前の best-effort 経路。ここでの失敗で CLI 自体を落とさないため、
+        # 想定外の例外も含め広く捕捉し安全なデフォルトに fallback する (例: 不正な MIXSEEK_LOG_LEVEL)。
+        # 設定の確定的な検証・エラー通知は本呼び出しの initialize_observability が担う。
+        # pydantic v2 の ValidationError は ValueError サブクラスだが、その関係に依存せず広く受ける。
+        env_config = LoggingConfig()
+
+    # workspace 未解決のため file/logfire は無効化 (本呼び出しで設定し直す)
+    bootstrap_config = env_config.model_copy(update={"file_enabled": False, "logfire_enabled": False})
+    return setup_logging(bootstrap_config, workspace=None)

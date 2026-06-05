@@ -1,13 +1,20 @@
-"""setup_logging() 統一ロガーのテスト。
+"""setup_logging() / early_setup_logging_from_env() ロガーのテスト。
 
-"mixseek" named loggerを使用する4モード（logfire有無 x text/json）対応。
-TextFormatter, JsonFormatter, SkipTracesFilter のユニットテストを含む。
+- ``mixseek`` named logger (4 モード = logfire 有無 x text/json) のセットアップ
+- ``mixseek.cli`` 子 logger の親 ``mixseek`` への伝搬と統合出力
+- env var ベースの早期 bootstrap
+- TextFormatter / JsonFormatter / SkipTracesFilter のユニットテスト
 """
 
+import io
 import json
 import logging
+import subprocess
+import sys
+import textwrap
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,10 +23,12 @@ from mixseek.observability.logging_setup import (
     JsonFormatter,
     SkipTracesFilter,
     TextFormatter,
+    early_setup_logging_from_env,
     setup_logging,
 )
 
 LOGGER_NAME = "mixseek"
+_CLI_LOGGER_NAME = "mixseek.cli"
 
 
 @pytest.fixture
@@ -31,18 +40,34 @@ def temp_workspace(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def reset_logging() -> Generator[None]:
-    """テスト後にロガーをリセット"""
+def reset_logging(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+    """テスト前後でロガーをリセット。
+
+    モジュール import 時に attach される NullHandler を再 attach することで、
+    setup_logging 未呼び出しテストでも root / lastResort への leak を防ぐ。
+    """
+    monkeypatch.delenv("MIXSEEK_LOG_FORMAT", raising=False)
+    monkeypatch.delenv("MIXSEEK_LOG_LEVEL", raising=False)
     yield
     logger = logging.getLogger(LOGGER_NAME)
     for h in logger.handlers:
         h.close()
     logger.handlers.clear()
     logger.setLevel(logging.WARNING)
+    logger.propagate = False
+    # 本番と同じ leak 防止 NullHandler を attach し直す
+    logger.addHandler(logging.NullHandler())
     # root loggerもクリア（テスト汚染防止）
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(logging.WARNING)
+
+
+def _swap_stderr(buf: io.StringIO) -> Any:
+    """sys.stderr を buf に差し替え、元の stderr を返す。"""
+    original = sys.stderr
+    sys.stderr = buf
+    return original
 
 
 class TestSetupLoggingNamedLogger:
@@ -453,6 +478,69 @@ class TestJsonFormatter:
         data = json.loads(output)
         assert data["type"] == "log"
 
+    def test_schema_keys_not_overwritten_by_extra(self) -> None:
+        """extra がスキーマ不変キー (type/timestamp/level/logger/message) を上書きしない"""
+        fmt = JsonFormatter()
+        record = logging.LogRecord(
+            name="mixseek",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Test message",
+            args=(),
+            exc_info=None,
+        )
+        # スキーマ予約キーと同名の extra を付与（logger.info(msg, extra={...}) 相当）
+        record.type = "user_event"
+        record.timestamp = "overwritten"
+        record.level = "FATAL"
+        record.logger = "other.logger"
+
+        output = fmt.format(record)
+        data = json.loads(output)
+
+        # スキーマは安定
+        assert data["type"] == "log"
+        assert data["level"] == "INFO"
+        assert data["logger"] == "mixseek"
+        assert data["message"] == "Test message"
+        # timestamp は ISO 形式 (上書きされていない)
+        assert data["timestamp"] != "overwritten"
+        assert "T" in data["timestamp"]
+
+    def test_traces_logger_type_preserved(self) -> None:
+        """mixseek.traces 由来レコードは extra の type (span_start/span_end) を維持する。
+
+        JsonSpanProcessor は信頼された内部プロデューサで、``extra={"type": "span_start"}``
+        により discriminator を載せる。アプリログ (mixseek / mixseek.cli) の type 保護とは別に、
+        traces ロガーのみ type の上書きを許可し、ログとスパンの区別を JSON 上で保つ。
+        """
+        fmt = JsonFormatter()
+        for span_type in ("span_start", "span_end"):
+            record = logging.LogRecord(
+                name="mixseek.traces",
+                level=logging.INFO,
+                pathname="",
+                lineno=0,
+                msg="myspan started",
+                args=(),
+                exc_info=None,
+            )
+            # JsonSpanProcessor の extra={"type": ...} 相当
+            record.type = span_type
+            record.trace_id = "abc"
+
+            output = fmt.format(record)
+            data = json.loads(output)
+
+            # discriminator が維持される
+            assert data["type"] == span_type
+            # type 以外のスキーマキーは formatter 制御のまま
+            assert data["level"] == "INFO"
+            assert data["logger"] == "mixseek.traces"
+            assert data["message"] == "myspan started"
+            assert data["trace_id"] == "abc"
+
 
 class TestSkipTracesFilter:
     """SkipTracesFilter のユニットテスト"""
@@ -498,3 +586,202 @@ class TestSkipTracesFilter:
             exc_info=None,
         )
         assert f.filter(record) is True
+
+
+# ---------------------------------------------------------------------------
+# mixseek.cli logger 統合
+# ---------------------------------------------------------------------------
+
+
+class TestCliLoggerIntegration:
+    """``mixseek.cli`` が親 ``mixseek`` に伝搬し、共通ハンドラから出力されることを検証。
+
+    フル統合方針: CLI イベントは独立 logger ではなく親 ``mixseek`` の handler チェーン
+    (stderr / mixseek.log / Logfire cloud) を経由する。
+    """
+
+    def test_propagates_to_parent(self) -> None:
+        """mixseek.cli は親 mixseek に伝搬する (propagate=True デフォルト)"""
+        cli_logger = logging.getLogger(_CLI_LOGGER_NAME)
+        assert cli_logger.propagate is True
+        assert cli_logger.parent is logging.getLogger(LOGGER_NAME)
+
+    def test_no_own_handlers_after_setup(self) -> None:
+        """mixseek.cli は独自 handler を持たない (親 mixseek に依存)"""
+        config = LoggingConfig()
+        setup_logging(config, workspace=None)
+        cli_logger = logging.getLogger(_CLI_LOGGER_NAME)
+        assert cli_logger.handlers == []
+
+    def test_text_mode_output_reaches_stderr(self) -> None:
+        """text モード: cli ロガー経由のメッセージが親の stderr handler から出る"""
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            config = LoggingConfig(log_format="text", file_enabled=False)
+            setup_logging(config, workspace=None)
+            logging.getLogger(_CLI_LOGGER_NAME).error("boom")
+        finally:
+            sys.stderr = original
+        output = buf.getvalue()
+        assert "boom" in output
+        assert " - mixseek.cli - ERROR - " in output
+        assert output.endswith("\n")
+
+    def test_json_mode_output_reaches_stderr(self) -> None:
+        """json モード: cli ロガー経由のメッセージが JSON で stderr に届く"""
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            config = LoggingConfig(log_format="json", file_enabled=False)
+            setup_logging(config, workspace=None)
+            logging.getLogger(_CLI_LOGGER_NAME).error("boom", extra={"event": "test.event", "k": "v"})
+        finally:
+            sys.stderr = original
+        payload = json.loads(buf.getvalue().rstrip("\n"))
+        assert payload["type"] == "log"
+        assert payload["level"] == "ERROR"
+        assert payload["logger"] == "mixseek.cli"
+        assert payload["message"] == "boom"
+        assert payload["event"] == "test.event"
+        assert payload["k"] == "v"
+
+    def test_cli_events_flow_to_log_file(self, temp_workspace: Path) -> None:
+        """フル統合: CLI イベントは mixseek.log にも記録される (旧来は stderr only)"""
+        config = LoggingConfig(log_format="text")
+        setup_logging(config, temp_workspace)
+        logging.getLogger(_CLI_LOGGER_NAME).info("test cli event")
+        log_file = temp_workspace / "logs" / "mixseek.log"
+        content = log_file.read_text()
+        assert "test cli event" in content
+        assert "mixseek.cli" in content
+
+
+class TestEarlySetupLoggingFromEnv:
+    """env var ベースの ``mixseek`` bootstrap 初期化を検証。"""
+
+    def _stream_handlers(self, logger: logging.Logger) -> list[logging.Handler]:
+        """FileHandler を除く StreamHandler のみを抽出 (厳密型一致)。"""
+        return [h for h in logger.handlers if type(h) is logging.StreamHandler]
+
+    def test_no_env_defaults_to_text(self) -> None:
+        logger = early_setup_logging_from_env()
+        handlers = self._stream_handlers(logger)
+        assert handlers
+        assert all(isinstance(h.formatter, TextFormatter) for h in handlers)
+
+    @pytest.mark.parametrize("env_value", ["json", "JSON", "Json"])
+    def test_env_json_is_case_insensitive(self, monkeypatch: pytest.MonkeyPatch, env_value: str) -> None:
+        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", env_value)
+        logger = early_setup_logging_from_env()
+        handlers = self._stream_handlers(logger)
+        assert handlers
+        assert all(isinstance(h.formatter, JsonFormatter) for h in handlers)
+
+    def test_invalid_log_level_falls_back_to_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """不正な MIXSEEK_LOG_LEVEL でも fallback して例外が漏れない"""
+        monkeypatch.setenv("MIXSEEK_LOG_LEVEL", "invalid_level")
+        logger = early_setup_logging_from_env()
+        assert logger.name == LOGGER_NAME
+        # default fallback: INFO level
+        assert logger.level == logging.INFO
+
+    def test_bootstrap_disables_file_output(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """bootstrap では file/logfire は無効 (workspace 未解決のため)"""
+        monkeypatch.setenv("MIXSEEK_LOG_FILE", "true")
+        logger = early_setup_logging_from_env()
+        assert not any(isinstance(h, logging.FileHandler) for h in logger.handlers)
+
+    def test_bootstrap_cli_logger_emits_via_parent(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """bootstrap 後、cli ロガー呼び出しが親経由で stderr に届く"""
+        monkeypatch.setenv("MIXSEEK_LOG_FORMAT", "json")
+        buf = io.StringIO()
+        original = _swap_stderr(buf)
+        try:
+            early_setup_logging_from_env()
+            logging.getLogger(_CLI_LOGGER_NAME).error("early boom")
+        finally:
+            sys.stderr = original
+        payload = json.loads(buf.getvalue().rstrip("\n"))
+        assert payload["logger"] == "mixseek.cli"
+        assert payload["message"] == "early boom"
+
+
+class TestUnconfiguredLoggerSafety:
+    """setup_logging 前の logger アクセスが leak しないことを検証。"""
+
+    def test_unconfigured_does_not_leak_to_root_or_stderr(self) -> None:
+        """setup_logging 未呼び出しでも root handler / stderr (lastResort) の双方に leak しない。
+
+        import 時に確立される「安全な未初期化状態」(= NullHandler + propagate=False) を
+        忠実に再現し、2 つの leak 経路を 1 つの buffer で同時に検証する:
+
+        - NullHandler により ``found > 0`` となり ``lastResort`` (stderr) への leak を防ぐ
+        - propagate=False により root に handler を持つホストアプリへの伝搬を防ぐ
+
+        NullHandler は lastResort のみ、propagate=False は root 伝搬のみを遮断する別個の機構
+        であり、どちらか一方では "root / stderr" 双方を満たせない。そのため本テストは ambient な
+        propagate 状態に依存せず明示的に NullHandler + propagate=False を再現し、さらに root に
+        StreamHandler を付与して root 経由の leak も検出する。
+        """
+        # autouse fixture が teardown 時に再現する安全状態を、本テスト内でも明示的に再現する
+        logger = logging.getLogger(LOGGER_NAME)
+        for h in logger.handlers:
+            h.close()
+        logger.handlers.clear()
+        logger.addHandler(logging.NullHandler())
+        logger.propagate = False
+
+        # 単一の buffer で stderr (lastResort) と root handler 双方への leak を捕捉する。
+        buf = io.StringIO()
+        # ホストアプリが root に handler を設定したケースを再現
+        root = logging.getLogger()
+        root_handler = logging.StreamHandler(buf)
+        root.addHandler(root_handler)
+        root.setLevel(logging.DEBUG)
+        original = _swap_stderr(buf)
+        try:
+            logging.getLogger(_CLI_LOGGER_NAME).error("should not appear")
+        finally:
+            sys.stderr = original
+            root.removeHandler(root_handler)
+            root_handler.close()
+        assert buf.getvalue() == ""
+
+    def test_import_blocks_propagation_to_root(self) -> None:
+        """setup_logging 未呼び出しでも root の handler に leak しない (propagate=False)。
+
+        NullHandler 単体では ``found > 0`` となり lastResort への leak は防げるが、
+        ``propagate`` がデフォルト True のままだと root に handler を持つホストアプリへ
+        ``mixseek`` / ``mixseek.cli`` レコードが伝搬してしまう。import 時に propagate=False
+        を設定することで root への leak も遮断することを検証する。
+
+        autouse fixture や他テストが live logger の propagate を変更するため、import 時の
+        素の状態を忠実に検証する目的で別プロセス (fresh interpreter) で実行する。
+        """
+        code = textwrap.dedent(
+            """
+            import io, logging
+            import mixseek.observability.logging_setup  # noqa: F401  (import 時 setup を発火)
+
+            mix = logging.getLogger("mixseek")
+            assert mix.propagate is False, f"propagate={mix.propagate}"
+
+            # ホストアプリが root に handler を設定したケースを再現
+            buf = io.StringIO()
+            root = logging.getLogger()
+            root.addHandler(logging.StreamHandler(buf))
+            root.setLevel(logging.DEBUG)
+
+            logging.getLogger("mixseek.cli").error("should not leak to root")
+            assert buf.getvalue() == "", repr(buf.getvalue())
+            print("OK")
+            """
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+        assert "OK" in result.stdout

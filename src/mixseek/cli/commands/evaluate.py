@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 import sys
 from pathlib import Path
 
@@ -19,8 +20,10 @@ from mixseek.cli.common_options import (
     VERBOSE_OPTION,
     WORKSPACE_OPTION,
 )
-from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.cli.utils import ensure_log_format_env, initialize_observability, validate_logfire_flags
 from mixseek.utils.env import get_workspace_path
+
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def evaluate(
@@ -65,6 +68,11 @@ def evaluate(
 
         mixseek evaluate "質問" "回答" --log-level debug --verbose
     """
+    # setup_logging() 前の早期エラーも CLI logger で出せるよう env var を確定。
+    # 戻り値で正規化済みの値を受け取り、以降の initialize_observability に明示的に渡す
+    # (env var サイドチャネルへの暗黙依存を避ける)。
+    log_format = ensure_log_format_env(log_format)
+
     # Logfireフラグの排他的チェック（workspace解決より先に実行）
     validate_logfire_flags(logfire, logfire_metadata, logfire_http)
 
@@ -110,5 +118,8 @@ def evaluate(
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        typer.echo("\n⚠️  Interrupted by user", err=True)
+        cli_logger.error(
+            "\n⚠️  Interrupted by user",
+            extra={"event": "evaluate.interrupted_by_user"},
+        )
         sys.exit(130)

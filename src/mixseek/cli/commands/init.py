@@ -15,9 +15,11 @@ from mixseek.exceptions import (
 )
 from mixseek.models.result import InitResult
 from mixseek.models.workspace import WorkspacePath, WorkspaceStructure
+from mixseek.observability import early_setup_logging_from_env
 from mixseek.utils.env import get_workspace_path
 
 logger = logging.getLogger(__name__)
+cli_logger = logging.getLogger("mixseek.cli")
 
 
 def init(
@@ -38,6 +40,10 @@ def init(
         mixseek init -w ./my-workspace
         export MIXSEEK_WORKSPACE=/path/to/workspace && mixseek init
     """
+    # init コマンドは setup_logging() を完全な workspace 設定では呼ばない (ワークスペース
+    # 自体を作る側) が、"mixseek" logger は env var ベースで早期初期化する必要がある。
+    early_setup_logging_from_env()
+
     # Initialize workspace_path_input to None for safe error handling
     workspace_path_input: Path | None = None
 
@@ -61,7 +67,13 @@ def init(
                 f"Workspace already exists at {workspace_structure.root}. Overwrite?",
                 default=False,
             ):
-                typer.echo("Workspace initialization aborted.", err=True)
+                cli_logger.error(
+                    "Workspace initialization aborted.",
+                    extra={
+                        "event": "init.aborted",
+                        "workspace_path": str(workspace_structure.root),
+                    },
+                )
                 sys.exit(1)
 
         # Create directories
@@ -109,7 +121,10 @@ def init(
     ) as e:
         handle_error(e, workspace_path_input or Path("."))
     except KeyboardInterrupt:
-        typer.echo("\nInitialization cancelled by user.", err=True)
+        cli_logger.error(
+            "\nInitialization cancelled by user.",
+            extra={"event": "init.cancelled_by_user"},
+        )
         sys.exit(130)  # Standard exit code for SIGINT
 
 
@@ -125,19 +140,31 @@ def handle_error(error: Exception, workspace_path: Path) -> None:
 
     # Add solution hints based on error type
     if isinstance(error, WorkspacePermissionError):
-        typer.echo(
+        cli_logger.error(
             f"Error: {error}\nSolution: Check directory permissions or choose a different path.",
-            err=True,
+            extra={
+                "event": "init.error_permission",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     elif isinstance(error, ParentDirectoryNotFoundError):
-        typer.echo(
+        cli_logger.error(
             f"Error: {error}\nSolution: Create the parent directory first or choose an existing location.",
-            err=True,
+            extra={
+                "event": "init.error_parent_not_found",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     elif isinstance(error, WorkspacePathNotSpecifiedError):
-        typer.echo(
+        cli_logger.error(
             f"Error: {error}",
-            err=True,
+            extra={
+                "event": "init.error_path_not_specified",
+                "error": str(error),
+                "error_type": type(error).__name__,
+            },
         )
     else:
         result.print_result()

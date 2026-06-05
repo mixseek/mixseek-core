@@ -118,7 +118,7 @@ def evaluate(
             display_evaluation_text(result, verbose=verbose)
 
     except KeyboardInterrupt:
-        cli_logger.warning(
+        cli_logger.error(
             "\n⚠️  Interrupted by user",
             extra={"event": "evaluate.interrupted_by_user"},
         )

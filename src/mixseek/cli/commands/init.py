@@ -67,7 +67,7 @@ def init(
                 f"Workspace already exists at {workspace_structure.root}. Overwrite?",
                 default=False,
             ):
-                cli_logger.warning(
+                cli_logger.error(
                     "Workspace initialization aborted.",
                     extra={
                         "event": "init.aborted",
@@ -121,7 +121,7 @@ def init(
     ) as e:
         handle_error(e, workspace_path_input or Path("."))
     except KeyboardInterrupt:
-        cli_logger.warning(
+        cli_logger.error(
             "\nInitialization cancelled by user.",
             extra={"event": "init.cancelled_by_user"},
         )

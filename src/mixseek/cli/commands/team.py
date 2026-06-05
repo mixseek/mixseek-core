@@ -121,7 +121,7 @@ def team(
                     "error_type": type(e).__name__,
                 },
             )
-            cli_logger.warning(
+            cli_logger.error(
                 "Please specify workspace via --workspace option or MIXSEEK_WORKSPACE environment variable",
                 extra={"event": "team.workspace_resolve_hint"},
             )

@@ -270,7 +270,7 @@ def member(
         # Re-raise typer.Exit to preserve intended exit code
         raise
     except KeyboardInterrupt:
-        cli_logger.warning(
+        cli_logger.error(
             "\n⚠️  Interrupted by user",
             extra={"event": "member.interrupted_by_user"},
         )

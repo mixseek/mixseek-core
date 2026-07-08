@@ -152,13 +152,15 @@ RUN bash -c ". $NVM_DIR/nvm.sh && \
 COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} pyproject.toml uv.lock README.md LICENSE /app/
 
 # Install Python dependencies using uv with cache mounting
+# `--extra ui` は `make streamlit` (= `mixseek ui`) 用。streamlit/plotly は optional-dependencies に
+# 移したため、dev コンテナで UI を起動できるよう明示的に入れる。
 RUN --mount=type=cache,target=/home/${MIXSEEK_USERNAME}/.cache/uv,uid=${MIXSEEK_UID},gid=${MIXSEEK_GID} \
-    uv sync --frozen --no-install-project
+    uv sync --frozen --extra ui --no-install-project
 
 # コマンドインストール
 COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} src/ /app/src/
 RUN --mount=type=cache,target=/home/${MIXSEEK_USERNAME}/.cache/uv,uid=${MIXSEEK_UID},gid=${MIXSEEK_GID} \
-    uv sync --frozen
+    uv sync --frozen --extra ui
 
 # =============================================================================
 # DEVELOPMENT TOOLS CONFIGURATION

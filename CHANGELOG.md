@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a17 (2026-07-09)
+
+### Perf
+
+- restore google-cloud-aiplatform (Vertex 実行に必要)
+- slim runtime deps (pydantic-ai-slim, streamlit を optional 化)
+
 ## v0.1.0a16 (2026-05-15)
 
 ### Feat

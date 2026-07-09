@@ -1616,6 +1616,7 @@ version = "0.1.0a16"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
+    { name = "google-cloud-aiplatform" },
     { name = "google-genai" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -1659,6 +1660,7 @@ docs = [
 requires-dist = [
     { name = "duckdb", specifier = ">=1.4.2" },
     { name = "google-adk", marker = "extra == 'adk'", specifier = ">=1.19.0" },
+    { name = "google-cloud-aiplatform", specifier = ">=1.128.0" },
     { name = "google-genai", specifier = ">=1.52.0" },
     { name = "logfire", marker = "extra == 'logfire'", specifier = ">=4.15.1" },
     { name = "pandas", specifier = ">=2.3.3" },

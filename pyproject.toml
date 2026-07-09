@@ -25,6 +25,9 @@ classifiers = [
 keywords = ["multi-agent", "ai-agent", "pydantic-ai", "llm", "framework", "google-genai", "anthropic", "openai"]
 dependencies = [
     "duckdb>=1.4.2",
+    # Vertex AI プロバイダ (`google-vertex:` モデル) の実行に必要。GoogleProvider(vertexai=True)
+    # 経由の Vertex 認証/実行で参照されるため、ソースに直接 import が無くても残す。
+    "google-cloud-aiplatform>=1.128.0",
     "google-genai>=1.52.0",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",

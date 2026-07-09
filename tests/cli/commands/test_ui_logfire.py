@@ -49,8 +49,13 @@ def clear_logfire_env_vars():
 
 @pytest.fixture
 def mock_streamlit_runner():
-    """Mock stcli.main_run to prevent actual Streamlit launch."""
-    with patch("mixseek.cli.commands.ui.stcli.main_run") as mock_main_run:
+    """Mock stcli.main_run to prevent actual Streamlit launch.
+
+    `ui()` は streamlit を関数内で遅延 import する(任意依存 `[ui]` のため)。
+    モジュール属性 `mixseek.cli.commands.ui.stcli` は存在しないので、実体である
+    `streamlit.web.cli.main_run` を直接パッチする(遅延 import 後の `stcli` はこのモジュールを指す)。
+    """
+    with patch("streamlit.web.cli.main_run") as mock_main_run:
         mock_main_run.return_value = None
         yield mock_main_run
 

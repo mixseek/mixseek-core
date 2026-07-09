@@ -122,8 +122,10 @@ COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} pyproject.toml uv.lock READ
 
 # Install external dependencies only (excludes local package mixseek-core)
 # This layer will be cached unless pyproject.toml or uv.lock changes
+# `--extra ui` は Streamlit ダッシュボード依存 (streamlit/plotly)。tests/ui/* が import するため
+# CI では必須。ランタイム(FastAPI サービス等)は ui を入れない構成にできる(optional-dependencies)。
 RUN --mount=type=cache,target=/home/${MIXSEEK_USERNAME}/.cache/uv,uid=${MIXSEEK_UID},gid=${MIXSEEK_GID} \
-    uv sync --frozen --group dev --group docs --no-install-project
+    uv sync --frozen --group dev --group docs --extra ui --no-install-project
 
 # Copy source code
 COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} src /app/src

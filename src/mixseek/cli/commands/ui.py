@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import typer
-from streamlit.web import cli as stcli
 
 from mixseek.cli.common_options import (
     LOG_FORMAT_OPTION,
@@ -62,6 +61,18 @@ def ui(
 
         mixseek ui --no-log-console
     """
+    # Streamlit は任意依存 (`mixseek-core[ui]`)。UI を使わないランタイムには入っていないため、
+    # コマンド実行時に遅延 import し、未インストールなら導入方法を案内する。
+    try:
+        from streamlit.web import cli as stcli
+    except ModuleNotFoundError as e:
+        typer.echo(
+            "ERROR: Streamlit is not installed. The UI is an optional extra.\n"
+            "       Install it with:  pip install 'mixseek-core[ui]'  (or  uv sync --extra ui)",
+            err=True,
+        )
+        raise typer.Exit(1) from e
+
     # 排他的チェック（複数のlogfireフラグは指定できない）
     logfire_flags_count = sum([logfire, logfire_metadata, logfire_http])
     if logfire_flags_count > 1:

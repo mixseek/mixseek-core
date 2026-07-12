@@ -26,7 +26,7 @@ def sample_success_result() -> MemberAgentResult:
         execution_time_ms=1500,
         usage_info={"total_tokens": 150, "prompt_tokens": 50, "completion_tokens": 100},
         metadata={
-            "model_id": "google-gla:gemini-2.5-flash-lite",
+            "model_id": "google-gla:gemini-flash-lite-latest",
             "temperature": 0.2,
             "max_tokens": 2048,
             "additional_info": "test metadata",

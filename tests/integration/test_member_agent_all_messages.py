@@ -24,7 +24,7 @@ async def test_plain_member_agent_captures_all_messages() -> None:
     config = MemberAgentConfig(
         name="test_plain_agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="You are a test agent. Respond concisely.",
@@ -42,7 +42,7 @@ async def test_plain_member_agent_captures_all_messages() -> None:
         ),
         ModelResponse(
             parts=[TextPart(content="4")],
-            model_name="gemini-2.5-flash-lite",
+            model_name="gemini-flash-lite-latest",
         ),
     ]
 
@@ -78,7 +78,7 @@ async def test_web_search_member_agent_captures_all_messages() -> None:
     config = MemberAgentConfig(
         name="test_web_search_agent",
         type=AgentType.WEB_SEARCH,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="You are a web search agent. Respond concisely.",
@@ -96,7 +96,7 @@ async def test_web_search_member_agent_captures_all_messages() -> None:
         ),
         ModelResponse(
             parts=[TextPart(content="Python is a high-level programming language.")],
-            model_name="gemini-2.5-flash-lite",
+            model_name="gemini-flash-lite-latest",
         ),
     ]
 
@@ -177,7 +177,7 @@ async def test_member_agent_all_messages_includes_system_prompt() -> None:
     config = MemberAgentConfig(
         name="test_agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="UNIQUE_SYSTEM_PROMPT_FOR_TESTING",
@@ -195,7 +195,7 @@ async def test_member_agent_all_messages_includes_system_prompt() -> None:
         ),
         ModelResponse(
             parts=[TextPart(content="Test response")],
-            model_name="gemini-2.5-flash-lite",
+            model_name="gemini-flash-lite-latest",
         ),
     ]
 
@@ -233,7 +233,7 @@ async def test_member_agent_all_messages_includes_user_prompt() -> None:
     config = MemberAgentConfig(
         name="test_agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="You are a test agent.",
@@ -251,7 +251,7 @@ async def test_member_agent_all_messages_includes_user_prompt() -> None:
         ),
         ModelResponse(
             parts=[TextPart(content="Test response")],
-            model_name="gemini-2.5-flash-lite",
+            model_name="gemini-flash-lite-latest",
         ),
     ]
 
@@ -287,7 +287,7 @@ async def test_member_agent_all_messages_includes_model_response() -> None:
     config = MemberAgentConfig(
         name="test_agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="You are a test agent.",
@@ -305,7 +305,7 @@ async def test_member_agent_all_messages_includes_model_response() -> None:
         ),
         ModelResponse(
             parts=[TextPart(content="The answer is 4")],
-            model_name="gemini-2.5-flash-lite",
+            model_name="gemini-flash-lite-latest",
         ),
     ]
 
@@ -338,7 +338,7 @@ async def test_member_agent_error_case_captures_all_messages() -> None:
     config = MemberAgentConfig(
         name="test_agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=512,
         system_instruction="You are a test agent.",

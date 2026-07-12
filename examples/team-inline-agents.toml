@@ -43,7 +43,7 @@ system_instruction = """
 - 調査+分析: researcher → analyst
 - 調査+分析+まとめ: researcher → analyst → summarizer
 """
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7  # 省略可（省略時はモデルのデフォルト値を使用）
 
 # pydantic-ai ModelSettings (TypedDict) に渡す追加設定（Provider 共通、検証なし）
@@ -74,7 +74,7 @@ tool_description = """
 - 因果関係の分析
 - データに基づく洞察の提供
 """
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2  # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 2048
 # analystは短時間で応答を返すため明示的なタイムアウトは設定しない
@@ -106,7 +106,7 @@ Web検索で最新情報を収集・調査します。
 - 事実確認が必要な情報
 - 複数ソースからの情報統合
 """
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 6144
 timeout_seconds = 120
@@ -160,7 +160,7 @@ tool_description = """
 - 結論の明確化
 - エグゼクティブサマリー作成
 """
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = """
 あなたは情報を簡潔にまとめる専門家です。
 

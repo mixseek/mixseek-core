@@ -39,7 +39,7 @@ class TestCustomAgentType:
         config = MemberAgentConfig(
             name="my-custom-agent",
             type="custom",  # Custom string type
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Custom agent instructions.",
         )
 
@@ -64,7 +64,7 @@ class TestCustomAgentType:
         config = MemberAgentConfig(
             name="my-custom-agent",
             type="custom",
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Custom agent instructions.",
         )
 
@@ -86,7 +86,7 @@ class TestCustomAgentType:
         config = MemberAgentConfig(
             name="my-custom-agent",
             type="custom",
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Custom agent instructions.",
         )
 
@@ -117,7 +117,7 @@ class TestCustomAgentType:
         config = MemberAgentConfig(
             name="my-custom-agent",
             type=custom_type,
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Custom instructions",
         )
 
@@ -133,7 +133,7 @@ class TestCustomAgentType:
         config = MemberAgentConfig(
             name="my-agent",
             type="unregistered_custom_type",
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Test instructions.",
         )
 

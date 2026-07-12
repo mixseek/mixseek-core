@@ -153,7 +153,7 @@ class TestGetAllDefaults:
         defaults = manager.get_all_defaults(LeaderAgentSettings)
 
         # Verify specific default values
-        assert defaults["model"] == "google-gla:gemini-2.5-flash-lite"
+        assert defaults["model"] == "google-gla:gemini-flash-lite-latest"
         assert defaults["timeout_seconds"] == 300
 
     def test_get_all_defaults_for_orchestrator_settings(self, tmp_path: Path) -> None:

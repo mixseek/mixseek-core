@@ -46,7 +46,7 @@ timeout_seconds = 300
 parallel_tool_calls = true
 
 # Google モデル固有設定の例（Gemini Thinking）
-# 上記 model を "google-gla:gemini-2.5-pro" 等に切り替えたときに有効化される
+# 上記 model を "google-gla:gemini-flash-latest" 等に切り替えたときに有効化される
 [team.leader.google_model_settings]
 google_thinking_config = { thinking_level = "HIGH", include_thoughts = true }
 ```
@@ -61,7 +61,7 @@ Member Agentは特定のタスクを実行する専門エージェントです�
 |-----------|---------|------------|---------|---------|-----------|----------|--------------|------|
 | name | str | - | TOML | agent.name | - | - | 必須 | Agent識別子 |
 | type | str | - | TOML | agent.type | - | - | 必須 | Agent種別（plain/web_search/code_execution） |
-| model | str | "google-gla:gemini-2.5-flash-lite" | TOML/定数 | agent.model | - | - | 必須 | Pydantic AIモデル識別子 |
+| model | str | "google-gla:gemini-flash-lite-latest" | TOML/定数 | agent.model | - | - | 必須 | Pydantic AIモデル識別子 |
 | temperature | float \| None | None | TOML/定数 | agent.temperature | - | - | オプション | Temperature（0.0-2.0、Noneの場合はモデルデフォルト） |
 | max_tokens | int \| None | None | TOML/定数 | agent.max_tokens | - | - | オプション | 最大トークン数（> 0、Noneの場合はモデルデフォルト） |
 | stop_sequences | list[str] \| None | None | TOML/定数 | agent.stop_sequences | - | - | オプション | 生成を停止するシーケンスのリスト |
@@ -94,7 +94,7 @@ Member Agentは特定のタスクを実行する専門エージェントです�
 [agent]
 name = "researcher"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 4096
 timeout_seconds = 60
@@ -161,7 +161,7 @@ timeout_seconds = 300
 name = "researcher"
 type = "web_search"
 tool_description = "Searches the web for information"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 max_tokens = 4096
 ```
 
@@ -190,7 +190,7 @@ Evaluatorは複数のメトリクスを使用してAgent出力を評価します
 
 | 設定項目名 | データ型 | デフォルト値 | 設定方法 | TOMLキー | 環境変数名 | CLI引数名 | 必須/オプション | 説明 |
 |-----------|---------|------------|---------|---------|-----------|----------|--------------|------|
-| default_model | str | "google-gla:gemini-2.5-flash" | TOML/定数 | default_model | - | - | オプション | デフォルトLLMモデル |
+| default_model | str | "google-gla:gemini-flash-lite-latest" | TOML/定数 | default_model | - | - | オプション | デフォルトLLMモデル |
 | temperature | float \| None | None | TOML/定数 | temperature | - | - | オプション | デフォルトtemperature（0.0-2.0、Noneの場合はモデルデフォルト） |
 | max_tokens | int \| None | None | TOML/定数 | max_tokens | - | - | オプション | デフォルトmax_tokens（> 0、Noneの場合はモデルデフォルト） |
 | max_retries | int | 3 | TOML/定数 | max_retries | - | - | オプション | デフォルトmax_retries（>= 0） |
@@ -262,7 +262,7 @@ JudgmentはLLM-as-a-Judgeによるラウンド継続判定機能を提供しま�
 
 | 設定項目名 | データ型 | デフォルト値 | 設定方法 | TOMLキー | 環境変数名 | CLI引数名 | 必須/オプション | 説明 |
 |-----------|---------|------------|---------|---------|-----------|----------|--------------|------|
-| model | str | "google-gla:gemini-2.5-flash" | TOML/定数 | model | MIXSEEK_JUDGMENT__MODEL | - | オプション | LLMモデル（例: google-gla:gemini-2.5-flash、anthropic:claude-sonnet-4-5） |
+| model | str | "google-gla:gemini-flash-lite-latest" | TOML/定数 | model | MIXSEEK_JUDGMENT__MODEL | - | オプション | LLMモデル（例: google-gla:gemini-flash-lite-latest、anthropic:claude-sonnet-4-5） |
 | temperature | float | 0.0 | TOML/定数 | temperature | MIXSEEK_JUDGMENT__TEMPERATURE | - | オプション | Temperature（0.0-2.0、デフォルト: 0.0、決定論的判定） |
 | max_tokens | int \| None | None | TOML/定数 | max_tokens | MIXSEEK_JUDGMENT__MAX_TOKENS | - | オプション | 最大トークン数（> 0、Noneの場合はLLM側のデフォルト値） |
 | max_retries | int | 3 | TOML/定数 | max_retries | MIXSEEK_JUDGMENT__MAX_RETRIES | - | オプション | LLM API呼び出しの最大リトライ回数（>= 0） |
@@ -338,7 +338,7 @@ google_thinking_config = { thinking_level = "MEDIUM" }
 
 ```bash
 # 環境変数で設定
-export MIXSEEK_JUDGMENT__MODEL="google-gla:gemini-2.5-flash"
+export MIXSEEK_JUDGMENT__MODEL="google-gla:gemini-flash-lite-latest"
 export MIXSEEK_JUDGMENT__TEMPERATURE=0.0
 export MIXSEEK_JUDGMENT__MAX_TOKENS=1000
 export MIXSEEK_JUDGMENT__TIMEOUT_SECONDS=60

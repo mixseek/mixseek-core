@@ -366,8 +366,8 @@ class LeaderAgentSettings(MixSeekBaseSettings):
 
     # LLM設定（オプション、すべての環境で同じデフォルト値）
     model: str = Field(
-        default="google-gla:gemini-2.5-flash-lite",
-        description="LLMモデル (例: google-gla:gemini-2.5-flash-lite)",
+        default="google-gla:gemini-flash-lite-latest",
+        description="LLMモデル (例: google-gla:gemini-flash-lite-latest)",
     )
 
     temperature: float | None = Field(
@@ -668,7 +668,7 @@ class EvaluatorSettings(MixSeekBaseSettings):
 
     # llm_default相当のデフォルトLLM設定
     default_model: str = Field(
-        default="google-gla:gemini-2.5-flash",
+        default="google-gla:gemini-flash-lite-latest",
         description="デフォルトLLMモデル（EvaluationConfig.llm_default.model互換）",
     )
 
@@ -783,8 +783,8 @@ class JudgmentSettings(MixSeekBaseSettings):
 
     # LLM設定
     model: str = Field(
-        default="google-gla:gemini-2.5-flash",
-        description="LLMモデル (例: google-gla:gemini-2.5-flash)",
+        default="google-gla:gemini-flash-lite-latest",
+        description="LLMモデル (例: google-gla:gemini-flash-lite-latest)",
     )
 
     temperature: float = Field(
@@ -1590,7 +1590,7 @@ class WorkflowSettings(MixSeekBaseSettings):
         description="ワークフロー表示名（DuckDB の team_name に流用）",
     )
     default_model: str = Field(
-        default="google-gla:gemini-2.5-flash",
+        default="google-gla:gemini-flash-lite-latest",
         description=("全 agent executor のデフォルトモデル。各 executor の `model` 省略時にフォールバックされる。"),
     )
     include_all_context: bool = Field(

@@ -4,7 +4,7 @@
 [agent]
 name = "my-code-execution-agent"
 type = "code_execution"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.1
 max_tokens = 4096
 tool_description = "An AI assistant specialized in writing and explaining code"

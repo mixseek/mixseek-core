@@ -21,7 +21,7 @@ class TestBuildModelSettingsEmpty:
     """空入力時の挙動。"""
 
     def test_no_inputs_returns_empty(self) -> None:
-        result = build_model_settings(model_id="google-gla:gemini-2.5-pro")
+        result = build_model_settings(model_id="google-gla:gemini-flash-latest")
         assert result == {}
 
     def test_only_none_inputs_returns_empty(self) -> None:
@@ -95,7 +95,7 @@ class TestMergeOrder:
 
     def test_google_model_settings_overrides_model_settings_on_google(self) -> None:
         result = build_model_settings(
-            model_id="google-gla:gemini-2.5-pro",
+            model_id="google-gla:gemini-flash-latest",
             model_settings={"temperature": 0.5},
             google_model_settings={"temperature": 0.3},
         )
@@ -104,7 +104,7 @@ class TestMergeOrder:
 
     def test_individual_field_overrides_google_model_settings(self) -> None:
         result = build_model_settings(
-            model_id="google-gla:gemini-2.5-pro",
+            model_id="google-gla:gemini-flash-latest",
             model_settings={"temperature": 0.5},
             google_model_settings={"temperature": 0.3},
             temperature=0.0,
@@ -117,7 +117,7 @@ class TestGoogleModelSettings:
 
     def test_google_gla_applies_google_settings(self) -> None:
         result = build_model_settings(
-            model_id="google-gla:gemini-2.5-pro",
+            model_id="google-gla:gemini-flash-latest",
             google_model_settings={"google_thinking_config": {"thinking_level": "HIGH"}},
         )
         # google_thinking_config は GoogleModelSettings 固有キーのため、
@@ -126,7 +126,7 @@ class TestGoogleModelSettings:
 
     def test_google_vertex_applies_google_settings(self) -> None:
         result = build_model_settings(
-            model_id="google-vertex:gemini-2.5-pro",
+            model_id="google-vertex:gemini-flash-latest",
             google_model_settings={"google_thinking_config": {"include_thoughts": True}},
         )
         assert cast(dict[str, Any], result)["google_thinking_config"] == {"include_thoughts": True}
@@ -168,7 +168,7 @@ class TestCombinedScenarios:
     def test_thinking_on_google_with_individual_fields(self) -> None:
         """Google モデルで Thinking を有効化しつつ個別 temperature/max_tokens を指定。"""
         result = build_model_settings(
-            model_id="google-gla:gemini-2.5-pro",
+            model_id="google-gla:gemini-flash-latest",
             model_settings={"parallel_tool_calls": True},
             google_model_settings={
                 "google_thinking_config": {"thinking_level": "HIGH", "include_thoughts": True},

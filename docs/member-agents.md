@@ -29,7 +29,7 @@ Member Agentは、以下の特徴を持つエージェントコンポーネン�
 [agent]
 name = "plain-assistant"
 type = "plain"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2 # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 2048
 timeout_seconds = 30
@@ -49,7 +49,7 @@ Web検索機能を持つエージェントです。最新情報の取得や事�
 - 情報収集
 
 対応プロバイダー：
-- **Google Gemini**: `google-gla:gemini-2.5-flash`
+- **Google Gemini**: `google-gla:gemini-flash-lite-latest`
 - **Anthropic Claude**: `anthropic:claude-sonnet-4-5-20250929`
 - **Grok (xAI)**: `grok-responses:grok-4-fast` (ネイティブWeb検索ツール使用)
 
@@ -59,7 +59,7 @@ Web検索機能を持つエージェントです。最新情報の取得や事�
 [agent]
 name = "research-agent"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3 # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 3072
 system_instruction = "You are a research assistant with web search capabilities. Search for current information when needed to provide accurate responses. Always cite your sources."
@@ -105,7 +105,7 @@ Grokモデルは`grok-responses:`プレフィックスを使用することで�
 
 対応プロバイダー：
 - **Anthropic Claude**: `anthropic:claude-sonnet-4-5-20250929`（フルサポート、パラメータ設定可能）
-- **Google Gemini**: `google-gla:gemini-2.5-flash`（基本サポート、パラメータ設定不可）
+- **Google Gemini**: `google-gla:gemini-flash-lite-latest`（基本サポート、パラメータ設定不可）
 
 制限事項：
 - OpenAI/Grokではサポートされていません
@@ -159,7 +159,7 @@ max_content_tokens = 30000
 [agent]
 name = "url-reader-gemini"
 type = "web_fetch"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 system_instruction = "あなたはWebページの内容を分析するエージェントです。"
@@ -469,7 +469,7 @@ Response:
 
 Execution Details:
 ----------------------------------------
-  Model: google-gla:gemini-2.5-flash-lite
+  Model: google-gla:gemini-flash-lite-latest
   Temperature: 0.7
   Max Tokens: 4096
   Usage:
@@ -486,7 +486,7 @@ Message History:
         Content: Search for latest AI news
 
   [2] ModelResponse
-      Model: gemini-2.5-flash-lite
+      Model: gemini-flash-lite-latest
       Usage: input=890, output=50
       Part: ToolCallPart
         Tool: web_search
@@ -497,7 +497,7 @@ Message History:
           }
 
   [3] ModelResponse
-      Model: gemini-2.5-flash-lite
+      Model: gemini-flash-lite-latest
       Usage: input=940, output=294
       Part: ToolReturnPart
         Tool Return: web_search
@@ -629,7 +629,7 @@ model = "anthropic:claude-sonnet-4-5-20250929"
 
 # または Google（基本サポート）
 [agent]
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 ```
 
 環境変数を設定:

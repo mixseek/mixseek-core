@@ -15,7 +15,7 @@ class TestTracingIntegration:
         settings = manager.load_settings(LeaderAgentSettings)
 
         # Values should match defaults
-        assert settings.model == "google-gla:gemini-2.5-flash-lite"
+        assert settings.model == "google-gla:gemini-flash-lite-latest"
         assert settings.timeout_seconds == 300
 
     def test_print_debug_info_output_structure(self, capsys: Any) -> None:
@@ -57,7 +57,7 @@ class TestTracingIntegration:
         orchestrator_defaults = manager.get_all_defaults(OrchestratorSettings)
 
         # Verify LeaderAgentSettings defaults
-        assert leader_defaults["model"] == "google-gla:gemini-2.5-flash-lite"
+        assert leader_defaults["model"] == "google-gla:gemini-flash-lite-latest"
         # temperature is None, so it may be excluded from defaults dict
         assert leader_defaults["timeout_seconds"] == 300
 

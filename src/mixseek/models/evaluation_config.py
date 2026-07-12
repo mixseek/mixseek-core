@@ -222,7 +222,7 @@ class LLMDefaultConfig(BaseModel):
     TOMLファイルで明示的に指定しない場合はこれらの値が使用されます。
 
     Attributes:
-        model: デフォルトLLMモデル（デフォルト: "google-gla:gemini-2.5-flash"）
+        model: デフォルトLLMモデル（デフォルト: "google-gla:gemini-flash-lite-latest"）
         temperature: デフォルトtemperature設定（デフォルト: 0.0）
         max_tokens: デフォルトmax_tokens設定（デフォルト: None=制限なし）
         max_retries: デフォルトmax_retries設定（デフォルト: 3）
@@ -270,7 +270,7 @@ class LLMDefaultConfig(BaseModel):
     """
 
     model: str = Field(
-        default="google-gla:gemini-2.5-flash",
+        default="google-gla:gemini-flash-lite-latest",
         description="デフォルトLLMモデル（フォーマット：'provider:model-name'）",
         examples=["anthropic:claude-sonnet-4-5-20250929", "openai:gpt-5"],
     )

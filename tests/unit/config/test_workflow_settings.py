@@ -209,7 +209,7 @@ class TestAgentToMemberAgentConfig:
         exe = AgentExecutorSettings(name="a1", type="plain")
         config = exe.to_member_agent_config(
             workspace=tmp_path,
-            default_model="google-gla:gemini-2.5-flash",
+            default_model="google-gla:gemini-flash-lite-latest",
         )
         assert isinstance(config, MemberAgentConfig)
         assert config.name == "a1"
@@ -224,7 +224,7 @@ class TestAgentToMemberAgentConfig:
         exe = AgentExecutorSettings(name="a1", type="plain", system_instruction=None)
         config = exe.to_member_agent_config(
             workspace=tmp_path,
-            default_model="google-gla:gemini-2.5-flash",
+            default_model="google-gla:gemini-flash-lite-latest",
         )
         assert config.system_instruction == "BUNDLED_TEXT"
         resolver.assert_called_once_with(
@@ -240,8 +240,8 @@ class TestAgentToMemberAgentConfig:
             return_value="",
         )
         exe = AgentExecutorSettings(name="a1", type="plain", model=None)
-        config = exe.to_member_agent_config(default_model="google-gla:gemini-2.5-flash")
-        assert config.model == "google-gla:gemini-2.5-flash"
+        config = exe.to_member_agent_config(default_model="google-gla:gemini-flash-lite-latest")
+        assert config.model == "google-gla:gemini-flash-lite-latest"
 
     def test_explicit_model_overrides_default(self, mocker: MockerFixture) -> None:
         """model 指定があればそちらが優先される。"""
@@ -250,7 +250,7 @@ class TestAgentToMemberAgentConfig:
             return_value="",
         )
         exe = AgentExecutorSettings(name="a1", type="plain", model="anthropic:claude-sonnet-4-5")
-        config = exe.to_member_agent_config(default_model="google-gla:gemini-2.5-flash")
+        config = exe.to_member_agent_config(default_model="google-gla:gemini-flash-lite-latest")
         assert config.model == "anthropic:claude-sonnet-4-5"
 
     def test_plugin_and_tool_settings_propagated(self, mocker: MockerFixture) -> None:
@@ -260,7 +260,7 @@ class TestAgentToMemberAgentConfig:
         )
         plugin = PluginMetadata(agent_class="mypkg.MyAgent")
         exe = AgentExecutorSettings(name="c1", type="custom", plugin=plugin, metadata={"k": "v"})
-        config = exe.to_member_agent_config(default_model="google-gla:gemini-2.5-flash")
+        config = exe.to_member_agent_config(default_model="google-gla:gemini-flash-lite-latest")
         assert config.plugin is plugin
         assert config.metadata.get("k") == "v"
 
@@ -297,7 +297,7 @@ class TestFunctionExecutorSettings:
                 {
                     "name": "f1",
                     "plugin": {"module": "m", "function": "f"},
-                    "model": "google-gla:gemini-2.5-flash",
+                    "model": "google-gla:gemini-flash-lite-latest",
                 }
             )
 
@@ -392,7 +392,7 @@ class TestWorkflowSettings:
         wf = _make_workflow()
         assert wf.workflow_id == "wf-1"
         assert wf.workflow_name == "Workflow 1"
-        assert wf.default_model == "google-gla:gemini-2.5-flash"
+        assert wf.default_model == "google-gla:gemini-flash-lite-latest"
         assert wf.include_all_context is True
         assert wf.final_output_format == "json"
         assert len(wf.steps) == 1
@@ -407,7 +407,7 @@ class TestWorkflowSettings:
 
     def test_default_model_default_value(self) -> None:
         wf = _make_workflow()
-        assert wf.default_model == "google-gla:gemini-2.5-flash"
+        assert wf.default_model == "google-gla:gemini-flash-lite-latest"
 
     def test_default_model_invalid_format_rejected(self) -> None:
         with pytest.raises(ValidationError):

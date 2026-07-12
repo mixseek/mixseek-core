@@ -84,7 +84,7 @@ class TestBuildExecutable:
             ),
             timeout_seconds=5,
         )
-        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-2.5-flash")
+        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-flash-lite-latest")
         assert isinstance(ex, FunctionExecutable)
         assert ex.name == "fn"
         assert ex.executor_type == "function"
@@ -98,7 +98,7 @@ class TestBuildExecutable:
             return_value=mock_agent,
         )
         cfg = AgentExecutorSettings(name="ag", type="plain")
-        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-2.5-flash")
+        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-flash-lite-latest")
         assert isinstance(ex, AgentExecutable)
         assert ex.name == "ag"
 
@@ -107,7 +107,7 @@ class TestBuildExecutable:
             build_executable(
                 "not-a-cfg",  # type: ignore[arg-type]
                 team_deps,
-                default_model="google-gla:gemini-2.5-flash",
+                default_model="google-gla:gemini-flash-lite-latest",
             )
 
     def test_function_settings_with_path(self, team_deps: TeamDependencies, tmp_path: Path) -> None:
@@ -121,7 +121,7 @@ class TestBuildExecutable:
             plugin=FunctionPluginMetadata(path=str(f), function="fn"),
             timeout_seconds=5,
         )
-        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-2.5-flash")
+        ex = build_executable(cfg, team_deps, default_model="google-gla:gemini-flash-lite-latest")
         assert isinstance(ex, FunctionExecutable)
         assert ex.name == "fn"
         assert ex.executor_type == "function"

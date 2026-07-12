@@ -18,7 +18,7 @@ max_concurrent_members = 3
 [team.leader]
 # 空文字を明示してシステム指示なしで稼働させる
 system_instruction = ""
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.6  # 省略可（省略時はモデルのデフォルト値を使用）
 
 # Member Agent 1: 解析担当
@@ -27,7 +27,7 @@ name = "analyst"
 type = "plain"
 tool_name = "delegate_to_analyst"
 tool_description = "解析を行います。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "与えられた情報を分析し、簡潔な結論を導き出してください。"
 temperature = 0.2  # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 2048
@@ -38,7 +38,7 @@ name = "summarizer"
 type = "plain"
 tool_name = "delegate_to_summarizer"
 tool_description = "要約を行います。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "情報を3つのポイントに要約してください。"
 temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 1024

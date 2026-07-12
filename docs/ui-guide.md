@@ -104,8 +104,7 @@ max_tokens = 4096
 
 [[member_agents]]
 agent_id = "coder"
-provider = "google-adk"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 system_prompt = "You are a coding expert. Write clean, efficient code."
 temperature = 0.3
 max_tokens = 8192

@@ -47,7 +47,7 @@ description = "Test team for unit testing"
 [[team.members]]
 agent_name = "agent-1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a test agent"
 tool_description = "A test agent for unit testing"
 temperature = 0.7
@@ -56,7 +56,7 @@ max_tokens = 1024
 [[team.members]]
 agent_name = "agent-2"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are another test agent"
 tool_description = "Another test agent for unit testing"
 temperature = 0.7

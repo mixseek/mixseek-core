@@ -13,7 +13,7 @@
 [agent]
 name = "gemini-web-fetch-agent"
 type = "web_fetch"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 8192
 tool_description = "Google GeminiによるURLコンテンツ取得・分析エージェント"

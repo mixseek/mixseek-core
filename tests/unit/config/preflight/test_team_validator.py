@@ -25,7 +25,7 @@ def _write_team_toml(path: Path, team_id: str = "t1") -> Path:
         f'[team]\nteam_id = "{team_id}"\nteam_name = "{team_id}"\n'
         "[[team.members]]\n"
         'agent_name = "a1"\nagent_type = "plain"\n'
-        'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+        'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
         'system_instruction = "x"\n'
     )
     return path

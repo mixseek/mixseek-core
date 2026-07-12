@@ -18,7 +18,7 @@ class TestADKAgentConfig:
 
     def test_valid_config(self, sample_adk_config: ADKAgentConfig) -> None:
         """Test creating a valid ADKAgentConfig."""
-        assert sample_adk_config.gemini_model == "gemini-2.5-flash"
+        assert sample_adk_config.gemini_model == "gemini-flash-lite-latest"
         assert sample_adk_config.temperature == 0.7
         assert sample_adk_config.max_output_tokens == 4096
         assert sample_adk_config.search_result_limit == 10
@@ -28,7 +28,7 @@ class TestADKAgentConfig:
     def test_default_values(self) -> None:
         """Test default values are applied correctly."""
         config = ADKAgentConfig()
-        assert config.gemini_model == "gemini-2.5-flash"
+        assert config.gemini_model == "gemini-flash-lite-latest"
         assert config.temperature == 0.5
         assert config.max_output_tokens == 8192
         assert config.search_result_limit == 15
@@ -38,10 +38,8 @@ class TestADKAgentConfig:
     def test_valid_gemini_models(self) -> None:
         """Test various supported Gemini model names."""
         valid_models = [
-            "gemini-2.0-flash",
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite",
-            "gemini-2.5-pro",
+            "gemini-flash-lite-latest",
+            "gemini-flash-latest",
             "gemini-3-pro-preview",
         ]
         for model in valid_models:

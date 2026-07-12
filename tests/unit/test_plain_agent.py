@@ -25,7 +25,7 @@ def plain_agent_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-plain-agent",
         type="plain",
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="Test instructions for plain agent behavior.",
     )
 
@@ -192,7 +192,7 @@ class TestPlainMemberAgent:
         invalid_config = MemberAgentConfig(
             name="invalid-agent",
             type=AgentType.WEB_SEARCH,  # Wrong type for PlainMemberAgent
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Test instructions.",
         )
 

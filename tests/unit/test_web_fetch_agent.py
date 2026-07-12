@@ -44,7 +44,7 @@ def web_fetch_agent_config_google() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-fetch-agent-google",
         type="web_fetch",
-        model="google-gla:gemini-2.5-flash",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="Test instructions for web fetch agent behavior.",
     )
 

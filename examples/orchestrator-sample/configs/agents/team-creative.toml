@@ -28,7 +28,7 @@ max_concurrent_members = 5
 [team.leader]
 
 # LLM モデルの指定
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 
 # 温度パラメータ（0.0-1.0）
 # 創造性重視なので高温度に設定（多様性・新規性重視）
@@ -71,7 +71,7 @@ system_instruction = """
 name = "web_search"
 type = "web_search"
 tool_description = "Web検索で最新トレンド、革新的事例、新しいアイデアを発見します。市場の変化、新技術、ベストプラクティスなど創造的な発想につながる情報収集に使用します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 6144
 
@@ -115,7 +115,7 @@ include_raw_content = true
 name = "data_analyst"
 type = "plain"
 tool_description = "数値データの分析、統計的検証、データドリブンな洞察を提供します。定量的な裏付け、トレンド分析、データに基づいた予測が必要な場合に使用します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 4096
 

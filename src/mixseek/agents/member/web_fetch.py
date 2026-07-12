@@ -54,7 +54,7 @@ class WebFetchMemberAgent(BaseMemberAgent):
             raise ValueError(
                 f"Web Fetch Agent only supports Anthropic and Google models. "
                 f"Got: {config.model}. "
-                f"Use 'anthropic:claude-sonnet-4-5-20250929' or 'google-gla:gemini-2.5-flash'."
+                f"Use 'anthropic:claude-sonnet-4-5-20250929' or 'google-gla:gemini-flash-lite-latest'."
             )
 
         # NO implicit fallbacks in authentication

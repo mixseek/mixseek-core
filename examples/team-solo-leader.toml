@@ -15,7 +15,7 @@ team_name = "Solo Leader Team"
 max_concurrent_members = 15  # Member Agentは0件だが、上限設定は必須
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 4096
 

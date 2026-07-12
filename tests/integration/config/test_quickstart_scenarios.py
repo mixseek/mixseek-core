@@ -59,7 +59,7 @@ timeout_seconds = 180
         settings = manager.load_settings(LeaderAgentSettings)
 
         # Should successfully load with defaults
-        assert settings.model == "google-gla:gemini-2.5-flash-lite"
+        assert settings.model == "google-gla:gemini-flash-lite-latest"
         assert settings.timeout_seconds == 300
 
     def test_scenario_4_debug_info_output(self, monkeypatch: Any, capsys: Any) -> None:

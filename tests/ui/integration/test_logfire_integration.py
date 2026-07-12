@@ -93,13 +93,13 @@ timeout_per_team_seconds = 300
 name = "test-team"
 
 [orchestrator.teams.leader]
-model = "gemini-2.0-flash-exp"
+model = "gemini-flash-lite-latest"
 system_instruction = "You are a helpful assistant."
 
 [[orchestrator.teams.members]]
 name = "test-member"
 type = "code"
-model = "gemini-2.0-flash-exp"
+model = "gemini-flash-lite-latest"
 system_instruction = "You are a code assistant."
 """)
 

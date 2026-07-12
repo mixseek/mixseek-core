@@ -116,8 +116,8 @@ mixseek ui
 
 | Provider | Model Format | Environment Variable |
 |----------|-------------|---------------------|
-| Google Gemini | `google-gla:gemini-2.5-flash` | `GOOGLE_API_KEY` |
-| Google Vertex AI | `google-vertex:gemini-2.5-flash` | `GOOGLE_APPLICATION_CREDENTIALS` |
+| Google Gemini | `google-gla:gemini-flash-lite-latest` | `GOOGLE_API_KEY` |
+| Google Vertex AI | `google-vertex:gemini-flash-lite-latest` | `GOOGLE_APPLICATION_CREDENTIALS` |
 | OpenAI | `openai:gpt-4o` | `OPENAI_API_KEY` |
 | Anthropic | `anthropic:claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` |
 | xAI | `xai:grok-3` | `GROK_API_KEY` |

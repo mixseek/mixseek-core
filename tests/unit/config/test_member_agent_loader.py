@@ -130,7 +130,7 @@ class TestMemberSettingsToConfigBundledRefactor:
             agent_name="a1",
             agent_type="plain",
             tool_description="dummy",
-            model="google-gla:gemini-2.5-flash",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction=None,
         )
 
@@ -149,7 +149,7 @@ class TestMemberSettingsToConfigBundledRefactor:
             agent_name="a1",
             agent_type="plain",
             tool_description="dummy",
-            model="google-gla:gemini-2.5-flash",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="EXPLICIT",
         )
 
@@ -169,7 +169,7 @@ class TestMemberSettingsToConfigBundledRefactor:
             agent_name="a1",
             agent_type="custom",
             tool_description="dummy",
-            model="google-gla:gemini-2.5-flash",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction=None,
         )
 

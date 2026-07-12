@@ -14,8 +14,8 @@
 workflow_id = "research-pipeline"
 workflow_name = "Research Pipeline"
 
-# 各 executor の `model` 省略時のフォールバック。本サンプルは全て gemini-2.5-flash を使う。
-default_model = "google-gla:gemini-2.5-flash"
+# 各 executor の `model` 省略時のフォールバック。本サンプルは全て gemini-flash-lite-latest を使う。
+default_model = "google-gla:gemini-flash-lite-latest"
 
 # 後続ステップに過去の全ステップを渡す (false の場合は直前 1 ステップのみ)。
 include_all_context = false

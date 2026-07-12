@@ -116,7 +116,7 @@ Configuration Manager で管理される主要な設定スキーマ：
 ```bash
 MIXSEEK_WORKSPACE=/home/dev/mixseek-workspace
 MIXSEEK_LEADER__TIMEOUT_SECONDS=120
-MIXSEEK_LEADER__MODEL=google-gla:gemini-2.5-flash-lite
+MIXSEEK_LEADER__MODEL=google-gla:gemini-flash-lite-latest
 ```
 
 **本番環境** (`.env.prod`):
@@ -149,7 +149,7 @@ test:
   variables:
     MIXSEEK_WORKSPACE: /builds/workspace
     MIXSEEK_LEADER__TIMEOUT_SECONDS: "300"
-    MIXSEEK_LEADER__MODEL: "google-gla:gemini-2.5-flash-lite"
+    MIXSEEK_LEADER__MODEL: "google-gla:gemini-flash-lite-latest"
   script:
     - mixseek team "テストタスク" --config team.toml
 ```
@@ -349,7 +349,7 @@ export MIXSEEK_WORKSPACE=/path/to/workspace
 # ネストされた設定
 export MIXSEEK_LEADER__MODEL=openai:gpt-4o
 export MIXSEEK_LEADER__TIMEOUT_SECONDS=600
-export MIXSEEK_MEMBER__MODEL=google-gla:gemini-2.5-flash-lite
+export MIXSEEK_MEMBER__MODEL=google-gla:gemini-flash-lite-latest
 ```
 
 ### .env ファイル
@@ -477,7 +477,7 @@ mixseek team "タスク" --config team.toml --verbose
 # 機密情報を含む設定の表示
 $ mixseek config show
 api_key: [REDACTED]
-model: gemini-2.5-flash-lite
+model: gemini-flash-lite-latest
 workspace_path: /path/to/workspace
 ```
 

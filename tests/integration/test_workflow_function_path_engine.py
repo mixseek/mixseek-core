@@ -57,7 +57,7 @@ def _write_minimal_workflow_toml(toml_path: Path, *, plugin_path: str) -> None:
         "[workflow]\n"
         'workflow_id = "fn-path-engine"\n'
         'workflow_name = "Function Path Engine Test"\n'
-        'default_model = "google-gla:gemini-2.5-flash"\n'
+        'default_model = "google-gla:gemini-flash-lite-latest"\n'
         "include_all_context = true\n"
         'final_output_format = "json"\n\n'
         "[[workflow.steps]]\n"

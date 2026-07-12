@@ -36,14 +36,14 @@ def _team_toml(workspace: Path) -> Path:
         max_concurrent_members = 3
 
         [team.leader]
-        model = "google-gla:gemini-2.5-flash"
+        model = "google-gla:gemini-flash-lite-latest"
 
         [[team.members]]
         agent_name = "agent-1"
         agent_type = "plain"
         tool_name = "search_tool"
         tool_description = "Search tool"
-        model = "google-gla:gemini-2.5-flash"
+        model = "google-gla:gemini-flash-lite-latest"
         """,
     )
 
@@ -86,7 +86,7 @@ class TestLoadWorkflowSettings:
         _workflow_toml(workspace)
         cm = ConfigurationManager(workspace=workspace)
         settings = cm.load_workflow_settings(Path("wf.toml"))
-        assert settings.default_model == "google-gla:gemini-2.5-flash"
+        assert settings.default_model == "google-gla:gemini-flash-lite-latest"
 
 
 # ---- load_unit_settings: dispatch ----

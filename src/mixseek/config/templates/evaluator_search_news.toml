@@ -4,7 +4,7 @@
 # デフォルトメトリクスのみを使用したシンプルな設定です。
 # Evaluatorはツールを持たないため、LLMが直接評価可能な項目に絞っています。
 
-default_model = "google-gla:gemini-2.5-flash"
+default_model = "google-gla:gemini-flash-lite-latest"
 
 [[metrics]]
 name = "Coverage"

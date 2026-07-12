@@ -24,7 +24,7 @@ def _make_workflow(**overrides: Any) -> WorkflowSettings:
     payload: dict[str, Any] = {
         "workflow_id": "wf-1",
         "workflow_name": "Workflow 1",
-        "default_model": overrides.pop("default_model", "google-gla:gemini-2.5-flash"),
+        "default_model": overrides.pop("default_model", "google-gla:gemini-flash-lite-latest"),
         "steps": overrides.pop(
             "steps",
             [
@@ -55,7 +55,7 @@ class TestCollectModelIdsWorkflow:
     def test_agent_executor_model_collected(self) -> None:
         """agent executor が `model` を持つ場合のみ収集される"""
         wf = _make_workflow(
-            default_model="google-gla:gemini-2.5-flash",
+            default_model="google-gla:gemini-flash-lite-latest",
             steps=[
                 {
                     "id": "s1",
@@ -70,7 +70,7 @@ class TestCollectModelIdsWorkflow:
         ids = _collect_model_ids([], None, None, [wf])
 
         assert "openai:gpt-5" in ids
-        assert "google-gla:gemini-2.5-flash" in ids
+        assert "google-gla:gemini-flash-lite-latest" in ids
         # model 省略 executor は default_model にフォールバックされるため
         # 個別収集はされない（default 経由でカバー済）
         assert len(ids) == 2
@@ -78,7 +78,7 @@ class TestCollectModelIdsWorkflow:
     def test_function_executor_ignored(self) -> None:
         """function executor は model を持たないため収集されない"""
         wf = _make_workflow(
-            default_model="google-gla:gemini-2.5-flash",
+            default_model="google-gla:gemini-flash-lite-latest",
             steps=[
                 {
                     "id": "s1",
@@ -96,7 +96,7 @@ class TestCollectModelIdsWorkflow:
         ids = _collect_model_ids([], None, None, [wf])
 
         # function executor 由来は model なしで無視、default_model のみ収集される
-        assert ids == {"google-gla:gemini-2.5-flash"}
+        assert ids == {"google-gla:gemini-flash-lite-latest"}
 
     def test_empty_workflow_settings_list(self) -> None:
         """`workflow_settings_list=[]` → workflow 由来モデルなし (team/eval/judg のみ)"""
@@ -107,14 +107,14 @@ class TestCollectModelIdsWorkflow:
     def test_team_and_workflow_dedup_by_set(self) -> None:
         """同一 model が team / workflow 両方に存在 → set で deduplicate"""
         team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash"}
+        team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         team.members = []
 
-        wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
+        wf = _make_workflow(default_model="google-gla:gemini-flash-lite-latest")
 
         ids = _collect_model_ids([team], None, None, [wf])
 
-        assert ids == {"google-gla:gemini-2.5-flash"}
+        assert ids == {"google-gla:gemini-flash-lite-latest"}
 
 
 class TestValidateAuthWorkflow:
@@ -124,7 +124,7 @@ class TestValidateAuthWorkflow:
         """`workflow_settings_list=[wf]` で `default_model` の provider が検証される"""
         monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
 
-        wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
+        wf = _make_workflow(default_model="google-gla:gemini-flash-lite-latest")
 
         cat = _validate_auth([], None, None, [wf])
 
@@ -136,7 +136,7 @@ class TestValidateAuthWorkflow:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
         wf = _make_workflow(
-            default_model="google-gla:gemini-2.5-flash",
+            default_model="google-gla:gemini-flash-lite-latest",
             steps=[
                 {
                     "id": "s1",
@@ -158,7 +158,7 @@ class TestValidateAuthWorkflow:
         monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
 
         team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash"}
+        team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         team.members = []
 
         cat = _validate_auth([team], None, None, [])
@@ -170,10 +170,10 @@ class TestValidateAuthWorkflow:
         monkeypatch.setenv("GOOGLE_API_KEY", "AIza" + "x" * 30)
 
         team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
+        team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         team.members = []
 
-        wf = _make_workflow(default_model="google-gla:gemini-2.5-flash")
+        wf = _make_workflow(default_model="google-gla:gemini-flash-lite-latest")
 
         cat = _validate_auth([team], None, None, [wf])
 

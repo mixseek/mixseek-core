@@ -10,7 +10,7 @@ max_concurrent_members = 5
 # Leader Agent Configuration
 # ===================================================================
 [team.leader]
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 timeout_seconds = 300
 max_tokens = 4096
@@ -51,7 +51,7 @@ agent_name = "adk_researcher"
 agent_type = "custom"
 tool_description = "深層調査エージェント。複数視点からの並列検索、統合分析、構造化レポートを提供。技術的側面、市場動向、課題・将来方向、ユースケース、競合分析の5視点から調査"
 # LLM settings
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 8192
 timeout_seconds = 180
@@ -61,7 +61,7 @@ timeout_seconds = 180
 #   path = "examples/custom_agents/adk_research/agent.py"
 plugin = { path = "/app/examples/custom_agents/adk_research/agent.py", agent_class = "ADKResearchAgent" }
 # Metadata with tool settings (agent.py expects config.metadata.tool_settings.adk_research)
-metadata = { tool_settings = { adk_research = { gemini_model = "gemini-2.5-flash", temperature = 0.5, max_output_tokens = 8192, search_result_limit = 10, researcher_count = 3, timeout_seconds = 120, deep_research_default = true, structured_output = true, debug_mode = false, persist_metadata = true, append_sources_to_content = true } } }
+metadata = { tool_settings = { adk_research = { gemini_model = "gemini-flash-lite-latest", temperature = 0.5, max_output_tokens = 8192, search_result_limit = 10, researcher_count = 3, timeout_seconds = 120, deep_research_default = true, structured_output = true, debug_mode = false, persist_metadata = true, append_sources_to_content = true } } }
 
 # ===================================================================
 # Member Agent 2: Web Search (Standard Agent)
@@ -70,7 +70,7 @@ metadata = { tool_settings = { adk_research = { gemini_model = "gemini-2.5-flash
 agent_name = "web_search"
 agent_type = "web_search"
 tool_description = "最新ニュース、トレンド、リアルタイム情報を検索。adk_researcherの調査を補完する最新情報を提供"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 4096
 timeout_seconds = 120

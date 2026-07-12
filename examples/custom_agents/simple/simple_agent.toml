@@ -1,7 +1,7 @@
 [agent]
 name = "simple-custom"
 type = "custom"  # Must be "custom" for all custom agents
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 max_tokens = 2048
 tool_description = "A simple custom agent for testing and demonstration"
 

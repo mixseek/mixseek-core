@@ -27,7 +27,7 @@ def web_search_agent_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-search-agent",
         type="web_search",
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="Test instructions for web search agent behavior.",
         tool_settings=ToolSettings(web_search=WebSearchToolConfig(max_results=5, timeout=20)),
     )
@@ -282,7 +282,7 @@ class TestWebSearchMemberAgent:
         config = MemberAgentConfig(
             name="default-search-agent",
             type=AgentType.WEB_SEARCH,
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             system_instruction="Default web search instructions.",
         )
 

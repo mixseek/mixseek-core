@@ -43,7 +43,7 @@ team_name = "Test Team"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 timeout_seconds = 300
 
@@ -51,7 +51,7 @@ timeout_seconds = 300
 agent_name = "member1"
 agent_type = "plain"
 tool_description = "Test member"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 4096
 """
@@ -235,7 +235,7 @@ team_name = "Team A"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 timeout_seconds = 300
 """
@@ -284,7 +284,7 @@ team_name = "Test Team"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 timeout_seconds = 300
 """
@@ -341,7 +341,7 @@ team_name = "Test Team"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 timeout_seconds = 300
 """
@@ -381,7 +381,7 @@ team_name = "Test Team"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 timeout_seconds = 300
 """

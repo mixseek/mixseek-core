@@ -27,7 +27,7 @@ def get_e2e_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="adk-research-e2e-test",
         type="custom",
-        model="google-gla:gemini-2.5-flash",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=4096,
         description="E2E Test ADK Research Agent",
@@ -39,7 +39,7 @@ def get_e2e_config() -> MemberAgentConfig:
         metadata={
             "tool_settings": {
                 "adk_research": {
-                    "gemini_model": "gemini-2.5-flash",
+                    "gemini_model": "gemini-flash-lite-latest",
                     "temperature": 0.7,
                     "max_output_tokens": 4096,
                     "search_result_limit": 5,

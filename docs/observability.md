@@ -453,7 +453,7 @@ Spanをクリックして「Generation」タブを開くと、会話履歴が見
 - **Output tokens**: 110
 - **Total cost**: $0.000172
 - **Duration**: 4.519s
-- **Model**: gemini-2.5-flash-lite
+- **Model**: gemini-flash-lite-latest
 
 ### 4. Explore（SQL分析）
 

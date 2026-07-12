@@ -26,7 +26,7 @@ system_instruction = """
 - トレンドの推移を分析
 - バイラル性の高い情報の背景を説明
 """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 
 [[team.members]]

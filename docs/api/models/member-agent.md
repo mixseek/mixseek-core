@@ -24,7 +24,7 @@ Member Agentシステムは、設定、実行結果、リソース管理など�
 
 **モデル設定** (デフォルト値あり):
 
-- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-2.5-flash-lite"）
+- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-flash-lite-latest"）
 - `temperature: float | None` - 応答のランダム性（0.0-2.0、デフォルト: None = モデルのデフォルト値を使用）
 - `max_tokens: int | None` - 最大トークン数（> 0、デフォルト: None = モデルのデフォルト値を使用）
 - `stop_sequences: list[str] | None` - 生成を停止するシーケンスのリスト（デフォルト: None）
@@ -58,7 +58,7 @@ from mixseek.models.member_agent import MemberAgentConfig, AgentType
 config = MemberAgentConfig(
     name="my-agent",
     type=AgentType.PLAIN,
-    model="google-gla:gemini-2.5-flash-lite",
+    model="google-gla:gemini-flash-lite-latest",
     temperature=0.7,  # Optional: None uses model default
     max_tokens=4096,  # Optional: None uses model default
     stop_sequences=["END", "STOP"],  # Optional
@@ -348,7 +348,7 @@ print(str(agent_type))  # "plain"
 [agent]
 name = "my-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 2048
 description = "General purpose assistant"

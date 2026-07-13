@@ -139,7 +139,7 @@ class TestValidateOrchestrator:
             '[team]\nteam_id = "t1"\nteam_name = "T1"\n'
             "[[team.members]]\n"
             'agent_name = "a1"\nagent_type = "plain"\n'
-            'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+            'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
             'system_instruction = "x"\n'
         )
         config = tmp_path / "orchestrator.toml"
@@ -191,7 +191,7 @@ class TestValidateTeams:
             '[team]\nteam_id = "t1"\nteam_name = "T1"\n'
             "[[team.members]]\n"
             'agent_name = "a1"\nagent_type = "plain"\n'
-            'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+            'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
             'system_instruction = "x"\n'
         )
         # OrchestratorSettingsのteamsフィールド形式をシミュレート
@@ -213,7 +213,7 @@ class TestValidateTeams:
             '[team]\nteam_id = "t1"\nteam_name = "T1"\n'
             "[[team.members]]\n"
             'agent_name = "a1"\nagent_type = "plain"\n'
-            'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+            'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
             'system_instruction = "x"\n'
         )
 
@@ -260,7 +260,7 @@ class TestValidateEvaluator:
         evaluator_toml = config_dir / "evaluator.toml"
         evaluator_toml.write_text(
             "[llm_default]\n"
-            'model = "google-gla:gemini-2.5-flash"\n'
+            'model = "google-gla:gemini-flash-lite-latest"\n'
             "[[metrics]]\n"
             'name = "ClarityCoherence"\nweight = 1.0\n'
         )
@@ -363,7 +363,7 @@ class TestValidateAuth:
 
         # Google AIモデルのみ使用するチーム設定をモック
         team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
+        team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         team.members = []
 
         cat = _validate_auth([team], None, None, [])
@@ -392,9 +392,9 @@ class TestValidateAuth:
         from mixseek.config.schema import MemberAgentSettings, TeamSettings
 
         team = MagicMock(spec=TeamSettings)
-        team.leader = {"model": "google-gla:gemini-2.5-flash-lite"}
+        team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         member = MagicMock(spec=MemberAgentSettings)
-        member.model = "google-gla:gemini-2.5-flash"
+        member.model = "google-gla:gemini-flash-latest"
         team.members = [member]
 
         cat = _validate_auth([team], None, None, [])
@@ -633,7 +633,7 @@ class TestRunPreflightCheck:
             '[team]\nteam_id = "t1"\nteam_name = "T1"\n'
             "[[team.members]]\n"
             'agent_name = "a1"\nagent_type = "plain"\n'
-            'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+            'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
             'system_instruction = "x"\n'
         )
         config = tmp_path / "orchestrator.toml"

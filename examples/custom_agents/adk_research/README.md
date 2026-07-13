@@ -83,7 +83,7 @@ print(f"情報源数: {result.metadata['source_count']}")
 ```python
 {
     "mode": "deep_research",           # "single_search" | "deep_research"
-    "model": "gemini-2.5-flash",       # 使用したGeminiモデル
+    "model": "gemini-flash-lite-latest",       # 使用したGeminiモデル
     "sources": [                       # SearchResult配列
         {
             "url": "https://example.com/article",
@@ -236,11 +236,8 @@ uv sync --extra adk
 
 `google_search`ツールでは以下の Gemini 2.0 以降のモデルを使用できます：
 
-- `gemini-2.5-flash`（デフォルト推奨）
-- `gemini-2.5-flash-lite`
-- `gemini-2.5-pro`
-- `gemini-2.0-flash`
-- `gemini-3-pro-preview`
+- `gemini-flash-lite-latest`（デフォルト推奨）
+- `gemini-flash-latest`
 
 ## クイックスタート
 
@@ -276,7 +273,7 @@ from mixseek.models.member_agent import (
 config = MemberAgentConfig(
     name="my-research-agent",
     type="custom",
-    model="google-gla:gemini-2.5-flash",
+    model="google-gla:gemini-flash-lite-latest",
     system_instruction="You are a research assistant.",
     plugin=PluginMetadata(
         path="examples/custom_agents/adk_research/agent.py",
@@ -285,7 +282,7 @@ config = MemberAgentConfig(
     metadata={
         "tool_settings": {
             "adk_research": {
-                "gemini_model": "gemini-2.5-flash",
+                "gemini_model": "gemini-flash-lite-latest",
                 "temperature": 0.7,
                 "max_output_tokens": 4096,
                 "search_result_limit": 10,
@@ -325,7 +322,7 @@ asyncio.run(main())
 [agent]
 type = "custom"
 name = "adk-research-agent"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 4096
 description = "Google ADK Deep Research Agent"
@@ -338,7 +335,7 @@ path = "/app/examples/custom_agents/adk_research/agent.py"
 agent_class = "ADKResearchAgent"
 
 [agent.metadata.tool_settings.adk_research]
-gemini_model = "gemini-2.5-flash"
+gemini_model = "gemini-flash-lite-latest"
 temperature = 0.7
 max_output_tokens = 4096
 search_result_limit = 10
@@ -350,7 +347,7 @@ timeout_seconds = 30
 
 | Option                      | Type   | Default            | Description                                             |
 | --------------------------- | ------ | ------------------ | ------------------------------------------------------- |
-| `gemini_model`              | string | `gemini-2.5-flash` | Gemini model for ADK agents                             |
+| `gemini_model`              | string | `gemini-flash-lite-latest` | Gemini model for ADK agents                             |
 | `temperature`               | float  | `0.5`              | Generation temperature (0.0-2.0)                        |
 | `max_output_tokens`         | int    | `8192`             | Maximum tokens per response                             |
 | `search_result_limit`       | int    | `15`               | Max search results to process                           |

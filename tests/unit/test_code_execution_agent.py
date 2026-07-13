@@ -333,7 +333,7 @@ class TestCodeExecutionProviderValidation:
         config = MemberAgentConfig(
             name="test-code-agent",
             type=AgentType.CODE_EXECUTION,
-            model="google-gla:gemini-2.5-flash-lite",  # ❌ Not supported
+            model="google-gla:gemini-flash-lite-latest",  # ❌ Not supported
             system_instruction="Test agent for code execution",
         )
 
@@ -353,7 +353,7 @@ class TestCodeExecutionProviderValidation:
         config = MemberAgentConfig(
             name="test-code-agent",
             type=AgentType.CODE_EXECUTION,
-            model="google-gla:gemini-2.5-flash-lite",  # ❌ Not supported (Vertex AI uses same prefix)
+            model="google-gla:gemini-flash-lite-latest",  # ❌ Not supported (Vertex AI uses same prefix)
             system_instruction="Test agent for code execution",
         )
 
@@ -427,7 +427,7 @@ class TestCodeExecutionProviderValidation:
         config = MemberAgentConfig(
             name="test-code-agent",
             type=AgentType.CODE_EXECUTION,
-            model="google-gla:gemini-2.5-flash-lite",  # ❌ Not supported
+            model="google-gla:gemini-flash-lite-latest",  # ❌ Not supported
             system_instruction="Test agent for code execution",
         )
 

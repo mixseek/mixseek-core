@@ -26,7 +26,7 @@ class TestLeaderAgentConfig:
 
         # Assert
         assert config.system_instruction == "あなたはリーダーエージェントです。"
-        assert config.model == "google-gla:gemini-2.5-flash-lite"  # デフォルト
+        assert config.model == "google-gla:gemini-flash-lite-latest"  # デフォルト
         assert config.temperature is None  # デフォルト (uses model default)
 
     def test_create_without_system_prompt(self) -> None:
@@ -61,7 +61,7 @@ class TestTeamMemberAgentConfig:
             agent_type="plain",
             tool_name="delegate_to_analyst",
             tool_description="論理的な分析を実行します",
-            model="gemini-2.5-flash-lite",
+            model="gemini-flash-lite-latest",
             system_instruction="あなたはアナリストです",
             temperature=0.7,
             max_tokens=2048,
@@ -78,7 +78,7 @@ class TestTeamMemberAgentConfig:
             agent_name="analyst",
             agent_type="plain",
             tool_description="論理的な分析を実行します",
-            model="gemini-2.5-flash-lite",
+            model="gemini-flash-lite-latest",
             system_instruction="あなたはアナリストです",
             temperature=0.7,
             max_tokens=2048,
@@ -96,7 +96,7 @@ class TestTeamMemberAgentConfig:
                 agent_name="analyst",
                 agent_type="plain",
                 tool_description="",  # 空文字列不可
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -119,7 +119,7 @@ class TestTeamConfig:
                     agent_name="analyst",
                     agent_type="plain",
                     tool_description="分析",
-                    model="gemini-2.5-flash-lite",
+                    model="gemini-flash-lite-latest",
                     system_instruction="test",
                     temperature=0.7,
                     max_tokens=2048,
@@ -147,7 +147,7 @@ class TestTeamConfig:
                     agent_name="analyst",
                     agent_type="plain",
                     tool_description="分析",
-                    model="gemini-2.5-flash-lite",
+                    model="gemini-flash-lite-latest",
                     system_instruction="test",
                     temperature=0.7,
                     max_tokens=2048,
@@ -167,7 +167,7 @@ class TestTeamConfig:
                 agent_name=f"agent-{i}",
                 agent_type="plain",
                 tool_description=f"Agent {i}",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -189,7 +189,7 @@ class TestTeamConfig:
                 agent_name="analyst",
                 agent_type="plain",
                 tool_description="分析1",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -198,7 +198,7 @@ class TestTeamConfig:
                 agent_name="analyst",  # 重複
                 agent_type="plain",
                 tool_description="分析2",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -220,7 +220,7 @@ class TestTeamConfig:
                 agent_type="plain",
                 tool_name="delegate_to_analyst",  # 明示的tool_name
                 tool_description="分析1",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -230,7 +230,7 @@ class TestTeamConfig:
                 agent_type="plain",
                 tool_name="delegate_to_analyst",  # 重複
                 tool_description="分析2",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -252,7 +252,7 @@ class TestTeamConfig:
                 agent_type="plain",
                 # tool_name未設定 → "delegate_to_analyst"に自動生成
                 tool_description="分析1",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -262,7 +262,7 @@ class TestTeamConfig:
                 agent_type="plain",
                 tool_name="delegate_to_analyst",  # 明示的に設定、自動生成と重複
                 tool_description="分析2",
-                model="gemini-2.5-flash-lite",
+                model="gemini-flash-lite-latest",
                 system_instruction="test",
                 temperature=0.7,
                 max_tokens=2048,
@@ -296,7 +296,7 @@ team_name = "Test Team"
 agent_name = "analyst"
 agent_type = "plain"
 tool_description = "論理的な分析"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "あなたはアナリストです"
 temperature = 0.7
 max_tokens = 2048
@@ -338,7 +338,7 @@ system_instruction = "あなたはリーダーです"
 agent_name = "analyst"
 agent_type = "plain"
 tool_description = "分析"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "test"
 temperature = 0.7
 max_tokens = 2048
@@ -370,7 +370,7 @@ max_tokens = 2048
 [agent]
 name = "web-searcher"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 4096
 
@@ -454,7 +454,7 @@ tool_description = "test"
 [agent]
 name = "analyzer"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 2048
 
@@ -507,7 +507,7 @@ tool_description = "カスタム分析"
 [agent]
 name = "test-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 2048
 
@@ -563,7 +563,7 @@ team_name = "Test Team"
 agent_name = "analyst"
 agent_type = "plain"
 tool_description = "分析"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "test"
 temperature = 0.7
 max_tokens = 2048
@@ -592,7 +592,7 @@ max_tokens = 2048
 [agent]
 name = "test-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 2048
 
@@ -733,7 +733,7 @@ class TestTeamSettingsToTeamConfig:
         team_settings.team_name = "Solo Team"
         team_settings.max_concurrent_members = 5
         team_settings.leader = {
-            "model": "google-gla:gemini-2.5-flash-lite",
+            "model": "google-gla:gemini-flash-lite-latest",
             "timeout_seconds": 450,
         }
         team_settings.members = []
@@ -745,7 +745,7 @@ class TestTeamSettingsToTeamConfig:
         assert team_config.team_id == "solo-team"
         assert len(team_config.members) == 0
         assert team_config.leader is not None
-        assert team_config.leader.model == "google-gla:gemini-2.5-flash-lite"
+        assert team_config.leader.model == "google-gla:gemini-flash-lite-latest"
 
     def test_integration_with_configuration_manager(self) -> None:
         """ConfigurationManager経由の変換（統合テスト）"""

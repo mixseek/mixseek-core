@@ -17,7 +17,7 @@ class ADKAgentConfig(BaseModel):
     Values should be provided via TOML configuration file.
 
     Attributes:
-        gemini_model: Gemini model name for ADK agents (e.g., gemini-2.5-flash).
+        gemini_model: Gemini model name for ADK agents (e.g., gemini-flash-lite-latest).
         temperature: Generation temperature (0.0 = deterministic, 2.0 = creative).
         max_output_tokens: Maximum tokens per response.
         search_result_limit: Maximum number of search results to process.
@@ -30,7 +30,7 @@ class ADKAgentConfig(BaseModel):
     """
 
     gemini_model: str = Field(
-        default="gemini-2.5-flash",
+        default="gemini-flash-lite-latest",
         description="Gemini model name for ADK internal agents",
     )
     temperature: float = Field(
@@ -90,23 +90,15 @@ class ADKAgentConfig(BaseModel):
         """Validate that gemini_model is a supported model.
 
         Supported models for google_search tool (Search grounding):
-        - gemini-2.0-flash
-        - gemini-2.5-flash (default, recommended)
-        - gemini-2.5-flash-lite
-        - gemini-2.5-pro
-        - gemini-3-pro-preview
+        - gemini-flash-lite-latest (default, recommended)
+        - gemini-flash-latest
         """
-        supported_prefixes = (
-            "gemini-2.0-flash",
-            "gemini-2.5-flash",
-            "gemini-2.5-pro",
-            "gemini-3-pro",
-        )
+        supported_prefixes = ("gemini-flash",)
         if not v.startswith(supported_prefixes):
             raise ValueError(
                 f"Unsupported model '{v}'. Model must start with one of: "
                 f"{', '.join(supported_prefixes)}. "
-                f"google_search tool requires Gemini 2.0+ models."
+                f"google_search tool requires a Gemini Flash model."
             )
         return v
 
@@ -117,7 +109,7 @@ class ADKAgentConfig(BaseModel):
         json_schema_extra={
             "examples": [
                 {
-                    "gemini_model": "gemini-2.5-flash",
+                    "gemini_model": "gemini-flash-lite-latest",
                     "temperature": 0.5,
                     "max_output_tokens": 8192,
                     "search_result_limit": 15,

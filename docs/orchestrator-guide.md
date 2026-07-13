@@ -136,7 +136,7 @@ team_name = "Research Team"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 timeout_seconds = 300
 system_instruction = """
@@ -149,7 +149,7 @@ system_instruction = """
 name = "web_search"
 type = "web_search"
 tool_description = "Web検索でリアルタイム情報を取得します"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 6144
 
@@ -303,7 +303,7 @@ mixseek config show --config configs/orchestrator.toml --workspace $MIXSEEK_WORK
     [member 1]
       name: logical_analyst
       type: plain
-      model: google-gla:gemini-2.5-flash-lite
+      model: google-gla:gemini-flash-lite-latest
       ...
 ```
 
@@ -374,7 +374,7 @@ Web Search Agent を使用する場合の重要な設定項目：
 name = "web_search"
 type = "web_search"
 tool_description = "Web検索で最新情報を収集します"
-model = "google-gla:gemini-2.5-flash-lite"  # または anthropic:claude-sonnet-4-5-20250929, openai:gpt-4o
+model = "google-gla:gemini-flash-lite-latest"  # または anthropic:claude-sonnet-4-5-20250929, openai:gpt-4o
 temperature = 0.3
 max_tokens = 6144  # Web検索は大量データを処理するため高めに設定
 
@@ -388,7 +388,7 @@ include_raw_content = true # 生コンテンツを取得
 ```
 
 **サポートされるモデル**:
-- Google Gemini: `google-gla:gemini-2.5-flash-lite`
+- Google Gemini: `google-gla:gemini-flash-lite-latest`
 - Anthropic Claude: `anthropic:claude-sonnet-4-5-20250929`
 - OpenAI: `openai:gpt-4o`
 

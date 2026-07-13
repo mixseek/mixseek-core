@@ -1,7 +1,7 @@
 [agent]
 type = "custom"
 name = "bitbank-api-agent"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.0
 max_tokens = 4096
 tool_description = "Sample agent for bitbank Public API integration"

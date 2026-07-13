@@ -47,7 +47,7 @@ class TestMemberAgentConfig:
         return {
             "name": "test-agent",
             "type": AgentType.PLAIN,
-            "model": "google-gla:gemini-2.5-flash-lite",
+            "model": "google-gla:gemini-flash-lite-latest",
             "system_instruction": "Test system_instruction with minimum length.",
         }
 
@@ -58,7 +58,7 @@ class TestMemberAgentConfig:
 
         assert config.name == "test-agent"
         assert config.type == AgentType.PLAIN
-        assert config.model == "google-gla:gemini-2.5-flash-lite"
+        assert config.model == "google-gla:gemini-flash-lite-latest"
         assert config.temperature is None  # Default (uses model default)
         assert config.max_tokens is None  # Default (uses model default)
 
@@ -68,9 +68,9 @@ class TestMemberAgentConfig:
 
         # Valid Google Gemini models
         valid_google_models = [
-            "google-gla:gemini-2.5-flash-lite",
-            "google-gla:gemini-2.5-flash-lite",
-            "google-gla:gemini-2.0-flash",
+            "google-gla:gemini-flash-lite-latest",
+            "google-gla:gemini-flash-latest",
+            "google-vertex:gemini-flash-lite-latest",
         ]
 
         for model in valid_google_models:
@@ -101,7 +101,7 @@ class TestMemberAgentConfig:
         # Invalid models
         invalid_models = [
             "gpt-4",  # Missing prefix
-            "gemini-2.5-flash-lite",  # Missing prefix
+            "gemini-flash-lite-latest",  # Missing prefix
             "claude-3-sonnet",  # Missing prefix
             "invalid:model",  # Unsupported provider
             "unsupported:model",  # Unsupported provider
@@ -201,7 +201,7 @@ class TestMemberAgentConfig:
         # system_instruction is also optional (str | None = None)
         # Only name and type are truly required
         config = MemberAgentConfig(name="test", type=AgentType.PLAIN)
-        assert config.model == "google-gla:gemini-2.5-flash-lite"  # Uses default
+        assert config.model == "google-gla:gemini-flash-lite-latest"  # Uses default
         assert config.system_instruction is None  # Uses default None
 
     def test_system_instruction_string_format(self) -> None:
@@ -359,7 +359,7 @@ class TestMemberAgentResult:
 
     def test_result_metadata_handling(self) -> None:
         """Test result metadata is properly handled."""
-        metadata = {"model_id": "gemini-2.5-flash-lite", "tokens_used": 150}
+        metadata = {"model_id": "gemini-flash-lite-latest", "tokens_used": 150}
 
         result = MemberAgentResult.success(
             content="Test response", agent_name="test-agent", agent_type="plain", metadata=metadata

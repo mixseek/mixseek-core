@@ -40,7 +40,7 @@ timeout_seconds = 300
 agent_name = "member1"
 agent_type = "plain"
 tool_description = "Test member agent"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 4096
 """
@@ -54,7 +54,7 @@ def member_toml_content() -> str:
 name = "test_member"
 type = "plain"
 description = "Test member agent"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 4096
 """
@@ -240,7 +240,7 @@ class TestLoadMemberSettings:
         # Assert
         assert isinstance(member_settings, MemberAgentSettings)
         assert member_settings.agent_name == "test_member"
-        assert member_settings.model == "google-gla:gemini-2.5-flash-lite"
+        assert member_settings.model == "google-gla:gemini-flash-lite-latest"
 
     def test_load_member_settings_includes_trace_info(
         self,

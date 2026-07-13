@@ -39,12 +39,12 @@ class TestAuthProvider:
 
     def test_detect_google_ai_provider(self) -> None:
         """Test detection of Google AI provider with google-gla: prefix."""
-        provider = detect_auth_provider("google-gla:gemini-2.5-flash-lite")
+        provider = detect_auth_provider("google-gla:gemini-flash-lite-latest")
         assert provider == AuthProvider.GOOGLE_AI
 
     def test_detect_vertex_ai_provider(self) -> None:
         """Test detection of Vertex AI provider with google-vertex: prefix."""
-        provider = detect_auth_provider("google-vertex:gemini-2.5-flash-lite")
+        provider = detect_auth_provider("google-vertex:gemini-flash-lite-latest")
         assert provider == AuthProvider.VERTEX_AI
 
     def test_detect_openai_provider(self) -> None:
@@ -269,7 +269,7 @@ class TestAuthenticatedModelCreation:
         mock_test_instance = MagicMock()
         mock_test_model.return_value = mock_test_instance
 
-        model = create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+        model = create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
         assert model == mock_test_instance
         mock_test_model.assert_called_once()
@@ -287,11 +287,11 @@ class TestAuthenticatedModelCreation:
         mock_cached_model.return_value = mock_model_instance
 
         with patch.dict(os.environ, {"GOOGLE_GENAI_USE_VERTEXAI": "false"}, clear=True):
-            model = create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+            model = create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
             assert model == mock_model_instance
             mock_validate_creds.assert_called_once()
-            mock_cached_model.assert_called_once_with("gemini-2.5-flash-lite", "google-gla")
+            mock_cached_model.assert_called_once_with("gemini-flash-lite-latest", "google-gla")
 
     @patch("mixseek.core.auth.validate_test_environment")
     def test_create_authenticated_model_google_ai_failure(self, mock_validate_test: Any) -> None:
@@ -301,7 +301,7 @@ class TestAuthenticatedModelCreation:
         # Test with missing credentials to trigger actual authentication error
         with patch.dict(os.environ, {"GOOGLE_GENAI_USE_VERTEXAI": "false"}, clear=True):
             with pytest.raises(AuthenticationError) as exc_info:
-                create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+                create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
             assert "GOOGLE_API_KEY environment variable not found" in str(exc_info.value)
             assert exc_info.value.provider == AuthProvider.GOOGLE_AI
@@ -318,11 +318,11 @@ class TestAuthenticatedModelCreation:
         mock_model_instance = MagicMock()
         mock_cached_model.return_value = mock_model_instance
 
-        model = create_authenticated_model("google-vertex:gemini-2.5-flash-lite")
+        model = create_authenticated_model("google-vertex:gemini-flash-lite-latest")
 
         assert model == mock_model_instance
         mock_validate_creds.assert_called_once()
-        mock_cached_model.assert_called_once_with("gemini-2.5-flash-lite", "google-vertex")
+        mock_cached_model.assert_called_once_with("gemini-flash-lite-latest", "google-vertex")
 
     @patch("mixseek.core.auth.validate_test_environment")
     @patch("mixseek.core.auth.validate_grok_credentials")
@@ -360,7 +360,7 @@ class TestAuthInfo:
         """Test auth info in test environment."""
         mock_validate_test.return_value = True
 
-        info = get_auth_info("google-gla:gemini-2.5-flash-lite")
+        info = get_auth_info("google-gla:gemini-flash-lite-latest")
 
         assert info["provider"] == "test_model"
         assert info["environment"] == "test"
@@ -372,7 +372,7 @@ class TestAuthInfo:
         mock_validate_test.return_value = False
 
         with patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key"}, clear=True):
-            info = get_auth_info("google-gla:gemini-2.5-flash-lite")
+            info = get_auth_info("google-gla:gemini-flash-lite-latest")
 
             assert info["provider"] == "google_ai"
             assert info["environment"] == "production"
@@ -384,7 +384,7 @@ class TestAuthInfo:
         mock_validate_test.return_value = False
 
         with patch.dict(os.environ, {}, clear=True):
-            info = get_auth_info("google-gla:gemini-2.5-flash-lite")
+            info = get_auth_info("google-gla:gemini-flash-lite-latest")
 
             assert info["provider"] == "google_ai"
             assert info["environment"] == "production"
@@ -396,7 +396,7 @@ class TestAuthInfo:
         mock_validate_test.return_value = False
 
         with patch.dict(os.environ, {"GOOGLE_APPLICATION_CREDENTIALS": "/path/to/creds.json"}, clear=True):
-            info = get_auth_info("google-vertex:gemini-2.5-flash-lite")
+            info = get_auth_info("google-vertex:gemini-flash-lite-latest")
 
             assert info["provider"] == "vertex_ai"
             assert info["environment"] == "production"
@@ -436,7 +436,7 @@ class TestConstitutionalCompliance:
         with patch.dict(os.environ, {}, clear=True):
             # This should raise an authentication error, NOT silently use TestModel
             with pytest.raises(AuthenticationError) as exc_info:
-                create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+                create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
             assert "GOOGLE_API_KEY environment variable not found" in str(exc_info.value)
 
@@ -445,7 +445,7 @@ class TestConstitutionalCompliance:
         with patch.dict(os.environ, {}, clear=True):
             # This should raise an authentication error, NOT silently use TestModel
             with pytest.raises(AuthenticationError) as exc_info:
-                create_authenticated_model("google-vertex:gemini-2.5-flash-lite")
+                create_authenticated_model("google-vertex:gemini-flash-lite-latest")
 
             assert "GOOGLE_APPLICATION_CREDENTIALS environment variable not found" in str(exc_info.value)
 
@@ -453,7 +453,7 @@ class TestConstitutionalCompliance:
         """Test that authentication errors are explicitly propagated."""
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(AuthenticationError) as exc_info:
-                create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+                create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
             # Verify proper error type and message
             assert isinstance(exc_info.value, AuthenticationError)
@@ -465,21 +465,21 @@ class TestConstitutionalCompliance:
         # First test: TestModel allowed in test environment
         mock_validate_test.return_value = True
         # Should create TestModel instance (mocked)
-        create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+        create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
         # Second test: TestModel forbidden in production
         mock_validate_test.return_value = False
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(AuthenticationError):
-                create_authenticated_model("google-gla:gemini-2.5-flash-lite")
+                create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
     def test_no_silent_error_handling(self) -> None:
         """Test that all authentication errors are raised, not silently handled."""
         error_scenarios: list[tuple[dict[str, str], str]] = [
             # Missing Google API key
-            ({}, "google-gla:gemini-2.5-flash-lite"),
+            ({}, "google-gla:gemini-flash-lite-latest"),
             # Missing Vertex AI credentials
-            ({}, "google-vertex:gemini-2.5-flash-lite"),
+            ({}, "google-vertex:gemini-flash-lite-latest"),
         ]
 
         for env_vars, model_id in error_scenarios:
@@ -503,8 +503,8 @@ class TestClearAuthCaches:
             with patch("mixseek.core.auth.GoogleProvider"):
                 with patch("mixseek.core.auth.GoogleModel"):
                     # Call the cached function to populate cache
-                    _create_google_model_cached("gemini-2.5-flash", "google-gla")
-                    _create_google_model_cached("gemini-2.5-flash-lite", "google-gla")
+                    _create_google_model_cached("gemini-flash-lite-latest", "google-gla")
+                    _create_google_model_cached("gemini-flash-latest", "google-gla")
 
                     # Verify cache has entries
                     cache_info = _create_google_model_cached.cache_info()

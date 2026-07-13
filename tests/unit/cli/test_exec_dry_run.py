@@ -36,7 +36,7 @@ def orchestrator_toml(tmp_path: Path) -> Path:
         "[[team.members]]\n"
         'agent_name = "dummy"\nagent_type = "plain"\n'
         'tool_description = "dummy agent"\n'
-        'model = "google-gla:gemini-2.5-flash-lite"\n'
+        'model = "google-gla:gemini-flash-lite-latest"\n'
         'system_instruction = "dummy"\ntemperature = 0.7\nmax_tokens = 2048\n'
     )
     config = tmp_path / "orchestrator.toml"

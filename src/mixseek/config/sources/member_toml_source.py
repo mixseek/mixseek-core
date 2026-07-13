@@ -24,7 +24,7 @@ class MemberAgentTomlSource(PydanticBaseSettingsSource):
         [agent]
         name = "plain-agent"
         type = "plain"
-        model = "google-gla:gemini-2.5-flash-lite"
+        model = "google-gla:gemini-flash-lite-latest"
         temperature = 0.2
         max_tokens = 4096
 

@@ -27,7 +27,7 @@ def mock_workspace_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def sample_adk_config() -> ADKAgentConfig:
     """Create a sample ADKAgentConfig for testing."""
     return ADKAgentConfig(
-        gemini_model="gemini-2.5-flash",
+        gemini_model="gemini-flash-lite-latest",
         temperature=0.7,
         max_output_tokens=4096,
         search_result_limit=10,
@@ -42,7 +42,7 @@ def sample_member_agent_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-adk-agent",
         type="custom",
-        model="google-gla:gemini-2.5-flash",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.7,
         max_tokens=4096,
         description="Test ADK Research Agent",
@@ -54,7 +54,7 @@ def sample_member_agent_config() -> MemberAgentConfig:
         metadata={
             "tool_settings": {
                 "adk_research": {
-                    "gemini_model": "gemini-2.5-flash",
+                    "gemini_model": "gemini-flash-lite-latest",
                     "temperature": 0.7,
                     "max_output_tokens": 4096,
                     "search_result_limit": 10,
@@ -72,7 +72,7 @@ def sample_member_agent_config_missing_settings() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-adk-agent-no-settings",
         type="custom",
-        model="google-gla:gemini-2.5-flash",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="You are a research assistant.",
         plugin=PluginMetadata(
             path="/app/examples/custom_agents/adk_research/agent.py",
@@ -162,7 +162,7 @@ def mock_llm_agent() -> MagicMock:
     """Create a mock LlmAgent for testing."""
     agent = MagicMock()
     agent.name = "mock_researcher"
-    agent.model = "gemini-2.5-flash"
+    agent.model = "gemini-flash-lite-latest"
     return agent
 
 

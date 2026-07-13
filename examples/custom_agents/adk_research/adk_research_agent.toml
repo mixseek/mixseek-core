@@ -60,7 +60,7 @@ license = "Apache-2.0"
 # Google ADK固有設定
 [agent.metadata.tool_settings.adk_research]
 # ADK内部エージェント用Geminiモデル（google_search対応必須）
-# 対応: gemini-flash-lite-latest, gemini-flash-latest, gemini-3-pro-preview
+# 対応: gemini-flash-lite-latest, gemini-flash-latest
 gemini_model = "gemini-flash-lite-latest"
 
 # 生成設定

@@ -238,7 +238,6 @@ uv sync --extra adk
 
 - `gemini-flash-lite-latest`（デフォルト推奨）
 - `gemini-flash-latest`
-- `gemini-3-pro-preview`
 
 ## クイックスタート
 

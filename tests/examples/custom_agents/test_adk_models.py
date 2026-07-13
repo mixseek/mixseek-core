@@ -40,7 +40,6 @@ class TestADKAgentConfig:
         valid_models = [
             "gemini-flash-lite-latest",
             "gemini-flash-latest",
-            "gemini-3-pro-preview",
         ]
         for model in valid_models:
             config = ADKAgentConfig(gemini_model=model)

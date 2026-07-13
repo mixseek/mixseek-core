@@ -92,12 +92,8 @@ class ADKAgentConfig(BaseModel):
         Supported models for google_search tool (Search grounding):
         - gemini-flash-lite-latest (default, recommended)
         - gemini-flash-latest
-        - gemini-3-pro-preview
         """
-        supported_prefixes = (
-            "gemini-flash",
-            "gemini-3-pro",
-        )
+        supported_prefixes = ("gemini-flash",)
         if not v.startswith(supported_prefixes):
             raise ValueError(
                 f"Unsupported model '{v}'. Model must start with one of: "

@@ -98,7 +98,7 @@ class ADKAgentConfig(BaseModel):
             raise ValueError(
                 f"Unsupported model '{v}'. Model must start with one of: "
                 f"{', '.join(supported_prefixes)}. "
-                f"google_search tool requires Gemini 3.x models."
+                f"google_search tool requires a Gemini Flash model."
             )
         return v
 

@@ -69,8 +69,8 @@ class TestMemberAgentConfig:
         # Valid Google Gemini models
         valid_google_models = [
             "google-gla:gemini-flash-lite-latest",
-            "google-gla:gemini-flash-lite-latest",
-            "google-gla:gemini-flash-lite-latest",
+            "google-gla:gemini-flash-latest",
+            "google-vertex:gemini-flash-lite-latest",
         ]
 
         for model in valid_google_models:

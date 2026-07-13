@@ -31,8 +31,8 @@ max_concurrent_members = 3
 
 # LLM モデルの指定
 # Note: gemini-flash-lite-latest はツール呼び出し後の最終回答生成に問題が発生することがあるため
-# より高性能な gemini-flash-lite-latest を使用
-model = "google-gla:gemini-flash-lite-latest"
+# より高性能な gemini-flash-latest を使用
+model = "google-gla:gemini-flash-latest"
 
 # 温度パラメータ（0.0-1.0）
 temperature = 0.3

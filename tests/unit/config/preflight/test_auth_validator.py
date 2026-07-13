@@ -173,7 +173,7 @@ class TestValidateAuthWorkflow:
         team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         team.members = []
 
-        wf = _make_workflow(default_model="google-gla:gemini-flash-lite-latest")
+        wf = _make_workflow(default_model="google-gla:gemini-flash-latest")
 
         cat = _validate_auth([team], None, None, [wf])
 

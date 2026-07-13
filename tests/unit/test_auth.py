@@ -504,7 +504,7 @@ class TestClearAuthCaches:
                 with patch("mixseek.core.auth.GoogleModel"):
                     # Call the cached function to populate cache
                     _create_google_model_cached("gemini-flash-lite-latest", "google-gla")
-                    _create_google_model_cached("gemini-flash-lite-latest", "google-gla")
+                    _create_google_model_cached("gemini-flash-latest", "google-gla")
 
                     # Verify cache has entries
                     cache_info = _create_google_model_cached.cache_info()

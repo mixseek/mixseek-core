@@ -394,7 +394,7 @@ class TestValidateAuth:
         team = MagicMock(spec=TeamSettings)
         team.leader = {"model": "google-gla:gemini-flash-lite-latest"}
         member = MagicMock(spec=MemberAgentSettings)
-        member.model = "google-gla:gemini-flash-lite-latest"
+        member.model = "google-gla:gemini-flash-latest"
         team.members = [member]
 
         cat = _validate_auth([team], None, None, [])

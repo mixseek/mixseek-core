@@ -179,7 +179,7 @@ claude-code:
 		echo "💡 Usage: make claude-code ARG='--help'"; \
 		echo "💡 Example: make claude-code ARG='analyze src/main.py'"; \
 	fi
-	@docker exec -it $(CONTAINER_NAME) claude-code $(ARG)
+	@docker exec -it $(CONTAINER_NAME) claude $(ARG)
 
 .PHONY: codex
 codex:
@@ -197,7 +197,7 @@ gemini:
 		echo "💡 Usage: make gemini ARG='--help'"; \
 		echo "💡 Example: make gemini ARG='code-review src/main.py'"; \
 	fi
-	@docker exec -it $(CONTAINER_NAME) gemini-cli $(ARG)
+	@docker exec -it $(CONTAINER_NAME) gemini $(ARG)
 
 # =============================================================================
 # CONTAINER MANAGEMENT
@@ -254,13 +254,14 @@ node-list:
 env-info:
 	@echo "ℹ️  Development environment information"
 	@docker exec $(CONTAINER_NAME) bash -c " \
-		echo '🐍 Python: $(python --version)' && \
-		echo '📦 uv: $(uv --version)' && \
-		echo '🟢 Node.js: $(node --version)' && \
-		echo '📦 npm: $(npm --version)' && \
-		echo '🤖 Claude Code: $(claude-code --version 2>/dev/null || echo not available)' && \
-		echo '🤖 Codex: $(codex --version 2>/dev/null || echo not available)' && \
-		echo '🤖 Gemini CLI: $(gemini-cli --version 2>/dev/null || echo not available)' \
+		echo \"🐍 Python: $$(python --version)\" && \
+		echo \"📦 uv: $$(uv --version)\" && \
+		echo \"🟢 Node.js: $$(node --version)\" && \
+		echo \"📦 npm: $$(npm --version)\" && \
+		echo \"🤖 Claude Code: $$(claude --version 2>/dev/null || echo not available)\" && \
+		echo \"🤖 Codex: $$(codex --version 2>/dev/null || echo not available)\" && \
+		echo \"🤖 Gemini CLI: $$(gemini --version 2>/dev/null || echo not available)\" && \
+		echo \"🐙 GitHub CLI: $$({ gh --version 2>/dev/null || echo not available; } | head -1)\" \
 	"
 
 # =============================================================================

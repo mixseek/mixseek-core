@@ -80,9 +80,19 @@ Dockerfile は共通ですが、コンテナは別物です。
 
 ## 仮想環境について
 
-Python の仮想環境はコンテナ内の `/venv` にあり、バインドマウントされる `/app` の外に置かれています。
-そのためホスト側の `.venv` とは独立しており、ホストの OS/アーキテクチャの影響を受けません。
-VS Code のインタプリタは `/venv/bin/python` に設定済みです。
+Python の仮想環境はコンテナ内の `/home/mixseek_core/.venv` にあり、バインドマウントされる `/app` の
+外に置かれています。そのためホスト側の `.venv` とは独立しており、ホストの OS/アーキテクチャの影響を
+受けません。VS Code のインタプリタは `/home/mixseek_core/.venv/bin/python` に設定済みです。
+
+ホーム配下に置いているのは、コンテナ内のユーザーが venv をディレクトリごと作り直せるようにするためです。
+`/venv` のように `/` 直下に置くと親ディレクトリが root 所有になり、`uv sync` が venv を再作成しようと
+した際に `failed to remove directory /venv: Permission denied` で失敗します。
+また Linux ホストでは `updateRemoteUserUID` によってコンテナユーザーの UID がホストに合わせて
+付け替えられますが、`usermod --uid` はホームディレクトリ配下しか chown しないため、
+ホーム配下に置くことで UID が 1000 以外でも venv が書き込み可能なまま保たれます。
+
+Python のバージョンは `.python-version`（3.13.9）をビルド時にも `COPY` して固定しているため、
+イメージ内の venv と実行時の要求バージョンが一致し、`uv sync` が venv を作り直すことはありません。
 
 ## ユーザー / UID / GID
 

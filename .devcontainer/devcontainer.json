@@ -50,6 +50,12 @@
 
   "remoteUser": "mixseek_core",
 
+  // Linux ホストではコンテナユーザーの UID/GID をホストに合わせて付け替える（既定で有効だが、
+  // venv をホーム配下に置いている前提と対になる設定なので明示する）。
+  // usermod --uid はホームディレクトリ配下のみ chown するため、venv が
+  // /home/mixseek_core/.venv にあることで UID 変更後も書き込み可能なまま保たれる。
+  "updateRemoteUserUID": true,
+
   "customizations": {
     "vscode": {
       "settings": {
@@ -63,9 +69,12 @@
           "editor.defaultFormatter": "charliermarsh.ruff"
         },
         // venv は /app（バインドマウント）の外にあるので、ホスト側の .venv とは独立している
-        "python.defaultInterpreterPath": "/venv/bin/python",
+        "python.defaultInterpreterPath": "/home/mixseek_core/.venv/bin/python",
         "python.analysis.autoImportCompletions": true,
-        "python.analysis.extraPaths": ["/venv/lib/python3.13/site-packages", "${workspaceFolder}/src"],
+        "python.analysis.extraPaths": [
+          "/home/mixseek_core/.venv/lib/python3.13/site-packages",
+          "${workspaceFolder}/src"
+        ],
         "python.analysis.typeCheckingMode": "basic",
         "python.analysis.diagnosticMode": "workspace",
         "python.analysis.include": ["${workspaceFolder}/src", "${workspaceFolder}/tests"],

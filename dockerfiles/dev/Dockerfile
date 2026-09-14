@@ -110,9 +110,13 @@ ENV LANGUAGE=ja_JP:ja
 RUN groupadd -g ${MIXSEEK_GID} ${MIXSEEK_USERNAME} && \
     useradd -m -u ${MIXSEEK_UID} -g ${MIXSEEK_GID} -s /bin/bash ${MIXSEEK_USERNAME}
 
-# Create application and virtual environment directories
-RUN mkdir -p /app /venv && \
-    chown -R ${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} /app /venv
+# Create application directory
+# NOTE: venv はホーム配下（/home/${MIXSEEK_USERNAME}/.venv）に置く。/ 直下だと親ディレクトリが
+# root 所有のため、ユーザーが venv をディレクトリごと作り直せず `uv sync` が失敗する。
+# devcontainer の updateRemoteUserUID（usermod --uid）もホーム配下しか chown しないため、
+# ホーム配下に置くことで UID が 1000 以外の Linux ホストでも書き込み可能なままになる。
+RUN mkdir -p /app && \
+    chown -R ${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} /app
 
 # =============================================================================
 # PYTHON ENVIRONMENT SETUP
@@ -128,14 +132,16 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Virtual environment configuration
-ENV VIRTUAL_ENV=/venv
-ENV PATH="/venv/bin:${PATH}"
+# /app はバインドマウントで上書きされるため venv は /app の外に置く必要があるが、
+# / 直下ではなくホーム配下にする（理由は上の NOTE を参照）。
+ENV VIRTUAL_ENV=/home/${MIXSEEK_USERNAME}/.venv
+ENV PATH="/home/${MIXSEEK_USERNAME}/.venv/bin:${PATH}"
 
 # uv optimization settings
 ENV UV_HTTP_TIMEOUT=120
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
-ENV UV_PROJECT_ENVIRONMENT=/venv
+ENV UV_PROJECT_ENVIRONMENT=/home/${MIXSEEK_USERNAME}/.venv
 
 # =============================================================================
 # NODE.JS SETUP (Development Environment Only)
@@ -167,6 +173,15 @@ RUN bash -c ". $NVM_DIR/nvm.sh && \
 # =============================================================================
 # PROJECT DEPENDENCIES
 # =============================================================================
+
+# Copy .python-version to pin the interpreter (same as ci/Dockerfile)
+# これを COPY しないと、ビルド時はベースイメージ同梱の Python（floating tag 由来で
+# パッチバージョンが変動する）で venv が作られる一方、実行時は /app のバインドマウントで
+# .python-version が見えるため、uv が要求バージョン差分を検出して venv を作り直してしまう。
+COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} .python-version /app/.python-version
+
+# Install the Python version specified in .python-version
+RUN uv python install
 
 # Copy dependency files with proper ownership
 COPY --chown=${MIXSEEK_USERNAME}:${MIXSEEK_USERNAME} pyproject.toml uv.lock README.md LICENSE /app/

@@ -1,0 +1,97 @@
+{
+  // =========================================================================
+  // MixSeek-Core Dev Container
+  // =========================================================================
+  // 既存の開発コンテナ（dockerfiles/dev/Dockerfile）をそのまま再利用する。
+  // `make -C dockerfiles/dev run` と devcontainer で同一のイメージ定義になるため、
+  // ツール構成がズレない。
+  //
+  // ユーザー/UID/GID は Makefile.common の既定値（mixseek_core:1000:1000）に固定。
+  // Linux ホストで UID/GID がズレる場合は updateRemoteUserUID（既定 true）が
+  // コンテナ起動時に調整するため、通常は編集不要。
+  // 恒久的に変更したい場合は、本ファイルの MIXSEEK_* / remoteUser / mounts の
+  // ホームディレクトリパスを .env.local と同じ値に揃えて書き換えること。
+  "name": "mixseek-core-devcontainer",
+  "build": {
+    "dockerfile": "../dockerfiles/dev/Dockerfile",
+    "context": "..",
+    "args": {
+      "MIXSEEK_USERNAME": "mixseek_core",
+      "MIXSEEK_UID": "1000",
+      "MIXSEEK_GID": "1000"
+    }
+  },
+
+  // ホスト側に必要なディレクトリ・ファイルを先に作る。
+  // Docker に作らせると root 所有になり、コンテナ内から書けなくなるため。
+  // .env.dev は --env-file が参照するので、未作成なら空ファイルを用意する
+  // （API キー等は dockerfiles/dev/.env.dev.template を参考に記入する）。
+  "initializeCommand": "mkdir -p .cache .config .claude && touch .env.dev",
+
+  // --init: ゾンビプロセス回収（コンテナ内で claude / pytest を多用するため）
+  "runArgs": ["--init", "--env-file", "${localWorkspaceFolder}/.env.dev"],
+
+  "workspaceFolder": "/app",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
+
+  // dockerfiles/dev/Makefile の DEV_DOCKER_OPTS と同じマウント構成 + .claude。
+  // .config に gh の認証情報が残るため、コンテナを作り直しても gh auth は維持される。
+  "mounts": [
+    "source=${localWorkspaceFolder}/.cache,target=/home/mixseek_core/.cache,type=bind",
+    "source=${localWorkspaceFolder}/.config,target=/home/mixseek_core/.config,type=bind",
+    "source=${localWorkspaceFolder}/.claude,target=/home/mixseek_core/.claude,type=bind"
+  ],
+
+  // イメージビルド後に uv.lock が更新されていた場合に追従する。
+  "postCreateCommand": "uv sync --frozen --extra ui",
+
+  // 5678: debugpy / 8501: Streamlit UI (`mixseek ui`)
+  "forwardPorts": [5678, 8501],
+
+  "remoteUser": "mixseek_core",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.renderWhitespace": "all",
+        "[python]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+          },
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        // venv は /app（バインドマウント）の外にあるので、ホスト側の .venv とは独立している
+        "python.defaultInterpreterPath": "/venv/bin/python",
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.extraPaths": ["/venv/lib/python3.13/site-packages", "${workspaceFolder}/src"],
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.diagnosticMode": "workspace",
+        "python.analysis.include": ["${workspaceFolder}/src", "${workspaceFolder}/tests"],
+        "python.analysis.ignore": ["**/node_modules", "**/.git", "**/__pycache__", "**/.venv"],
+        "python.testing.pytestArgs": ["tests", "--capture=tee-sys", "-vv"],
+        "python.testing.pytestEnabled": true,
+        "coverage-gutters.showLineCoverage": true,
+        "coverage-gutters.showRulerCoverage": true,
+        "coverage-gutters.coverageFileNames": ["coverage-reports/coverage.xml"],
+        "[json][jsonc]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll": "always"
+          }
+        }
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "njpwerner.autodocstring",
+        "KevinRose.vsc-python-indent",
+        "charliermarsh.ruff",
+        "ryanluker.vscode-coverage-gutters",
+        "google.gemini-cli-vscode-ide-companion"
+      ]
+    }
+  }
+}

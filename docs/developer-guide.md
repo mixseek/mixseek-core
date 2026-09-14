@@ -616,7 +616,7 @@ MixSeek-Coreは、開発環境（`dockerfiles/dev/`）とCI環境（`dockerfiles
 |------|------------------|----------------|
 | **目的** | ローカル開発 | GitHub Actions CI |
 | **Node.js** | ✅ あり (22.20.0) | ❌ なし |
-| **AI Tools** | ✅ あり (claude-code, codex, gemini-cli) | ❌ なし |
+| **AI Tools** | ✅ あり (claude, codex, gemini, gh) | ❌ なし |
 | **エディタ** | ✅ あり (vim, nano) | ❌ なし |
 | **Pythonバージョン** | 3.13系最新 | 3.13.9 (固定) |
 

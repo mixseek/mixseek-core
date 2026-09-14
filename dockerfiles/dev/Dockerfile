@@ -5,10 +5,11 @@
 # - Python 3.13.9 + uv package manager
 # - Node.js 22.20.0 for AI development tools
 # - Claude Code, Codex, and Gemini CLI
+# - GitHub CLI (gh)
 # - Development tools and debugging support
 #
 # Build Args:
-#   USERNAME: Container user name (default: appuser)
+#   USERNAME: Container user name (default: mixseek_core)
 #   UID: User ID for permission synchronization (default: 1000)
 #   GID: Group ID for permission synchronization (default: 1000)
 
@@ -33,7 +34,7 @@ LABEL mixseek.ai-tools.enabled="true"
 # BUILD ARGUMENTS
 # =============================================================================
 
-ARG MIXSEEK_USERNAME=appuser
+ARG MIXSEEK_USERNAME=mixseek_core
 ARG MIXSEEK_UID=1000
 ARG MIXSEEK_GID=1000
 
@@ -67,6 +68,25 @@ RUN apt-get update && \
         locales \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# GITHUB CLI INSTALLATION
+# =============================================================================
+
+# gh は devcontainer / dev コンテナの必須ツール（PR・Issue 操作に使用）。
+# 公式 apt リポジトリを追加して導入する。
+RUN set -eux; \
+    mkdir -p -m 755 /etc/apt/keyrings; \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        -o /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+    mkdir -p -m 755 /etc/apt/sources.list.d; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends gh; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
 # LOCALE CONFIGURATION
@@ -194,15 +214,16 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start-dev.sh && \
     echo 'echo "📦 npm version: $(npm --version)"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo ""' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "🤖 AI Development Tools:"' >> /usr/local/bin/start-dev.sh && \
-    echo 'echo "  - Claude Code: $(claude-code --version 2>/dev/null || echo "not available")"' >> /usr/local/bin/start-dev.sh && \
+    echo 'echo "  - Claude Code: $(claude --version 2>/dev/null || echo "not available")"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "  - Codex: $(codex --version 2>/dev/null || echo "not available")"' >> /usr/local/bin/start-dev.sh && \
-    echo 'echo "  - Gemini CLI: $(gemini-cli --version 2>/dev/null || echo "not available")"' >> /usr/local/bin/start-dev.sh && \
+    echo 'echo "  - Gemini CLI: $(gemini --version 2>/dev/null || echo "not available")"' >> /usr/local/bin/start-dev.sh && \
+    echo 'echo "  - GitHub CLI: $({ gh --version 2>/dev/null || echo "not available"; } | head -1)"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo ""' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "💡 Available commands:"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "  - make lint       # Run code linting"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "  - make format     # Format code"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo "  - make unittest   # Run tests"' >> /usr/local/bin/start-dev.sh && \
-    echo 'echo "  - claude-code     # AI code assistance"' >> /usr/local/bin/start-dev.sh && \
+    echo 'echo "  - claude          # AI code assistance"' >> /usr/local/bin/start-dev.sh && \
     echo 'echo ""' >> /usr/local/bin/start-dev.sh && \
     echo 'exec "$@"' >> /usr/local/bin/start-dev.sh && \
     chmod +x /usr/local/bin/start-dev.sh

@@ -15,7 +15,7 @@ CI専用の最小構成Docker環境です。GitHub Actions CIで使用するこ�
 |------|---------------|------------------|
 | **目的** | GitHub Actions CI | ローカル開発 |
 | **Node.js** | ❌ なし | ✅ あり (22.20.0) |
-| **AI Tools** | ❌ なし | ✅ あり (claude-code, codex, gemini-cli) |
+| **AI Tools** | ❌ なし | ✅ あり (claude, codex, gemini, gh) |
 | **エディタ** | ❌ なし | ✅ あり (vim, nano) |
 | **ネットワークツール** | ❌ なし | ✅ あり (ping, netcat) |
 | **デバッグポート** | ❌ なし | ✅ あり (5678) |

@@ -74,10 +74,16 @@ def format_submission_history(round_history: list[RoundState]) -> str:
         ... ]
         >>> print(format_submission_history(history))
         ## ラウンド 1
-        スコア: 75.50/100
-        スコア詳細:
+        ### スコア: 75.50/100
+        ### スコア詳細:
         {}
-        あなたの提出内容: ...
+        <submission>
+        ...
+        </submission>
+
+    Note:
+        提出内容は LLM の生成物であり Markdown 見出しを含みうるため、`<submission>` タグで
+        囲んでラウンド区切りの見出しと衝突しないようにする（issue #153）。
     """
     if not round_history:
         return "まだ過去のSubmissionはありません。"
@@ -88,8 +94,9 @@ def format_submission_history(round_history: list[RoundState]) -> str:
         parts.append(f"### スコア: {state.evaluation_score:.2f}/100")
         parts.append("### スコア詳細:")
         parts.append(json.dumps(state.score_details, ensure_ascii=False, indent=2))
-        parts.append("### あなたの提出内容:")
+        parts.append("<submission>")
         parts.append(state.submission_content)
+        parts.append("</submission>")
         parts.append("")  # Empty line between rounds
 
     # Remove trailing empty line

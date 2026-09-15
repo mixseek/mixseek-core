@@ -47,8 +47,8 @@ class TestBuildJudgmentPrompt:
 
         assert "Test task" in prompt
         assert "Initial submission" in prompt
-        assert "タスク" in prompt
-        assert "提出履歴" in prompt
+        assert "<user_task>" in prompt
+        assert "<submission_history>" in prompt
 
     async def test_build_judgment_prompt_custom_template(self, tmp_path: Path) -> None:
         """Test prompt formatting with custom template."""
@@ -245,9 +245,8 @@ Position: {{ team_position_message }}"""
             mock_dt.return_value = "2025-11-25T14:30:00+09:00"
             prompt = await builder.build_judgment_prompt(context)
 
-        # When store is None, ranking_table and team_position_message should be empty
-        # The default template has "# リーダーボード" section
-        assert "リーダーボード" in prompt
+        # store が None の場合でも <leader_board> ブロック自体は常に存在する
+        assert "<leader_board>" in prompt
         # But the actual ranking table content should be minimal/empty
 
     async def test_build_judgment_prompt_placeholder_validation(self, tmp_path: Path) -> None:

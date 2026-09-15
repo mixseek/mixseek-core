@@ -128,16 +128,16 @@ class TestPromptBuilderIntegration:
 
         # Then: Verify prompt contains expected sections
         assert "データ分析タスク" in formatted_prompt
-        assert "過去の提出履歴" in formatted_prompt
+        assert "<submission_history>" in formatted_prompt
         assert "ラウンド 1" in formatted_prompt
         assert "85.50/100" in formatted_prompt
         assert "Round 1 analysis" in formatted_prompt
 
         # Then: Verify Leader Board ranking is included
-        assert "現在のリーダーボード" in formatted_prompt or "ランキング情報がありません" in formatted_prompt
+        assert "<leader_board>" in formatted_prompt
 
         # Then: Verify current datetime is included
-        assert "現在日時:" in formatted_prompt
+        assert "current_datetime:" in formatted_prompt
 
     @pytest.mark.asyncio
     @pytest.mark.integration
@@ -246,7 +246,7 @@ class TestPromptBuilderIntegration:
         assert len(prompts_captured) >= 1
         round1_prompt = prompts_captured[0]
         assert "データ分析タスク" in round1_prompt
-        assert "過去の提出履歴" in round1_prompt
+        assert "<submission_history>" in round1_prompt
         assert "まだ過去のSubmissionはありません。" in round1_prompt
         assert "まだランキング情報がありません。" in round1_prompt  # No ranking in round 1
         assert result1.team_id == "test-team-001"  # fixture team1.toml has test-team-001
@@ -260,9 +260,9 @@ class TestPromptBuilderIntegration:
         # Then: Second round prompt should include history
         assert len(prompts_captured) >= 2
         # Find the first prompt with history (may not be at index 1 if controller ran multiple rounds)
-        round2_prompt = next((p for p in prompts_captured[1:] if "過去の提出履歴" in p), prompts_captured[-1])
+        round2_prompt = next((p for p in prompts_captured[1:] if "## ラウンド 1" in p), prompts_captured[-1])
         assert "データ分析タスク" in round2_prompt
-        assert "過去の提出履歴" in round2_prompt
+        assert "<submission_history>" in round2_prompt
         assert "ラウンド 1" in round2_prompt
         assert result2.team_id == "test-team-001"  # fixture team1.toml has test-team-001
 
@@ -291,10 +291,10 @@ class TestPromptBuilderIntegration:
         # Then: Verify round 1 specific content
         assert "データ分析タスク" in formatted_prompt
         assert "まだ過去のSubmissionはありません。" in formatted_prompt
-        assert "現在日時:" in formatted_prompt
+        assert "current_datetime:" in formatted_prompt
 
         # Then: Verify history section is present but empty
-        assert "過去の提出履歴" in formatted_prompt  # Header is always present
+        assert "<submission_history>" in formatted_prompt  # 履歴ブロックは常に存在する
 
         # Then: Verify no ranking sections in round 1
         assert "まだランキング情報がありません。" in formatted_prompt
@@ -383,7 +383,7 @@ class TestPromptBuilderIntegration:
         formatted_prompt = await builder.build_team_prompt(context)
 
         # Then: Verify ranking table includes all teams
-        assert "現在のリーダーボード" in formatted_prompt
+        assert "<leader_board>" in formatted_prompt
         assert "Team Alpha" in formatted_prompt
         assert "Team Beta (あなたのチーム)" in formatted_prompt
         assert "Team Gamma" in formatted_prompt

@@ -14,6 +14,7 @@ orchestrator-guide
 ui-guide
 configuration-guide
 configuration-reference
+prompt-templates
 advanced-features
 observability
 database-schema

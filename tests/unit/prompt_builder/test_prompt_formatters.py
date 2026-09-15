@@ -70,8 +70,41 @@ class TestFormatSubmissionHistory:
         result = format_submission_history(history)
         assert "## ラウンド 1" in result
         assert "### スコア: 75.50/100" in result
-        assert "### あなたの提出内容:" in result
-        assert "First submission" in result
+        assert "<submission>\nFirst submission\n</submission>" in result
+
+    def test_submission_content_is_wrapped_in_submission_tag(self) -> None:
+        """提出内容が Markdown 見出しを含んでもラウンド境界が壊れないこと。"""
+        now = datetime.now(UTC)
+        submission_content = "# レポート\n\n## 市場動向\n\n## ラウンド 99\n紛らわしい見出し。"
+        history = [
+            RoundState(
+                round_number=1,
+                submission_content=submission_content,
+                evaluation_score=75.5,
+                score_details={},
+                round_started_at=now,
+                round_ended_at=now,
+            ),
+            RoundState(
+                round_number=2,
+                submission_content="Second submission",
+                evaluation_score=85.0,
+                score_details={},
+                round_started_at=now,
+                round_ended_at=now,
+            ),
+        ]
+
+        result = format_submission_history(history)
+
+        # ラウンド区切りの数は履歴の件数と一致する（生成物の見出しに埋もれない）
+        assert result.count("<submission>") == 2
+        assert result.count("</submission>") == 2
+        assert result.count("## ラウンド 1") == 1
+        assert result.count("## ラウンド 2") == 1
+        # 生成物の見出しは <submission> の内側に留まる
+        first_submission = result.split("<submission>")[1].split("</submission>")[0]
+        assert first_submission.strip() == submission_content
 
     def test_multiple_rounds_history(self) -> None:
         """Test with multiple rounds history."""

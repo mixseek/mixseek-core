@@ -107,7 +107,7 @@ class TestClarityCoherenceMetric:
         models = [
             "anthropic:claude-sonnet-4-5-20250929",
             "openai:gpt-5",
-            "google:gemini-pro",
+            "google-gla:gemini-flash-lite-latest",
         ]
 
         for model in models:

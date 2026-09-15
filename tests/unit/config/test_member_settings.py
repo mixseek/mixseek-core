@@ -27,7 +27,7 @@ class TestLoadMemberSettings:
         assert isinstance(member_settings, MemberAgentSettings)
         assert member_settings.agent_name == "plain-agent"
         assert member_settings.agent_type == "plain"
-        assert member_settings.model == "google-gla:gemini-2.5-flash-lite"
+        assert member_settings.model == "google-gla:gemini-flash-lite-latest"
         assert member_settings.temperature == 0.2
         assert member_settings.max_tokens == 4096
         assert member_settings.system_instruction is not None
@@ -140,7 +140,7 @@ class TestLoadMemberSettings:
 
         # Assert: 正しく読み込める
         assert member_settings.agent_name == "plain-agent"
-        assert member_settings.model == "google-gla:gemini-2.5-flash-lite"
+        assert member_settings.model == "google-gla:gemini-flash-lite-latest"
 
     def test_tool_description_default_generation(self) -> None:
         """descriptionフィールドがない場合のtool_descriptionデフォルト生成。"""
@@ -151,7 +151,7 @@ class TestLoadMemberSettings:
 [agent]
 name = "test-agent-no-desc"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 max_tokens = 2048
 

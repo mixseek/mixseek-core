@@ -114,7 +114,7 @@ class JudgmentClient:
             return result.output
 
         except Exception as e:
-            # Extract provider name from model (e.g., "google-gla:gemini-2.5-flash" -> "google-gla")
+            # Extract provider name from model (e.g., "google-gla:gemini-flash-lite-latest" -> "google-gla")
             provider = self.settings.model.split(":")[0] if ":" in self.settings.model else self.settings.model
             raise JudgmentAPIError(
                 f"Failed to judge improvement prospects after {self.settings.max_retries} retries: {str(e)}",

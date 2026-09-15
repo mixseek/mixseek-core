@@ -65,7 +65,7 @@ def test_member_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="bitbank-api-agent",
         type="custom",
-        model="google-gla:gemini-2.0-flash-exp",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="Test instruction",
         plugin=PluginMetadata(
             agent_module="examples.custom_agents.bitbank.agent",

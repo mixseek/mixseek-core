@@ -474,7 +474,7 @@ evaluator_config = "configs/evaluator.toml"
         judgment_toml = configs_dir / "judgment.toml"
         judgment_toml.write_text(
             """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.0
 max_retries = 3
 timeout_seconds = 60
@@ -630,7 +630,7 @@ weight = 0.7
         judgment_toml = configs_dir / "judgment.toml"
         judgment_toml.write_text(
             """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.0
 """
         )

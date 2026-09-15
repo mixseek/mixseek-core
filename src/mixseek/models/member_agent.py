@@ -278,7 +278,7 @@ class MemberAgentConfig(BaseModel):
     type: str = Field(..., description="Agent type/capabilities")
 
     # Model configuration
-    model: str = Field(default="google-gla:gemini-2.5-flash-lite", description="Pydantic AI model identifier")
+    model: str = Field(default="google-gla:gemini-flash-lite-latest", description="Pydantic AI model identifier")
     temperature: float | None = Field(
         default=None, ge=0.0, le=2.0, description="Model temperature for response randomness (None uses model default)"
     )
@@ -376,8 +376,8 @@ class MemberAgentConfig(BaseModel):
         else:
             raise ValueError(
                 f"Unsupported model '{v}'. Supported models: "
-                f"Google AI (e.g., 'google-gla:gemini-2.5-flash-lite'), "
-                f"Google Vertex AI (e.g., 'google-vertex:gemini-2.5-flash-lite'), "
+                f"Google AI (e.g., 'google-gla:gemini-flash-lite-latest'), "
+                f"Google Vertex AI (e.g., 'google-vertex:gemini-flash-lite-latest'), "
                 f"OpenAI (e.g., 'openai:gpt-4o'), "
                 f"Anthropic Claude (e.g., 'anthropic:claude-3-5-sonnet-20241022'), "
                 f"Grok (e.g., 'grok:grok-2-1212'), or "

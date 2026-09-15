@@ -21,7 +21,7 @@ class LeaderAgentConfig(BaseModel):
     system_prompt: str | None = Field(
         default=None, description="システムプロンプト（Pydantic AIのsystem_prompt、高度な利用者向け）"
     )
-    model: str = Field(default="google-gla:gemini-2.5-flash-lite", description="LLMモデル")
+    model: str = Field(default="google-gla:gemini-flash-lite-latest", description="LLMモデル")
     temperature: float | None = Field(
         default=None, ge=0.0, le=2.0, description="Temperature（Noneの場合はモデルのデフォルト値を使用）"
     )

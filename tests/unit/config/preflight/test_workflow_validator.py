@@ -21,7 +21,7 @@ def _write_workflow_toml(
     path: Path,
     *,
     workflow_id: str = "wf-1",
-    default_model: str = "google-gla:gemini-2.5-flash",
+    default_model: str = "google-gla:gemini-flash-lite-latest",
     executor_model: str | None = None,
 ) -> Path:
     """最小構成の workflow TOML を作成する。"""
@@ -49,7 +49,7 @@ def _write_team_toml(path: Path) -> Path:
         '[team]\nteam_id = "t1"\nteam_name = "T1"\n'
         "[[team.members]]\n"
         'agent_name = "a1"\nagent_type = "plain"\n'
-        'tool_description = "d"\nmodel = "google-gla:gemini-2.5-flash-lite"\n'
+        'tool_description = "d"\nmodel = "google-gla:gemini-flash-lite-latest"\n'
         'system_instruction = "x"\n'
     )
     return path

@@ -6,7 +6,7 @@
 [agent]
 type = "custom"
 name = "adk-deep-research"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 8192
 description = "Google ADK深層リサーチエージェント - 複数視点から並列検索・統合分析・構造化レポート"
@@ -60,8 +60,8 @@ license = "Apache-2.0"
 # Google ADK固有設定
 [agent.metadata.tool_settings.adk_research]
 # ADK内部エージェント用Geminiモデル（google_search対応必須）
-# 対応: gemini-2.0-flash, gemini-2.5-flash, gemini-2.5-pro, gemini-3-pro-preview
-gemini_model = "gemini-2.5-flash"
+# 対応: gemini-flash-lite-latest, gemini-flash-latest
+gemini_model = "gemini-flash-lite-latest"
 
 # 生成設定
 temperature = 0.5

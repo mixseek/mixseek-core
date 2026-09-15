@@ -28,7 +28,7 @@ max_concurrent_members = 5
 [team.leader]
 
 # LLM モデルの指定
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 
 # 温度パラメータ（0.0-1.0）
 # バランス型なので中間の温度に設定（信頼性と多様性の両立）
@@ -72,7 +72,7 @@ system_instruction = """
 name = "web_search"
 type = "web_search"
 tool_description = "Web検索で最新情報、市場動向、事例を収集します。信頼できる情報源から幅広く情報を集め、包括的な理解をサポートします。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 6144
 
@@ -116,7 +116,7 @@ include_raw_content = true
 name = "logical_analyst"
 type = "plain"
 tool_description = "論理的・構造的な分析を実行します。収集した情報を整理し、因果関係を明確にして、構造的なフレームワークで分析します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 4096
 
@@ -157,7 +157,7 @@ text = """あなたは論理的分析に特化したエージェントです。
 name = "data_analyst"
 type = "plain"
 tool_description = "数値データの分析、統計的検証、データドリブンな洞察を提供します。定量的な裏付けと客観的な評価を行います。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.4
 max_tokens = 4096
 

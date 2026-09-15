@@ -26,7 +26,7 @@ system_instruction = """
 - 専門用語の適切な解説
 - 長期的な視点や深い分析
 """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 
 [[team.members]]
@@ -37,7 +37,7 @@ tool_description = """
 学術論文、専門資料、技術文書などを検索します。
 より専門的で信頼性の高い情報収集を行います。
 """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 8192
 timeout_seconds = 150

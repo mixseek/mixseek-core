@@ -138,7 +138,7 @@ class TestDefaultModelFallback:
         assert "default_model" not in data
         # Pydantic が default を使う
         settings = WorkflowSettings.model_validate(data)
-        assert settings.default_model == "google-gla:gemini-2.5-flash"
+        assert settings.default_model == "google-gla:gemini-flash-lite-latest"
 
     def test_default_model_reflected_when_specified(self, workspace: Path) -> None:
         _write_toml(

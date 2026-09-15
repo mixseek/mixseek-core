@@ -40,7 +40,7 @@ team_name = "Test Team"
 [[team.members]]
 agent_name = "plain-agent"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Plain agent"
@@ -89,7 +89,7 @@ class TestMemberAgentMigration:
 [agent]
 name = "plain-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 
@@ -121,7 +121,7 @@ text = "You are a plain agent."
 [agent]
 name = "test-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 
 [agent.system_instruction]
 text = "Test instruction"
@@ -158,7 +158,7 @@ text = "Test instruction"
 [agent]
 name = "test-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 """
         )
 
@@ -303,7 +303,7 @@ team_name = "Legacy Team"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Agent 1"

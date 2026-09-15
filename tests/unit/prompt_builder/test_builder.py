@@ -33,12 +33,12 @@ class TestUserPromptBuilderRound1:
 
         result = await builder.build_team_prompt(context)
 
-        assert "# ユーザから指定されたタスク" in result
+        assert "<user_task>" in result
         assert "データ分析タスク" in result
         assert "まだ過去のSubmissionはありません。" in result
-        assert "現在日時:" in result
-        # History section is always present
-        assert "# 過去の提出履歴" in result
+        assert "current_datetime:" in result
+        # 履歴ブロックは常に存在する
+        assert "<submission_history>" in result
         # Should contain empty ranking message in round 1
         assert "まだランキング情報がありません。" in result
 
@@ -76,9 +76,9 @@ class TestUserPromptBuilderRound2Plus:
 
         result = await builder.build_team_prompt(context)
 
-        assert "# ユーザから指定されたタスク" in result
+        assert "<user_task>" in result
         assert "データ分析タスク" in result
-        assert "# 過去の提出履歴" in result
+        assert "<submission_history>" in result
         assert "## ラウンド 1" in result
         assert "スコア: 75.50/100" in result
         # Should contain empty ranking message since store is None
@@ -127,10 +127,10 @@ class TestUserPromptBuilderRound2Plus:
 
         result = await builder.build_team_prompt(context)
 
-        assert "# ユーザから指定されたタスク" in result
-        assert "# 過去の提出履歴" in result
+        assert "<user_task>" in result
+        assert "<submission_history>" in result
         assert "## ラウンド 1" in result
-        assert "# 現在のリーダーボード" in result
+        assert "<leader_board>" in result
         assert "**#1 Alpha (あなたのチーム)" in result
         assert "#2 Beta" in result
         assert "🏆 現在、あなたのチームは1位です！" in result

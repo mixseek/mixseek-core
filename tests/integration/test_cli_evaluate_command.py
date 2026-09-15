@@ -238,7 +238,7 @@ class TestEvaluateCommand:
         config_file = tmp_path / "evaluator.toml"
         config_file.write_text("""
 [evaluator]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 2048
 """)

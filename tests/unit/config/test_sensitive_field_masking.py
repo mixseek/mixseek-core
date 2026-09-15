@@ -22,7 +22,7 @@ from mixseek.config.views import ConfigViewService
 class DummySettingsWithSensitiveFields(MixSeekBaseSettings):
     """Test settings class with sensitive fields."""
 
-    model: str = Field(default="gemini-2.5-flash-lite", description="Model name")
+    model: str = Field(default="gemini-flash-lite-latest", description="Model name")
     api_key: str = Field(default="secret-123", description="API Key")
     password: str = Field(default="my-password", description="Password")
     secret_token: str = Field(default="token-abc", description="Secret Token")
@@ -117,8 +117,8 @@ class TestMaskValue:
 
     def test_preserves_non_sensitive_field(self) -> None:
         """Preserves value of non-sensitive field."""
-        result = ConfigViewService._mask_value("model", "gemini-2.5-flash-lite")
-        assert result == "gemini-2.5-flash-lite"
+        result = ConfigViewService._mask_value("model", "gemini-flash-lite-latest")
+        assert result == "gemini-flash-lite-latest"
 
     def test_preserves_workspace_path(self) -> None:
         """Preserves value of workspace_path field."""
@@ -163,8 +163,8 @@ class TestFormatTableMasksSensitiveFields:
                 key="DummySettingsWithSensitiveFields.model",
                 raw_key="model",
                 class_name="DummySettingsWithSensitiveFields",
-                current_value="gemini-2.5-flash-lite",
-                default_value="gemini-2.5-flash-lite",
+                current_value="gemini-flash-lite-latest",
+                default_value="gemini-flash-lite-latest",
                 source="default",
                 source_type="default",
                 value_type="str",
@@ -179,7 +179,7 @@ class TestFormatTableMasksSensitiveFields:
         assert "secret-123" not in output
 
         # Check that model is not masked
-        assert "gemini-2.5-flash-lite" in output
+        assert "gemini-flash-lite-latest" in output
 
 
 class TestFormatSingleMasksSensitiveFields:
@@ -221,8 +221,8 @@ class TestFormatSingleMasksSensitiveFields:
             key="DummySettingsWithSensitiveFields.model",
             raw_key="model",
             class_name="DummySettingsWithSensitiveFields",
-            current_value="gemini-2.5-flash-lite",
-            default_value="gemini-2.5-flash-lite",
+            current_value="gemini-flash-lite-latest",
+            default_value="gemini-flash-lite-latest",
             source="default",
             source_type="default",
             value_type="str",
@@ -232,7 +232,7 @@ class TestFormatSingleMasksSensitiveFields:
         output = service.format_single(setting)
 
         # Check that model is not masked
-        assert "gemini-2.5-flash-lite" in output
+        assert "gemini-flash-lite-latest" in output
         assert "[REDACTED]" not in output
 
 
@@ -285,4 +285,4 @@ class TestPrintDebugInfoMasksSensitiveFields:
         captured = capsys.readouterr()
 
         # Check that model is not masked
-        assert "gemini-2.5-flash-lite" in captured.out
+        assert "gemini-flash-lite-latest" in captured.out

@@ -1,7 +1,7 @@
 [agent]
 name = "vertex-web-search-agent"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3  # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 6144
 tool_description = "Web検索機能を持つ高度な研究エージェント"

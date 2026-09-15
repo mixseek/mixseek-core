@@ -230,7 +230,7 @@ class Evaluator:
 
 ```python
 class EvaluationConfig(BaseModel):
-    model_name: str = "google-gla:gemini-2.5-flash"
+    model_name: str = "google-gla:gemini-flash-lite-latest"
     temperature: float = 0.0
     max_output_tokens: int = 2000
 ```
@@ -400,7 +400,7 @@ database_url = "sqlite:///mixseek.db"
 
 [[evaluators]]
 type = "llm"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 criteria = ["accuracy", "completeness", "clarity"]
 
 [[evaluators]]

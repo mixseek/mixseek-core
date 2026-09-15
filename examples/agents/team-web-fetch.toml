@@ -30,9 +30,9 @@ max_concurrent_members = 3
 [team.leader]
 
 # LLM モデルの指定
-# Note: gemini-2.5-flash-lite はツール呼び出し後の最終回答生成に問題が発生することがあるため
-# より高性能な gemini-2.5-flash を使用
-model = "google-gla:gemini-2.5-flash"
+# Note: gemini-flash-lite-latest はツール呼び出し後の最終回答生成に問題が発生することがあるため
+# より高性能な gemini-flash-latest を使用
+model = "google-gla:gemini-flash-latest"
 
 # 温度パラメータ（0.0-1.0）
 temperature = 0.3
@@ -116,7 +116,7 @@ max_content_tokens = 40000
 name = "google_fetcher"
 type = "web_fetch"
 tool_description = "Google Geminiによる高速URLコンテンツ取得。シンプルな要約や素早い情報取得が必要な場合に使用。"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 6144
 

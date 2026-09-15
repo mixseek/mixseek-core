@@ -38,7 +38,7 @@ from pydantic_ai import Agent
 
 # 最もシンプルなAgent
 agent = Agent(
-    model="gemini-2.5-flash-lite",
+    model="gemini-flash-lite-latest",
     system_prompt="あなたは研究アシスタントです。"
 )
 
@@ -59,7 +59,7 @@ class TeamDependencies(BaseModel):
 
 # 依存性注入型を指定したAgent
 agent = Agent(
-    model="gemini-2.5-flash-lite",
+    model="gemini-flash-lite-latest",
     deps_type=TeamDependencies,
     system_prompt="あなたはチームリーダーです。"
 )
@@ -113,7 +113,7 @@ ToolはPydantic AIにおけるエージェント間通信の仕組みです。�
 ```python
 from pydantic_ai import Agent, RunContext
 
-leader_agent = Agent("gemini-2.5-flash-lite")
+leader_agent = Agent("gemini-flash-lite-latest")
 
 @leader_agent.tool
 async def research_tool(ctx: RunContext, task: str) -> str:
@@ -257,7 +257,7 @@ class TeamDependencies(BaseModel):
 
 ```python
 leader_agent = Agent(
-    model="gemini-2.5-flash-lite",
+    model="gemini-flash-lite-latest",
     deps_type=TeamDependencies,  # ★ 依存性型を指定
     system_prompt="..."
 )

@@ -175,13 +175,13 @@ team_id = "general-researcher-team"
 team_name = "General Research Team"
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 
 [[team.members]]
 name = "general-searcher"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 ```
 
 - **Leader Agent**: チーム全体の調整とまとめを担当

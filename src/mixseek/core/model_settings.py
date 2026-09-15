@@ -44,7 +44,7 @@ def build_model_settings(
     （実行は継続）。
 
     Args:
-        model_id: モデル識別子 (例: "google-gla:gemini-2.5-pro", "anthropic:claude-...")。
+        model_id: モデル識別子 (例: "google-gla:gemini-flash-latest", "anthropic:claude-...")。
             Provider 判定に使用する。
         model_settings: pydantic-ai の ModelSettings TypedDict に渡す dict。
         google_model_settings: pydantic-ai の GoogleModelSettings TypedDict に渡す dict。

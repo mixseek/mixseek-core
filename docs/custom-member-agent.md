@@ -74,7 +74,7 @@ pipインストール可能なパッケージからロードする方式
 [agent]
 name = "data-analyst"
 type = "custom"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a data analyst with expertise in pandas and numpy. Analyze data and provide insights based on statistical methods."
 description = "Pandas/NumPyを使ったデータ分析専門エージェント"
 
@@ -103,7 +103,7 @@ pip install my_analytics_package
 [agent]
 name = "data-analyst"
 type = "custom"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a data analyst with expertise in pandas and numpy. Analyze data and provide insights based on statistical methods."
 description = "Pandas/NumPyを使ったデータ分析専門エージェント"
 
@@ -120,7 +120,7 @@ agent_class = "DataAnalystAgent"
 [agent]
 name = "data-analyst"
 type = "custom"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a data analyst with expertise in pandas and numpy. Analyze data and provide insights based on statistical methods."
 description = "Pandas/NumPyを使ったデータ分析専門エージェント"
 

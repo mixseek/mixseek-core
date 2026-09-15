@@ -25,7 +25,7 @@ system_instruction = """
 3. 重要度順に構造化
 4. 簡潔で分かりやすい最終報告を作成
 """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.7
 
 [[team.members]]
@@ -36,7 +36,7 @@ tool_description = """
 一般的なWeb検索でニュースを収集します。
 主要メディアや公式サイトからバランスよく情報を集めます。
 """
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 6144
 timeout_seconds = 120

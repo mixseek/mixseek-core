@@ -10,7 +10,7 @@ max_concurrent_members = 5
 # Leader Agent Configuration
 # ===================================================================
 [team.leader]
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 timeout_seconds = 300
 max_tokens = 4096
@@ -39,7 +39,7 @@ name = "bitbank_analyst"
 type = "custom"
 tool_description = "暗号通貨市場データ分析。bitbank取引所のBTC/XRP/ETH価格、ローソク足データ、トレーディングメトリクスを提供"
 # LLM settings
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.0
 max_tokens = 4096
 timeout_seconds = 120
@@ -58,7 +58,7 @@ tool_settings = { bitbank_api = { base_url = "https://public.bitbank.cc", timeou
 name = "web_search"
 type = "web_search"
 tool_description = "最新の暗号通貨ニュース、市場トレンド、規制情報を検索"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 4096
 timeout_seconds = 120

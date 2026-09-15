@@ -54,7 +54,7 @@ def test_workflow_function_path_loading_end_to_end(
         "[workflow]\n"
         'workflow_id = "fn-path-integration"\n'
         'workflow_name = "fn-path-integration"\n'
-        'default_model = "google-gla:gemini-2.5-flash"\n'
+        'default_model = "google-gla:gemini-flash-lite-latest"\n'
         "[[workflow.steps]]\n"
         'id = "s1"\n'
         "[[workflow.steps.executors]]\n"

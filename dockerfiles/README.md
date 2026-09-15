@@ -21,6 +21,9 @@ dockerfiles/
     └── .env.prod.template # Production environment variables template
 ```
 
+The Dev Container config for VS Code / Cursor (`.devcontainer/`) reuses `dev/Dockerfile` as-is.
+See [`.devcontainer/README.md`](../.devcontainer/README.md) for setup and usage.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -56,7 +59,8 @@ make -C dockerfiles/dev bash
 python --version  # Python 3.12.x
 node --version    # Node.js 22.20.0
 uv --version      # uv package manager
-claude-code --version  # AI development tools
+claude --version  # AI development tools
+gh --version      # GitHub CLI
 ```
 
 ### 3. Run Tests
@@ -301,9 +305,9 @@ make -C dockerfiles/dev run
 make -C dockerfiles/dev bash
 
 # Inside container
-claude-code analyze . --output suggestions.md
+claude analyze . --output suggestions.md
 codex generate --description "REST API endpoint for user management"
-gemini-cli review src/ --format markdown
+gemini review src/ --format markdown
 ```
 
 ### Parallel Development

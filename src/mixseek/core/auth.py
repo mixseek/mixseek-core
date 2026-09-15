@@ -55,7 +55,8 @@ def detect_auth_provider(model_id: str) -> AuthProvider:
     """Detect the required authentication provider from model ID.
 
     Args:
-        model_id: Model identifier (e.g., "google-gla:gemini-2.5-flash-lite", "google-vertex:gemini-2.5-flash-lite")
+        model_id: Model identifier (e.g., "google-gla:gemini-flash-lite-latest",
+            "google-vertex:gemini-flash-lite-latest")
 
     Returns:
         AuthProvider: Required authentication provider
@@ -218,7 +219,7 @@ def _create_google_model_cached(model_name: str, provider_type: Literal["google-
     that can occur in concurrent async operations.
 
     Args:
-        model_name: Base model name (e.g., "gemini-2.0-flash-lite", "gemini-2.5-flash")
+        model_name: Base model name (e.g., "gemini-flash-lite-latest", "gemini-flash-lite-latest")
         provider_type: Provider type ("google-gla" for Google AI, "google-vertex" for Vertex AI)
 
     Returns:
@@ -353,8 +354,8 @@ def create_authenticated_model(
     - Clear separation between test and production environments
 
     Args:
-        model_id: Model identifier (e.g., "google-gla:gemini-2.5-flash-lite",
-                  "google-vertex:gemini-2.5-flash-lite", "openai:gpt-4o", "anthropic:claude-sonnet-4-5-20250929")
+        model_id: Model identifier (e.g., "google-gla:gemini-flash-lite-latest",
+                  "google-vertex:gemini-flash-lite-latest", "openai:gpt-4o", "anthropic:claude-sonnet-4-5-20250929")
 
     Returns:
         Union[GoogleModel, OpenAIModel, AnthropicModel, TestModel]: Authenticated model instance

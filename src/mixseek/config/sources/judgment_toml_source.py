@@ -18,7 +18,7 @@ class JudgmentTomlSource(PydanticBaseSettingsSource):
     judgment.toml形式を読み込み、JudgmentSettingsスキーマに変換します。
 
     TOMLファイル形式:
-        model = "google-gla:gemini-2.5-flash"
+        model = "google-gla:gemini-flash-lite-latest"
         temperature = 0.0
         max_tokens = 2000
         max_retries = 3

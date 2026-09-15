@@ -15,14 +15,14 @@ class TestValidateModelFormat:
     def test_valid_model_format_with_colon(self) -> None:
         """Test valid model format with colon separator"""
         # Valid formats
-        assert validate_model_format("google-gla:gemini-2.5-flash-lite") == "google-gla:gemini-2.5-flash-lite"
+        assert validate_model_format("google-gla:gemini-flash-lite-latest") == "google-gla:gemini-flash-lite-latest"
         assert validate_model_format("openai:gpt-4o") == "openai:gpt-4o"
         assert validate_model_format("anthropic:claude-sonnet-4-5") == "anthropic:claude-sonnet-4-5"
 
     def test_invalid_model_format_without_colon(self) -> None:
         """Test invalid model format without colon separator"""
         with pytest.raises(ValueError) as exc_info:
-            validate_model_format("gemini-2.5-flash-lite")
+            validate_model_format("gemini-flash-lite-latest")
 
         error_msg = str(exc_info.value)
         assert "Invalid model format" in error_msg
@@ -58,7 +58,7 @@ class TestValidateModelFormat:
 
     def test_model_format_preserves_original_value(self) -> None:
         """Test that validation preserves the original value"""
-        original = "google-gla:gemini-2.5-flash-lite"
+        original = "google-gla:gemini-flash-lite-latest"
         result = validate_model_format(original)
         assert result is original or result == original
 
@@ -79,7 +79,7 @@ class TestValidateModelFormat:
     @pytest.mark.parametrize(
         "valid_format",
         [
-            "google-gla:gemini-2.5-flash-lite",
+            "google-gla:gemini-flash-lite-latest",
             "openai:gpt-4o",
             "anthropic:claude-sonnet-4-5",
             "custom:my-model",

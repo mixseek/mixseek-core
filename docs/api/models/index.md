@@ -52,7 +52,7 @@ from mixseek.models.member_agent import (
 config = MemberAgentConfig(
     name="my-agent",
     type=AgentType.PLAIN,
-    model="google-gla:gemini-2.5-flash",
+    model="google-gla:gemini-flash-lite-latest",
     temperature=0.2,
     max_tokens=2048,
     instructions=AgentInstructions(text="You are a helpful assistant.")
@@ -323,7 +323,7 @@ max_rounds = 10
 member_agent_limit = 15
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 instructions = "Coordinate analysis tasks with member agents"
 
 [[team.members]]
@@ -334,11 +334,11 @@ model = "anthropic:claude-sonnet-4-5-20250929"
 [[team.members]]
 name = "researcher"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 
 [[team.evaluators]]
 type = "llm"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 criteria = ["accuracy", "completeness"]
 ```
 

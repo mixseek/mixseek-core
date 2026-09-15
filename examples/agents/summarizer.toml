@@ -4,7 +4,7 @@
 [agent]
 name = "summarizer"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3 # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 1024
 tool_description = "情報を簡潔にまとめる専門家"

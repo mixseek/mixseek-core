@@ -136,7 +136,7 @@ class LeaderAgent:
 [agent]
 name = "my-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 2048
 

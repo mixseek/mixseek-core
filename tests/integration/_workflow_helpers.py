@@ -156,7 +156,7 @@ def write_workflow_toml(
         "[workflow]\n"
         f'workflow_id = "{workflow_id}"\n'
         f'workflow_name = "{workflow_name}"\n'
-        'default_model = "google-gla:gemini-2.5-flash"\n'
+        'default_model = "google-gla:gemini-flash-lite-latest"\n'
         "include_all_context = true\n"
         'final_output_format = "json"\n\n' + body
     )

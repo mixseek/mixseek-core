@@ -501,7 +501,7 @@ max_concurrent_members = 5
 
 # Leader Agent設定
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_prompt = """
 タスクを分析し、適切なMember Agentを選択してください:
 - delegate_to_analyst: 論理的分析が必要な場合
@@ -516,7 +516,7 @@ system_prompt = """
 name = "analyst"
 type = "plain"
 tool_description = "論理的な分析を実行します"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a data analyst. Analyze data using logical reasoning."
 temperature = 0.2
 max_tokens = 2048
@@ -526,7 +526,7 @@ max_tokens = 2048
 name = "web-researcher"
 type = "web_search"
 tool_description = "Web検索で最新情報を取得します"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a web researcher. Search for current information."
 temperature = 0.3
 max_tokens = 4096

@@ -4,7 +4,7 @@
 [agent]
 name = "my-web-search-agent"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 3072
 tool_description = "An AI assistant with web search capabilities for finding current information"

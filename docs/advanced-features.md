@@ -33,7 +33,7 @@ system_prompt = """
 回答は簡潔かつ具体的にしてください。
 """
 
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 ```
 
 ### 併用例: Member Agent
@@ -91,7 +91,7 @@ OpenAI の reasoning_effort 等）に追従するため、各エージェント�
 
 ```toml
 [team.leader]
-model = "google-gla:gemini-2.5-pro"
+model = "google-gla:gemini-flash-latest"
 
 [team.leader.google_model_settings]
 google_thinking_config = { thinking_level = "HIGH", include_thoughts = true }

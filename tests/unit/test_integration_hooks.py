@@ -51,7 +51,7 @@ def sample_config() -> MemberAgentConfig:
     return MemberAgentConfig(
         name="test-agent",
         type=AgentType.PLAIN,
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         temperature=0.2,
         max_tokens=1024,
         system_instruction="Test agent instructions",

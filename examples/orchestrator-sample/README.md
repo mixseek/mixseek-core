@@ -229,7 +229,7 @@ team_name = "チームA: 論理的分析"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 system_instruction = """
 あなたは論理的で構造的な分析を得意とする戦略コンサルタントです。
@@ -253,7 +253,7 @@ team_name = "チームB: 創造的視点"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.8
 system_instruction = """
 あなたは創造的な思考と新しい視点を得意とする戦略家です。
@@ -277,7 +277,7 @@ team_name = "Research Team: 研究重視チーム"
 max_concurrent_members = 5
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3  # 低温度で決定的・正確な判断
 system_instruction = """
 あなたは研究重視の Leader Agent です。
@@ -297,7 +297,7 @@ Agent Delegation 戦略:
 agent_name = "web_search"
 agent_type = "web_search"
 tool_description = "Web検索で最新情報を収集します。市場動向、技術トレンド、統計データなど。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 6144
 
@@ -314,7 +314,7 @@ include_raw_content = true
 agent_name = "logical_analyst"
 agent_type = "plain"
 tool_description = "論理的・構造的な分析を実行します。因果関係の整理、フレームワーク適用。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 
@@ -463,7 +463,7 @@ httpcore.ReadError
 # $MIXSEEK_WORKSPACE/configs/agents/analyst-team-a.toml
 
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 timeout_seconds = 300  # ← 追加（デフォルト: 300秒 / 5分）
 ```

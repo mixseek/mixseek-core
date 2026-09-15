@@ -184,7 +184,7 @@ class TestConfigurationManagerEdgeCases:
         # temperature has None as default, which might be excluded
         # but model should be included
         assert "model" in defaults
-        assert defaults["model"] == "google-gla:gemini-2.5-flash-lite"
+        assert defaults["model"] == "google-gla:gemini-flash-lite-latest"
 
     def test_multiple_manager_instances_independent(self) -> None:
         """Test that multiple ConfigurationManager instances are independent."""

@@ -158,7 +158,7 @@ agent_class = "TestCustomAgent"
         toml_content = f"""[agent]
 name = "test-path-config"
 type = "custom"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 max_tokens = 2048
 description = "Test custom agent config with path"
 
@@ -184,7 +184,7 @@ agent_class = "TestCustomAgent"
         assert config.plugin.agent_module is None
 
         # Verify other config fields
-        assert config.model == "google-gla:gemini-2.5-flash-lite"
+        assert config.model == "google-gla:gemini-flash-lite-latest"
         assert config.max_tokens == 2048
 
     @pytest.mark.integration

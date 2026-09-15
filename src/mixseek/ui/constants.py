@@ -15,8 +15,7 @@ max_tokens = 4096
 # Leader Agents
 [[leader_agents]]
 agent_id = "example_leader"
-provider = "google-adk"
-model = "gemini-2.0-flash-exp"
+model = "google-gla:gemini-flash-lite-latest"
 system_prompt = "You are a team leader."
 temperature = 0.5
 max_tokens = 8192

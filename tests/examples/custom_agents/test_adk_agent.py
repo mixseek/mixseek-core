@@ -21,7 +21,7 @@ class TestADKResearchAgentInit:
         agent = ADKResearchAgent(sample_member_agent_config)
 
         assert agent.config == sample_member_agent_config
-        assert agent.adk_config.gemini_model == "gemini-2.5-flash"
+        assert agent.adk_config.gemini_model == "gemini-flash-lite-latest"
         assert agent.adk_config.temperature == 0.7
         assert agent.adk_config.researcher_count == 3
 
@@ -42,7 +42,7 @@ class TestADKResearchAgentHelpers:
         researcher = agent._create_researcher(name="test_researcher", focus="AI trends")
 
         assert researcher.name == "test_researcher"
-        assert researcher.model == "gemini-2.5-flash"
+        assert researcher.model == "gemini-flash-lite-latest"
         assert "google_search" in str(researcher.tools)
 
     def test_create_researcher_without_focus(self, sample_member_agent_config: MemberAgentConfig) -> None:
@@ -51,7 +51,7 @@ class TestADKResearchAgentHelpers:
         researcher = agent._create_researcher()
 
         assert researcher.name == "researcher"
-        assert researcher.model == "gemini-2.5-flash"
+        assert researcher.model == "gemini-flash-lite-latest"
 
     def test_create_summarizer(self, sample_member_agent_config: MemberAgentConfig) -> None:
         """Test _create_summarizer creates valid LlmAgent."""
@@ -59,7 +59,7 @@ class TestADKResearchAgentHelpers:
         summarizer = agent._create_summarizer()
 
         assert summarizer.name == "summarizer"
-        assert summarizer.model == "gemini-2.5-flash"
+        assert summarizer.model == "gemini-flash-lite-latest"
         # Summarizer should have no tools
         assert not summarizer.tools or len(summarizer.tools) == 0
 

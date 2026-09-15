@@ -650,7 +650,7 @@ class ConfigurationManager:
             ...     Path("configs/judgment.toml")
             ... )
             >>> print(judgment_settings.model)
-            'google-gla:gemini-2.5-flash'
+            'google-gla:gemini-flash-lite-latest'
             >>> # トレース情報を取得
             >>> trace_info = getattr(judgment_settings, "__source_traces__", {})
             >>> if "model" in trace_info:

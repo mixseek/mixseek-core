@@ -21,6 +21,9 @@ dockerfiles/
     └── .env.prod.template # 本番環境変数テンプレート
 ```
 
+VS Code / Cursor 用の Dev Container 設定（`.devcontainer/`）は、上記 `dev/Dockerfile` をそのまま参照しています。
+設定と使い方は [`.devcontainer/README.md`](../.devcontainer/README.md) を参照してください。
+
 ## 🚀 クイックスタート
 
 ### 前提条件
@@ -44,6 +47,13 @@ docker info
 
 ### 2. 開発環境の起動
 
+#### Dev Container を使う場合（VS Code / Cursor）
+
+VS Code でリポジトリを開き、コマンドパレットから **Dev Containers: Reopen in Container** を実行します。
+詳細は [`.devcontainer/README.md`](../.devcontainer/README.md) を参照してください。
+
+#### make を使う場合
+
 ```bash
 # 開発コンテナをビルド・起動
 make -C dockerfiles/dev build
@@ -56,7 +66,8 @@ make -C dockerfiles/dev bash
 python --version  # Python 3.12.x
 node --version    # Node.js 22.20.0
 uv --version      # uvパッケージマネージャー
-claude-code --version  # AI開発ツール
+claude --version  # AI開発ツール
+gh --version      # GitHub CLI
 ```
 
 ### 3. テストの実行
@@ -301,9 +312,9 @@ make -C dockerfiles/dev run
 make -C dockerfiles/dev bash
 
 # コンテナ内で
-claude-code analyze . --output suggestions.md
+claude analyze . --output suggestions.md
 codex generate --description "ユーザー管理用REST APIエンドポイント"
-gemini-cli review src/ --format markdown
+gemini review src/ --format markdown
 ```
 
 ### 並行開発

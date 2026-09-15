@@ -40,7 +40,7 @@ def temp_config_file() -> Generator[Path]:
 [agent]
 name = "integration-test-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 1024
 timeout_seconds = 60
@@ -70,7 +70,7 @@ def web_search_config_file() -> Generator[Path]:
 [agent]
 name = "web-search-integration-agent"
 type = "web_search"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 2048
 timeout_seconds = 120
@@ -115,7 +115,7 @@ class TestConfigurationIntegration:
         # Verify configuration loaded correctly
         assert config.name == "integration-test-agent"
         assert config.type == AgentType.PLAIN
-        assert config.model == "google-gla:gemini-2.5-flash-lite"
+        assert config.model == "google-gla:gemini-flash-lite-latest"
         assert config.temperature == 0.2
         assert config.max_tokens == 1024  # Matches fixture configuration
 
@@ -243,7 +243,7 @@ class TestFormatterIntegration:
             execution_time_ms=1500,
             usage_info={"total_tokens": 45, "prompt_tokens": 25, "completion_tokens": 20},
             metadata={
-                "model_id": "google-gla:gemini-2.5-flash-lite",
+                "model_id": "google-gla:gemini-flash-lite-latest",
                 "temperature": 0.2,
                 "max_tokens": 1024,
                 "test_metadata": "integration_value",

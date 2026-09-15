@@ -36,8 +36,8 @@ def validate_model_format(value: str, allow_empty: bool = False) -> str:
     Examples:
         基本的な使用法（LeaderAgentSettings、EvaluatorSettings）:
 
-        >>> validate_model_format("google-gla:gemini-2.5-flash-lite")
-        'google-gla:gemini-2.5-flash-lite'
+        >>> validate_model_format("google-gla:gemini-flash-lite-latest")
+        'google-gla:gemini-flash-lite-latest'
 
         >>> validate_model_format("gpt-4o")  # コロンなし
         Traceback (most recent call last):

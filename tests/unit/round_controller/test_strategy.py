@@ -31,7 +31,7 @@ def _build_team_settings(members: list[MemberAgentSettings] | None = None) -> Te
         team_name="Strategy Team",
         leader={
             "system_instruction": "You are a helpful assistant",
-            "model": "google-gla:gemini-2.5-flash-lite",
+            "model": "google-gla:gemini-flash-lite-latest",
         },
         members=members or [],
     )
@@ -43,7 +43,7 @@ def _build_member_settings(name: str) -> MemberAgentSettings:
         agent_name=name,
         agent_type="plain",
         tool_description=f"tool description for {name}",
-        model="google-gla:gemini-2.5-flash-lite",
+        model="google-gla:gemini-flash-lite-latest",
         system_instruction="custom system instruction",
     )
 

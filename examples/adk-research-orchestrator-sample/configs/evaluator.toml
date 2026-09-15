@@ -1,7 +1,7 @@
 # Evaluator Configuration for ADK Research Orchestrator
 # 日付情報の誤判定を防ぐためのカスタム評価設定
 
-default_model = "google-gla:gemini-2.5-flash"
+default_model = "google-gla:gemini-flash-lite-latest"
 
 [[metrics]]
 name = "ClarityCoherence"

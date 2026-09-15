@@ -1,7 +1,7 @@
 [agent]
 name = "plain-agent"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2 # 省略可（省略時はモデルのデフォルト値を使用）
 max_tokens = 4096
 timeout_seconds = 45

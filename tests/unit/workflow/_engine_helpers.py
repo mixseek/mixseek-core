@@ -65,7 +65,7 @@ def make_settings(
     *,
     include_all_context: bool = True,
     final_output_format: str = "json",
-    default_model: str = "google-gla:gemini-2.5-flash",
+    default_model: str = "google-gla:gemini-flash-lite-latest",
 ) -> WorkflowSettings:
     return WorkflowSettings.model_validate(
         {

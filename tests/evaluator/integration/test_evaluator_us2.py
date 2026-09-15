@@ -463,7 +463,7 @@ class TestConfigurationHotReload:
         evaluator = Evaluator(settings=settings, prompt_builder_settings=prompt_builder_settings)
 
         # Verify default config
-        assert evaluator.config.llm_default.model == "google-gla:gemini-2.5-flash"
+        assert evaluator.config.llm_default.model == "google-gla:gemini-flash-lite-latest"
         assert evaluator.config.llm_default.max_retries == 3
         assert len(evaluator.config.metrics) == 3
 

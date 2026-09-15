@@ -78,7 +78,7 @@ team_name = "E2E Test Team"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Agent 1"
@@ -115,7 +115,7 @@ team_name = "Workspace 2 Team"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Agent 1"
@@ -234,7 +234,7 @@ team_name = "Trace Test"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.5
 max_tokens = 8000
 tool_description = "Agent 1"
@@ -345,7 +345,7 @@ class TestMemberAgentConfigGenerationE2E:
         member_settings = MemberAgentSettings(
             agent_name="test_agent",
             agent_type="plain",
-            model="google-gla:gemini-2.5-flash-lite",
+            model="google-gla:gemini-flash-lite-latest",
             temperature=0.5,
             max_tokens=8000,
             tool_description="Test Agent",
@@ -358,7 +358,7 @@ class TestMemberAgentConfigGenerationE2E:
         # Assert: All fields preserved
         assert member_config.name == "test_agent"
         assert member_config.type == "plain"
-        assert member_config.model == "google-gla:gemini-2.5-flash-lite"
+        assert member_config.model == "google-gla:gemini-flash-lite-latest"
         assert member_config.temperature == 0.5
         assert member_config.max_tokens == 8000
         assert member_config.description == ""  # agent_data=Noneなのでデフォルト
@@ -385,7 +385,7 @@ team_name = "Issue 146 Test"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Agent 1"
@@ -459,7 +459,7 @@ team_name = "US6 Test"
 [[team.members]]
 agent_name = "agent1"
 agent_type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 tool_description = "Agent 1"

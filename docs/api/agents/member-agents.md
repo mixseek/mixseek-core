@@ -33,7 +33,7 @@ from mixseek.models.member_agent import MemberAgentConfig, AgentInstructions
 config = MemberAgentConfig(
     name="my-agent",
     type="plain",
-    model="google-gla:gemini-2.5-flash",
+    model="google-gla:gemini-flash-lite-latest",
     temperature=0.2,
     max_tokens=2048,
     instructions=AgentInstructions(text="You are a helpful assistant."),
@@ -45,7 +45,7 @@ config = MemberAgentConfig(
 
 - `name: str` - エージェントの一意な識別子（必須）
 - `type: str` - エージェントタイプ（必須、標準タイプ: "plain", "web_search", "code_execution"、またはカスタム文字列）
-- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-2.5-flash"）。標準タイプでは `google-gla:`, `google-vertex:`, `openai:`, `anthropic:`, `grok:`, `grok-responses:` のプレフィックスが必須。`type="custom"` では任意のプレフィックスが使用可能
+- `model: str` - Pydantic AIモデル識別子（デフォルト: "google-gla:gemini-flash-lite-latest"）。標準タイプでは `google-gla:`, `google-vertex:`, `openai:`, `anthropic:`, `grok:`, `grok-responses:` のプレフィックスが必須。`type="custom"` では任意のプレフィックスが使用可能
 - `temperature: float` - 応答のランダム性（0.0-1.0、デフォルト: 0.2）
 - `max_tokens: int` - 最大トークン数（1-8192、デフォルト: 2048）
 - `instructions: AgentInstructions` - エージェントへの指示（必須）
@@ -379,7 +379,7 @@ config = loader.load_from_toml("agent.toml")
 from mixseek.core.auth import create_authenticated_model
 
 # Google Gemini
-model = create_authenticated_model("google-gla:gemini-2.5-flash")
+model = create_authenticated_model("google-gla:gemini-flash-lite-latest")
 
 # Anthropic Claude
 model = create_authenticated_model("anthropic:claude-sonnet-4-5-20250929")
@@ -417,7 +417,7 @@ execution_id = logger.log_execution_start(
     agent_name="my-agent",
     agent_type="plain",
     task="Sample task",
-    model_id="google-gla:gemini-2.5-flash"
+    model_id="google-gla:gemini-flash-lite-latest"
 )
 
 # 実行完了ログ
@@ -505,7 +505,7 @@ MemberAgentFactory.register_agent(custom_type, CustomMemberAgent)
 config = MemberAgentConfig(
     name="my-custom-agent",
     type=custom_type,
-    model="google-gla:gemini-2.5-flash-lite",
+    model="google-gla:gemini-flash-lite-latest",
     instructions=AgentInstructions(text="Custom instructions")
 )
 agent = MemberAgentFactory.create_agent(config)

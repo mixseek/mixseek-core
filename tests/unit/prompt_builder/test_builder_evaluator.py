@@ -28,8 +28,8 @@ class TestBuildEvaluatorPrompt:
         assert "What is Python?" in prompt
         assert "Python is a programming language..." in prompt
         assert "2025-11-25T14:30:00+09:00" in prompt
-        assert "ユーザプロンプト" in prompt
-        assert "提出内容" in prompt
+        assert "<user_task>" in prompt
+        assert "<submission>" in prompt
 
     def test_build_evaluator_prompt_custom_template(self, tmp_path: Path) -> None:
         """Test prompt formatting with custom template."""

@@ -176,7 +176,7 @@ team_id = "dev-team-001"  # オプション、未指定時は自動生成
 
 # Leader Agent設定（Agent Delegation対応）
 [team.leader]
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = """
 タスクを分析し、適切なMember Agentを選択してください:
 - delegate_to_analyst: 論理的分析が必要な場合
@@ -191,7 +191,7 @@ system_instruction = """
 name = "analyst"
 type = "plain"
 tool_description = "論理的な分析を実行します"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a data analyst. Analyze data using logical reasoning."
 temperature = 0.2
 
@@ -199,7 +199,7 @@ temperature = 0.2
 name = "web-researcher"
 type = "web_search"
 tool_description = "Web検索で最新情報を取得します"
-model = "google-gla:gemini-2.5-flash"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a web researcher. Search for current information."
 temperature = 0.3
 
@@ -248,7 +248,7 @@ $MIXSEEK_WORKSPACE/
 [agent]
 name = "analyst"
 type = "plain"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 2048
 description = "データ分析専門エージェント"
@@ -299,7 +299,7 @@ config = "agents/researcher.toml"  # → $MIXSEEK_WORKSPACE/agents/researcher.to
 name = "summarizer"
 type = "plain"
 tool_description = "情報を簡潔にまとめます"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "あなたはサマライザーです"
 temperature = 0.3
 max_tokens = 1024
@@ -390,7 +390,7 @@ $MIXSEEK_WORKSPACE/
 name = "web_search"
 type = "web_search"
 tool_description = "Web検索で最新情報を収集します。市場動向、技術トレンド、統計データなどリアルタイム情報が必要な場合に使用します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.3
 max_tokens = 6144  # Web検索は大量データを処理するため高めに設定
 
@@ -432,7 +432,7 @@ include_raw_content = true # 生コンテンツを取得
 
 **サポートされるモデル**:
 Web Search Agent はすべてのモデルプロバイダーで利用可能です：
-- Google Gemini: `model = "google-gla:gemini-2.5-flash-lite"`
+- Google Gemini: `model = "google-gla:gemini-flash-lite-latest"`
 - Anthropic Claude: `model = "anthropic:claude-sonnet-4-5-20250929"`
 - OpenAI: `model = "openai:gpt-4o"`
 
@@ -445,7 +445,7 @@ Web Search Agent はすべてのモデルプロバイダーで利用可能です
 name = "logical_analyst"
 type = "plain"
 tool_description = "論理的・構造的な分析を実行します。因果関係の整理、フレームワーク適用、データに基づいた結論導出が必要な場合に使用します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.2
 max_tokens = 4096
 
@@ -495,7 +495,7 @@ text = """あなたは論理的分析に特化したエージェントです。
 name = "data_analyst"
 type = "plain"
 tool_description = "数値データの分析、統計的検証、データドリブンな洞察を提供します。定量的な裏付け、トレンド分析、データに基づいた予測が必要な場合に使用します。"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 temperature = 0.4
 max_tokens = 4096
 
@@ -1076,7 +1076,7 @@ Error: No member agents defined in team configuration
 name = "agent-1"
 type = "plain"
 tool_description = "一般的なタスクを実行します"
-model = "google-gla:gemini-2.5-flash-lite"
+model = "google-gla:gemini-flash-lite-latest"
 system_instruction = "You are a helpful agent"
 ```
 

@@ -12,7 +12,11 @@ from datetime import UTC, datetime, tzinfo
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from mixseek.utils.prompt_injection import sanitize_context_text
+
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from mixseek.round_controller.models import RoundState
 
 
@@ -56,11 +60,15 @@ def get_current_datetime_with_timezone() -> str:
     return now.isoformat()
 
 
-def format_submission_history(round_history: list[RoundState]) -> str:
+def format_submission_history(
+    round_history: list[RoundState],
+    tag_names: Iterable[str] | None = None,
+) -> str:
     """Format past submission history.
 
     Args:
         round_history: History of all past rounds
+        tag_names: 中和対象のタグ名。None の場合はデフォルトのタグ名
 
     Returns:
         Formatted history string. Returns "まだ過去のSubmissionはありません。"
@@ -84,6 +92,10 @@ def format_submission_history(round_history: list[RoundState]) -> str:
     Note:
         提出内容は LLM の生成物であり Markdown 見出しを含みうるため、`<submission>` タグで
         囲んでラウンド区切りの見出しと衝突しないようにする（issue #153）。
+        提出内容に閉じタグが含まれるとブロック境界が壊れるため、埋め込む前に
+        `sanitize_context_text` で構造タグを中和する。
+        score_details には Evaluator の LLM が生成した evaluator_comment が入るため、
+        提出内容と同じく信頼できない。JSON 化した結果にも同じ中和を適用する。
     """
     if not round_history:
         return "まだ過去のSubmissionはありません。"
@@ -93,9 +105,10 @@ def format_submission_history(round_history: list[RoundState]) -> str:
         parts.append(f"## ラウンド {state.round_number}")
         parts.append(f"### スコア: {state.evaluation_score:.2f}/100")
         parts.append("### スコア詳細:")
-        parts.append(json.dumps(state.score_details, ensure_ascii=False, indent=2))
+        score_details_json = json.dumps(state.score_details, ensure_ascii=False, indent=2)
+        parts.append(sanitize_context_text(score_details_json, tag_names))
         parts.append("<submission>")
-        parts.append(state.submission_content)
+        parts.append(sanitize_context_text(state.submission_content, tag_names))
         parts.append("</submission>")
         parts.append("")  # Empty line between rounds
 
@@ -106,6 +119,7 @@ def format_submission_history(round_history: list[RoundState]) -> str:
 def format_ranking_table(
     ranking: list[dict[str, Any]] | None,
     team_id: str,
+    tag_names: Iterable[str] | None = None,
 ) -> str:
     """Format Leader Board ranking.
 
@@ -115,6 +129,7 @@ def format_ranking_table(
                                "max_score": float, "total_rounds": int}
                  None if ranking feature is unavailable
         team_id: Current team ID
+        tag_names: 中和対象のタグ名。None の場合はデフォルトのタグ名
 
     Returns:
         Formatted ranking table.
@@ -143,7 +158,7 @@ def format_ranking_table(
     parts = []
     for idx, team_entry in enumerate(ranking, start=1):
         entry_team_id = team_entry["team_id"]
-        entry_team_name = team_entry["team_name"]
+        entry_team_name = sanitize_context_text(team_entry["team_name"], tag_names)
         max_score = team_entry["max_score"]
         total_rounds = team_entry["total_rounds"]
 

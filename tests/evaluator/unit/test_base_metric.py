@@ -15,6 +15,7 @@ import pytest
 from mixseek.config.schema import PromptBuilderSettings
 from mixseek.evaluator.metrics.base import BaseLLMEvaluation, BaseMetric, LLMJudgeMetric
 from mixseek.models.evaluation_result import MetricScore
+from mixseek.utils.prompt_injection import INJECTION_GUARD_INSTRUCTION
 
 
 class TestBaseLLMEvaluation:
@@ -307,8 +308,9 @@ class TestLLMJudgeMetric:
 
         # Verify instruction contains the base instruction from get_instruction()
         assert expected_base_instruction in actual_instruction
-        # Verify the instruction is exactly the base instruction (no additional formatting added)
-        assert actual_instruction == expected_base_instruction
+        # Verify the instruction is the base instruction plus the injection guard
+        assert INJECTION_GUARD_INSTRUCTION in actual_instruction
+        assert actual_instruction.startswith(expected_base_instruction)
 
     def test_inheritance_hierarchy(self):
         """Test that LLMJudgeMetric inherits from BaseMetric."""

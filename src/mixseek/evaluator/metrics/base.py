@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from mixseek.evaluator.llm_client import evaluate_with_llm
 from mixseek.models.evaluation_result import MetricScore
+from mixseek.utils.prompt_injection import INJECTION_GUARD_INSTRUCTION
 
 if TYPE_CHECKING:
     from mixseek.config.schema import PromptBuilderSettings
@@ -270,7 +271,11 @@ class LLMJudgeMetric(BaseMetric):
         """
 
         # system_instructionの上書きがある場合は使用、なければget_instruction()を使用
-        instruction = system_instruction if system_instruction is not None else self.get_instruction()
+        base_instruction = system_instruction if system_instruction is not None else self.get_instruction()
+
+        # 提出内容は他チームのLLM生成物であり信頼できないため、
+        # インジェクション耐性の文言を常に付与する（上書き指定時も同様）
+        instruction = f"{base_instruction}\n{INJECTION_GUARD_INSTRUCTION}"
 
         user_prompt = self._get_user_prompt(user_query, submission, prompt_builder_settings)
 

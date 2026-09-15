@@ -27,12 +27,13 @@ Team / Evaluator / Judgment に渡すユーザプロンプトは `UserPromptBuil
 (prompt-blocks)=
 ## コンテキストブロック
 
-| タグ | 出現するテンプレート | 中身 |
-|---|---|---|
-| `<user_task>` | team / evaluator / judgment | ユーザから指定されたタスク |
-| `<leader_board>` | team / judgment | リーダーボードのランキングと自チームの順位 |
-| `<submission_history>` | team / judgment | 過去のラウンドのスコアと提出内容 |
-| `<submission>` | evaluator | 評価対象の提出内容 |
+| タグ | 出現するテンプレート | 階層 | 中身 |
+|---|---|---|---|
+| `<user_task>` | team / evaluator / judgment | トップレベル | ユーザから指定されたタスク |
+| `<leader_board>` | team / judgment | トップレベル | リーダーボードのランキングと自チームの順位 |
+| `<submission_history>` | team / judgment | トップレベル | 過去のラウンドのスコアと提出内容 |
+| `<submission>` | evaluator | トップレベル | 評価対象の提出内容 |
+| `<submission>` | team / judgment | `<submission_history>` の内側 | 各ラウンドの提出内容 |
 
 `<submission_history>` の中はラウンドごとに Markdown 見出しで区切られ、各ラウンドの提出内容だけが
 `<submission>` タグで囲まれます。
@@ -86,6 +87,20 @@ mixseek config init --component prompt_builder --workspace /path/to/workspace
 ```
 
 `configs/prompt_builder.toml` が生成されるので、必要な箇所を編集してください。
+
+:::{admonition} 出力先が既にある場合
+:class: note
+
+出力先のファイルが既に存在すると、このコマンドはエラー終了します。`--force` は既存の内容を
+上書きしてしまうため、`--output-path` で別のファイルに書き出してから差分をマージしてください。
+
+```bash
+mixseek config init --component prompt_builder \
+  --output-path configs/prompt_builder.new.toml \
+  --workspace /path/to/workspace
+```
+:::
+
 `orchestrator.toml` の `prompt_builder_config` で別のパスを指定することもできます。
 
 ```toml
@@ -118,8 +133,9 @@ mixseek exec "タスク" --config orchestrator.toml --workspace /path/to/workspa
 ```{admonition} 独自テンプレートを使っている場合
 :class: warning
 
-独自テンプレートはデフォルトの変更に追従しません。新しい構造を取り込むには、上記コマンドで
-デフォルトテンプレートを書き出し直し、独自の変更をマージしてください。
+独自テンプレートはデフォルトの変更に追従しません。新しい構造を取り込むには、`--output-path` で
+新しいデフォルトテンプレートを別ファイルに書き出し、独自の変更を手元のファイルへマージしてください。
+既存の `configs/prompt_builder.toml` をそのまま上書きする `--force` は、独自の変更を失うため使わないでください。
 なお `format_submission_history` の出力（`submission_history` 変数の中身）は
 `<submission>` タグを含む形に変わるため、独自テンプレートでもこの変更は反映されます。
 ```

@@ -1612,7 +1612,7 @@ wheels = [
 
 [[package]]
 name = "mixseek-core"
-version = "0.1.0a16"
+version = "0.1.0a17"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },

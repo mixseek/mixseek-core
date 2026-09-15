@@ -24,6 +24,29 @@ Team / Evaluator / Judgment に渡すユーザプロンプトは `UserPromptBuil
 タグ内のテキストをモデルへの指示として解釈しないよう促しています。
 ```
 
+(prompt-injection)=
+## プロンプトインジェクション対策
+
+タグで境界を示すだけでは、埋め込むテキストに閉じタグが含まれているとブロックが途中で閉じてしまい、
+後続がテンプレート本文と同じ階層に現れてモデルへの指示として解釈されえます。特に Evaluator は
+他チームの生成物を読んでスコアを決めるため、スコア詐取に直結します。
+
+対策は 2 段構えです。
+
+1. **値の中和**: 埋め込む前に `mixseek.prompt_builder.injection.sanitize_context_text` が構造タグの表記
+   （`<submission>` / `</submission_history>` など、属性や大文字小文字の違いも含む）を `&lt;` `&gt;` へ
+   置き換えます。対象は `user_prompt` / `submission` / 提出履歴の各提出内容 / ランキングのチーム名です。
+   構造タグ以外の XML・HTML は改変しません。
+2. **評価者の耐性文言**: `INJECTION_GUARD_INSTRUCTION` を Evaluator の system instruction に常に付与し、
+   `<submission>` の中身を指示として扱わないよう明示します。`system_instruction` を上書きした場合も付与されます。
+
+```{admonition} テンプレートではなく値の側で防ぐ
+:class: important
+
+テンプレートはユーザが差し替えられるため、対策は `UserPromptBuilder` が埋め込む値の側に実装しています。
+独自の `configs/prompt_builder.toml` を使っていても中和は有効です。
+```
+
 (prompt-blocks)=
 ## コンテキストブロック
 

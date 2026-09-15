@@ -20,6 +20,7 @@ from mixseek.prompt_builder.formatters import (
     generate_position_message,
     get_current_datetime_with_timezone,
 )
+from mixseek.prompt_builder.injection import sanitize_context_text
 from mixseek.prompt_builder.models import EvaluatorPromptContext, RoundPromptContext
 
 
@@ -111,7 +112,7 @@ class UserPromptBuilder:
             Dictionary of template variables
         """
         template_vars: dict[str, str | int] = {
-            "user_prompt": context.user_prompt,
+            "user_prompt": sanitize_context_text(context.user_prompt),
             "round_number": context.round_number,
             "current_datetime": get_current_datetime_with_timezone(),
         }
@@ -170,8 +171,8 @@ class UserPromptBuilder:
         """
         # Prepare template variables
         template_vars: dict[str, str | int] = {
-            "user_prompt": context.user_query,
-            "submission": context.submission,
+            "user_prompt": sanitize_context_text(context.user_query),
+            "submission": sanitize_context_text(context.submission),
             "current_datetime": get_current_datetime_with_timezone(),
         }
 

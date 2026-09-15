@@ -12,6 +12,8 @@ from datetime import UTC, datetime, tzinfo
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from mixseek.prompt_builder.injection import sanitize_context_text
+
 if TYPE_CHECKING:
     from mixseek.round_controller.models import RoundState
 
@@ -84,6 +86,8 @@ def format_submission_history(round_history: list[RoundState]) -> str:
     Note:
         提出内容は LLM の生成物であり Markdown 見出しを含みうるため、`<submission>` タグで
         囲んでラウンド区切りの見出しと衝突しないようにする（issue #153）。
+        提出内容に閉じタグが含まれるとブロック境界が壊れるため、埋め込む前に
+        `sanitize_context_text` で構造タグを中和する。
     """
     if not round_history:
         return "まだ過去のSubmissionはありません。"
@@ -95,7 +99,7 @@ def format_submission_history(round_history: list[RoundState]) -> str:
         parts.append("### スコア詳細:")
         parts.append(json.dumps(state.score_details, ensure_ascii=False, indent=2))
         parts.append("<submission>")
-        parts.append(state.submission_content)
+        parts.append(sanitize_context_text(state.submission_content))
         parts.append("</submission>")
         parts.append("")  # Empty line between rounds
 
@@ -143,7 +147,7 @@ def format_ranking_table(
     parts = []
     for idx, team_entry in enumerate(ranking, start=1):
         entry_team_id = team_entry["team_id"]
-        entry_team_name = team_entry["team_name"]
+        entry_team_name = sanitize_context_text(team_entry["team_name"])
         max_score = team_entry["max_score"]
         total_rounds = team_entry["total_rounds"]
 

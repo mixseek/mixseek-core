@@ -21,7 +21,7 @@ from mixseek.prompt_builder.formatters import (
     get_current_datetime_with_timezone,
 )
 from mixseek.prompt_builder.models import EvaluatorPromptContext, RoundPromptContext
-from mixseek.utils.prompt_injection import sanitize_context_text
+from mixseek.utils.prompt_injection import boundary_tags_for, sanitize_context_text
 
 
 class UserPromptBuilder:
@@ -76,8 +76,11 @@ class UserPromptBuilder:
             TemplateError: If Jinja2 template syntax error
             ValueError: If TZ environment variable is invalid
         """
+        # 中和対象のタグはテンプレートから決める（独自テンプレートの独自タグにも追随する）
+        tag_names = boundary_tags_for(self.settings.team_user_prompt)
+
         # Prepare template variables
-        template_vars = await self._prepare_round_template_variables(context)
+        template_vars = await self._prepare_round_template_variables(context, tag_names)
 
         # Render template
         return self._render_prompt(self.settings.team_user_prompt, template_vars)
@@ -102,23 +105,28 @@ class UserPromptBuilder:
             msg = f"Jinja2 template error: {e}"
             raise RuntimeError(msg) from e
 
-    async def _prepare_round_template_variables(self, context: RoundPromptContext) -> dict[str, str | int]:
+    async def _prepare_round_template_variables(
+        self,
+        context: RoundPromptContext,
+        tag_names: frozenset[str],
+    ) -> dict[str, str | int]:
         """Prepare template variables for Jinja2 rendering.
 
         Args:
             context: Context for prompt generation
+            tag_names: 中和対象のタグ名（テンプレートから決まる）
 
         Returns:
             Dictionary of template variables
         """
         template_vars: dict[str, str | int] = {
-            "user_prompt": sanitize_context_text(context.user_prompt),
+            "user_prompt": sanitize_context_text(context.user_prompt, tag_names),
             "round_number": context.round_number,
             "current_datetime": get_current_datetime_with_timezone(),
         }
 
         # Format submission history (always call formatters, which handles empty history)
-        template_vars["submission_history"] = format_submission_history(context.round_history)
+        template_vars["submission_history"] = format_submission_history(context.round_history, tag_names)
 
         # Fetch ranking data (if store is available and round > 1)
         ranking = None
@@ -135,7 +143,7 @@ class UserPromptBuilder:
                 total_teams = len(ranking)
 
         # Format ranking info (always call formatters, which handle None gracefully)
-        template_vars["ranking_table"] = format_ranking_table(ranking, context.team_id)
+        template_vars["ranking_table"] = format_ranking_table(ranking, context.team_id, tag_names)
         template_vars["team_position_message"] = generate_position_message(current_team_position, total_teams)
 
         return template_vars
@@ -169,10 +177,13 @@ class UserPromptBuilder:
             prompt = builder.build_evaluator_prompt(context)
             ```
         """
+        # 中和対象のタグはテンプレートから決める（独自テンプレートの独自タグにも追随する）
+        tag_names = boundary_tags_for(self.settings.evaluator_user_prompt)
+
         # Prepare template variables
         template_vars: dict[str, str | int] = {
-            "user_prompt": sanitize_context_text(context.user_query),
-            "submission": sanitize_context_text(context.submission),
+            "user_prompt": sanitize_context_text(context.user_query, tag_names),
+            "submission": sanitize_context_text(context.submission, tag_names),
             "current_datetime": get_current_datetime_with_timezone(),
         }
 
@@ -213,8 +224,11 @@ class UserPromptBuilder:
             prompt = await builder.build_judgment_prompt(context)
             ```
         """
+        # 中和対象のタグはテンプレートから決める（独自テンプレートの独自タグにも追随する）
+        tag_names = boundary_tags_for(self.settings.judgment_user_prompt)
+
         # Prepare template variables (reuse the same logic as build_team_prompt)
-        template_vars = await self._prepare_round_template_variables(context)
+        template_vars = await self._prepare_round_template_variables(context, tag_names)
 
         # Render template with judgment-specific template
         return self._render_prompt(self.settings.judgment_user_prompt, template_vars)

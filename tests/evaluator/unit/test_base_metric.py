@@ -212,9 +212,9 @@ class TestLLMJudgeMetric:
         call_kwargs = mock_evaluate.call_args[1]
         user_prompt = call_kwargs["user_prompt"]
 
-        assert "# ユーザから指定されたタスク" in user_prompt
+        assert "<user_task>" in user_prompt
         assert user_query in user_prompt
-        assert "# 提出内容" in user_prompt
+        assert "<submission>" in user_prompt
         assert submission in user_prompt
 
     @patch("mixseek.evaluator.metrics.base.evaluate_with_llm")
@@ -456,9 +456,9 @@ class TestLLMJudgeMetricUserPromptBuilderIntegration:
         user_prompt = call_kwargs["user_prompt"]
 
         # Verify Japanese format from DEFAULT_EVALUATOR_USER_PROMPT
-        assert "ユーザから指定されたタスク" in user_prompt
-        assert "提出内容" in user_prompt
-        assert "現在日時: 2025-11-25T14:30:00+09:00" in user_prompt
+        assert "<user_task>" in user_prompt
+        assert "<submission>" in user_prompt
+        assert "current_datetime: 2025-11-25T14:30:00+09:00" in user_prompt
         assert user_query in user_prompt
         assert submission in user_prompt
 
@@ -489,9 +489,9 @@ class TestLLMJudgeMetricUserPromptBuilderIntegration:
         user_prompt = call_kwargs["user_prompt"]
 
         # Verify structure
-        assert "---\n現在日時: 2025-11-25T15:00:00+09:00\n---" in user_prompt
-        assert "# ユーザから指定されたタスク\nExplain recursion" in user_prompt
-        assert "# 提出内容\nRecursion is when a function calls itself" in user_prompt
+        assert user_prompt.startswith("---\ncurrent_datetime: 2025-11-25T15:00:00+09:00\n---\n")
+        assert "<user_task>\nExplain recursion\n</user_task>" in user_prompt
+        assert "<submission>\nRecursion is when a function calls itself\n</submission>" in user_prompt
 
     @patch("mixseek.evaluator.metrics.base.evaluate_with_llm")
     @patch("mixseek.prompt_builder.builder.get_current_datetime_with_timezone")

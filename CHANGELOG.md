@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a19 (2026-09-15)
+
+### Fix
+
+- **prompt_builder**: score_details と独自テンプレートのタグを中和対象に加える
+- **prompt_builder**: プロンプトインジェクションに対する境界の防御を追加
+
+### Refactor
+
+- **prompt_builder**: injection モジュールを utils へ移しモジュール先頭で import する
+
 ## v0.1.0a18 (2026-09-15)
 
 ### Feat

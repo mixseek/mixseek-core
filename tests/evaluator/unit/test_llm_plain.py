@@ -8,6 +8,7 @@ from mixseek.config.schema import PromptBuilderSettings
 from mixseek.evaluator.metrics.base import BaseLLMEvaluation
 from mixseek.evaluator.metrics.llm_plain import LLMPlain
 from mixseek.models.evaluation_result import MetricScore
+from mixseek.utils.prompt_injection import INJECTION_GUARD_INSTRUCTION
 
 
 class TestLLMPlainMetric:
@@ -96,8 +97,10 @@ class TestLLMPlainMetric:
         call_kwargs = mock_evaluate.call_args[1]
         actual_instruction = call_kwargs["instruction"]
 
-        # Verify instruction is exactly the custom system_instruction (no additional formatting added)
-        assert actual_instruction == custom_instruction
+        # Verify instruction starts with the custom system_instruction
+        assert actual_instruction.startswith(custom_instruction)
+        # Verify the injection guard is always appended (信頼できない提出内容を読むため)
+        assert INJECTION_GUARD_INSTRUCTION in actual_instruction
 
     @patch("mixseek.evaluator.metrics.base.evaluate_with_llm")
     @pytest.mark.asyncio

@@ -200,9 +200,10 @@ Position: {{ team_position_message }}"""
             # Verify format_ranking_table was called with correct signature (positional args)
             mock_ranking.assert_called_once()
             call_args = mock_ranking.call_args.args
-            assert len(call_args) == 2
+            assert len(call_args) == 3
             assert call_args[0] == []  # ranking (empty list from mocked store)
             assert call_args[1] == "team-001"  # team_id
+            assert isinstance(call_args[2], frozenset)  # 中和対象のタグ名
 
             # Verify generate_position_message was called
             mock_position.assert_called_once()
@@ -410,15 +411,19 @@ DateTime: {{ current_datetime }}"""
 
             prompt = await builder.build_judgment_prompt(context)
 
-            # Verify format_submission_history called
-            mock_history.assert_called_once_with(round_history)
+            # Verify format_submission_history called（第2引数は中和対象のタグ名）
+            mock_history.assert_called_once()
+            history_args = mock_history.call_args.args
+            assert history_args[0] == round_history
+            assert isinstance(history_args[1], frozenset)
 
             # Verify format_ranking_table called with correct signature (positional args)
             mock_ranking.assert_called_once()
             ranking_args = mock_ranking.call_args.args
-            assert len(ranking_args) == 2
+            assert len(ranking_args) == 3
             assert ranking_args[0] == []  # ranking (empty list from mocked store)
             assert ranking_args[1] == "team-complete"  # team_id
+            assert isinstance(ranking_args[2], frozenset)  # 中和対象のタグ名
 
             # Verify generate_position_message called (positional args)
             mock_position.assert_called_once()

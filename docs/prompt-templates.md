@@ -24,6 +24,55 @@ Team / Evaluator / Judgment に渡すユーザプロンプトは `UserPromptBuil
 タグ内のテキストをモデルへの指示として解釈しないよう促しています。
 ```
 
+(prompt-injection)=
+## プロンプトインジェクション対策
+
+タグで境界を示すだけでは、埋め込むテキストに閉じタグが含まれているとブロックが途中で閉じてしまい、
+後続がテンプレート本文と同じ階層に現れてモデルへの指示として解釈されえます。特に Evaluator は
+他チームの生成物を読んでスコアを決めるため、スコア詐取に直結します。
+
+対策は 2 段構えです。
+
+1. **値の中和**: 埋め込む前に `mixseek.utils.prompt_injection.sanitize_context_text` が境界タグの表記
+   （`<submission>` / `</submission_history>` など、属性や大文字小文字の違いも含む）を `&lt;` `&gt;` へ
+   置き換えます。境界タグ以外の XML・HTML は改変しません。
+2. **評価者の耐性文言**: `INJECTION_GUARD_INSTRUCTION` を Evaluator の system instruction に常に付与し、
+   `<submission>` の中身を指示として扱わないよう明示します。`system_instruction` を上書きした場合も付与されます。
+
+中和の対象になる値は次のとおりです。いずれも外部由来、あるいは LLM の生成物です。
+
+| 値 | 由来 |
+|---|---|
+| `user_prompt` / `user_query` | ユーザから指定されたタスク |
+| `submission` | 評価対象の提出内容（Team の生成物） |
+| 提出履歴の各提出内容 | 過去ラウンドの Team の生成物 |
+| 提出履歴のスコア詳細 | `evaluator_comment` を含むため Evaluator の生成物 |
+| ランキングのチーム名 | 設定ファイル |
+
+```{admonition} テンプレートではなく値の側で防ぐ
+:class: important
+
+テンプレートはユーザが差し替えられるため、対策は `UserPromptBuilder` が埋め込む値の側に実装しています。
+```
+
+(prompt-injection-custom-tags)=
+### 独自テンプレートの境界タグ
+
+中和するタグ名は固定ではなく、**レンダリング対象のテンプレートから抽出**します
+（`extract_boundary_tags`）。開始タグと終了タグが揃っているタグ名だけを境界とみなすため、
+独自テンプレートが `<content>{{ submission }}</content>` のように独自のタグで境界を組んでいても、
+提出内容の `</content>` は中和されます。
+
+抽出結果には、テンプレートには現れないがフォーマッタが組み立てるタグ（提出履歴の中の `<submission>`）を
+含めるため、デフォルトのタグ名を常に併せます。
+
+```{admonition} 境界タグはペアで書く
+:class: warning
+
+閉じタグを持たないタグ（`<br>` など）は本文の一部とみなし、境界として扱いません。
+独自テンプレートで境界を作るときは、開始タグと終了タグを必ずペアで記述してください。
+```
+
 (prompt-blocks)=
 ## コンテキストブロック
 

@@ -33,7 +33,7 @@ Team / Evaluator / Judgment に渡すユーザプロンプトは `UserPromptBuil
 
 対策は 2 段構えです。
 
-1. **値の中和**: 埋め込む前に `mixseek.prompt_builder.injection.sanitize_context_text` が構造タグの表記
+1. **値の中和**: 埋め込む前に `mixseek.utils.prompt_injection.sanitize_context_text` が構造タグの表記
    （`<submission>` / `</submission_history>` など、属性や大文字小文字の違いも含む）を `&lt;` `&gt;` へ
    置き換えます。対象は `user_prompt` / `submission` / 提出履歴の各提出内容 / ランキングのチーム名です。
    構造タグ以外の XML・HTML は改変しません。

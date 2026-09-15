@@ -20,8 +20,8 @@ from mixseek.prompt_builder.formatters import (
     generate_position_message,
     get_current_datetime_with_timezone,
 )
-from mixseek.prompt_builder.injection import sanitize_context_text
 from mixseek.prompt_builder.models import EvaluatorPromptContext, RoundPromptContext
+from mixseek.utils.prompt_injection import sanitize_context_text
 
 
 class UserPromptBuilder:

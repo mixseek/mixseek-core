@@ -14,13 +14,13 @@ import pytest
 from mixseek.config.schema import PromptBuilderSettings
 from mixseek.prompt_builder.builder import UserPromptBuilder
 from mixseek.prompt_builder.formatters import format_ranking_table, format_submission_history
-from mixseek.prompt_builder.injection import (
+from mixseek.prompt_builder.models import EvaluatorPromptContext, RoundPromptContext
+from mixseek.round_controller.models import RoundState
+from mixseek.utils.prompt_injection import (
     CONTEXT_TAG_NAMES,
     INJECTION_GUARD_INSTRUCTION,
     sanitize_context_text,
 )
-from mixseek.prompt_builder.models import EvaluatorPromptContext, RoundPromptContext
-from mixseek.round_controller.models import RoundState
 
 pytestmark = pytest.mark.unit
 

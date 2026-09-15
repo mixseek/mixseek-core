@@ -12,6 +12,12 @@
 
     テンプレートはユーザが差し替え可能なため、対策はテンプレート側ではなく
     埋め込む値の側で行う。
+
+配置:
+    prompt_builder と evaluator の双方から使うが、`mixseek.prompt_builder` 配下に置くと
+    evaluator 側の import が循環する（evaluator → prompt_builder → round_controller →
+    evaluator）。mixseek 内に依存を持たないリーフモジュールとして utils に置き、
+    どちらからもモジュール先頭で import できるようにしている。
 """
 
 from __future__ import annotations

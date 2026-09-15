@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from mixseek.evaluator.llm_client import evaluate_with_llm
 from mixseek.models.evaluation_result import MetricScore
+from mixseek.utils.prompt_injection import INJECTION_GUARD_INSTRUCTION
 
 if TYPE_CHECKING:
     from mixseek.config.schema import PromptBuilderSettings
@@ -268,10 +269,6 @@ class LLMJudgeMetric(BaseMetric):
             print(f"Comment: {score.evaluator_comment}")
             ```
         """
-
-        # Circular import回避のため、ランタイムでのみimport
-        # (evaluator → prompt_builder → round_controller → evaluator)
-        from mixseek.prompt_builder.injection import INJECTION_GUARD_INSTRUCTION
 
         # system_instructionの上書きがある場合は使用、なければget_instruction()を使用
         base_instruction = system_instruction if system_instruction is not None else self.get_instruction()

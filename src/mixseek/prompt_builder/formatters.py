@@ -12,7 +12,7 @@ from datetime import UTC, datetime, tzinfo
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from mixseek.prompt_builder.injection import sanitize_context_text
+from mixseek.utils.prompt_injection import sanitize_context_text
 
 if TYPE_CHECKING:
     from mixseek.round_controller.models import RoundState

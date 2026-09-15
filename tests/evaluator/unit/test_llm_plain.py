@@ -8,7 +8,7 @@ from mixseek.config.schema import PromptBuilderSettings
 from mixseek.evaluator.metrics.base import BaseLLMEvaluation
 from mixseek.evaluator.metrics.llm_plain import LLMPlain
 from mixseek.models.evaluation_result import MetricScore
-from mixseek.prompt_builder.injection import INJECTION_GUARD_INSTRUCTION
+from mixseek.utils.prompt_injection import INJECTION_GUARD_INSTRUCTION
 
 
 class TestLLMPlainMetric:

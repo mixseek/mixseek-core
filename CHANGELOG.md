@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a18 (2026-09-15)
+
+### Feat
+
+- **devcontainer**: VS Code Dev Container 設定を追加
+
+### Fix
+
+- **devcontainer**: venv をホーム配下へ移し .python-version をビルド時に固定
+- レビュー指摘対応（ドキュメントの具体バージョン削除・評価テストのモデル名統一）
+- Gemini Code Assist レビュー対応（重複モデル名の解消・テスト検証力の回復）
+
+### Refactor
+
+- **prompt_builder**: Frontmatter と XML タグでプロンプトの境界を明確化
+
 ## v0.1.0a17 (2026-07-09)
 
 ### Perf

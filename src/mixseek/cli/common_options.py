@@ -13,7 +13,6 @@ Usage:
         ...
 """
 
-import click
 import typer
 
 # Workspace option - used by: init, team, evaluate, exec, config, ui
@@ -70,9 +69,10 @@ NO_LOG_FILE_OPTION = typer.Option(
     help="Disable file log output",
 )
 
+# 選択肢は使用側の型注釈 `log_format: LogFormatType | None = LOG_FORMAT_OPTION` から typer が生成する。
+# typer 0.26 以降は click をベンダリングしており、click 固有の型 (click.Choice 等) は click_type に渡せない。
 LOG_FORMAT_OPTION = typer.Option(
     None,
     "--log-format",
-    click_type=click.Choice(["text", "json"]),
     help="ログ出力形式 (text/json, デフォルト: text)",
 )

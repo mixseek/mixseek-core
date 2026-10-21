@@ -48,6 +48,7 @@ from mixseek.cli.common_options import (
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
+from mixseek.config.logging import LogFormatType
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.storage.aggregation_store import AggregationStore
@@ -70,7 +71,7 @@ def team(
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
     logfire_http: bool = LOGFIRE_HTTP_OPTION,
-    log_format: str | None = LOG_FORMAT_OPTION,
+    log_format: LogFormatType | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Execute team of Member Agents (development/testing only)
 

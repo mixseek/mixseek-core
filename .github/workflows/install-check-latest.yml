@@ -1,0 +1,30 @@
+name: Install Check (latest dependencies)
+
+# 利用者の pip install は uv.lock ではなく最新の依存を解決するため、
+# 上流の破壊的変更 (例: typer 0.26.0 で click が依存から外れた) を定期的に検知する
+on:
+  schedule:
+    - cron: "23 0 * * 1" # 毎週月曜 09:23 JST (混雑して遅延しやすい毎時 0 分を避ける)
+  workflow_dispatch:
+
+jobs:
+  install-check-latest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Build wheel
+        run: uv build --wheel --out-dir dist
+
+      - name: Install wheel with latest core dependencies
+        run: |
+          uv venv .venv-latest
+          uv pip install --python .venv-latest/bin/python dist/*.whl
+
+      - name: Check installed package
+        run: .venv-latest/bin/python -I scripts/check_install.py

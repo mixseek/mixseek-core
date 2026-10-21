@@ -78,7 +78,7 @@ make -C dockerfiles/dev format
 
 | Feature | Development | CI | Production |
 |---------|-------------|----|-----------|
-| **Base Image** | uv:0.8.24-python3.12 | uv:0.8.24-python3.12 | python:3.12-slim |
+| **Base Image** | uv:0.13.4-python3.13-trixie | uv:0.13.4-python3.13-trixie | python:3.13-slim-trixie |
 | **Python Tools** | Full (uv, pytest, ruff, debugpy, mypy) | Testing (uv, pytest, ruff, coverage) | Runtime only |
 | **Node.js** | ✅ 22.20.0 | ❌ | ❌ |
 | **AI Tools** | ✅ Claude Code, Codex, Gemini CLI | ❌ | ❌ |
@@ -335,7 +335,7 @@ USER2: CONTAINER_NAME=mixseek-core-dev-2 make -C dockerfiles/dev run
 
 ```bash
 # Update base images (monthly)
-docker pull ghcr.io/astral-sh/uv:0.8.24-python3.12-bookworm-slim
+docker pull ghcr.io/astral-sh/uv:0.13.4-python3.13-trixie-slim
 make -C dockerfiles/dev build --no-cache
 
 # Security updates

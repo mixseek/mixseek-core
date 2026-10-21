@@ -12,7 +12,7 @@
 #   MIXSEEK_UID: User ID for permission synchronization (default: 1000)
 #   MIXSEEK_GID: Group ID for permission synchronization (default: 1000)
 
-FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim
+FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-trixie-slim
 
 # =============================================================================
 # METADATA & LABELS

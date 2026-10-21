@@ -17,7 +17,7 @@
 # STAGE 1: BUILDER - Build dependencies and virtual environment
 # =============================================================================
 
-FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-trixie-slim AS builder
 
 LABEL stage=builder
 
@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # STAGE 2: RUNTIME - Minimal production image
 # =============================================================================
 
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.13-slim-trixie AS runtime
 
 # =============================================================================
 # METADATA & LABELS

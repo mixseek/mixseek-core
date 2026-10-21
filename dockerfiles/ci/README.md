@@ -26,10 +26,15 @@ CI専用の最小構成Docker環境です。GitHub Actions CIで使用するこ�
 ### ベースイメージ
 
 ```dockerfile
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-trixie-slim
 ```
 
-Python 3.13系最新パッチバージョンを使用し、再現性と安全性のセキュリティパッチを確保しています。具体的なバージョンは `.python-version` ファイルで固定されます。
+uv のバージョンを明示的に固定することで、ビルドの再現性を確保しています。
+eMudhra / emSign CA のインシデント対応により、uv は 0.13.4 以上が必須です（それ以前のバージョンは危殆化した中間 CA に連なるルート証明書をバンドルしています）。
+Python の具体的なパッチバージョンは `.python-version` ファイルで固定されます。
+
+ベースは Debian 13 (trixie) です。astral-sh は uv 0.10.0 以降 bookworm (Debian 12) 版の公開を
+停止しているため、0.13.4 を使うには trixie を選ぶ必要があります。
 
 ### インストールパッケージ
 

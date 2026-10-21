@@ -85,7 +85,7 @@ make -C dockerfiles/dev format
 
 | 機能 | 開発環境 | CI環境 | 本番環境 |
 |------|----------|-------|----------|
-| **ベースイメージ** | uv:0.8.24-python3.12 | uv:0.8.24-python3.12 | python:3.12-slim |
+| **ベースイメージ** | uv:0.13.4-python3.13 | uv:0.13.4-python3.13 | python:3.13-slim |
 | **Pythonツール** | フル（uv, pytest, ruff, debugpy, mypy） | テスト（uv, pytest, ruff, coverage） | ランタイムのみ |
 | **Node.js** | ✅ 22.20.0 | ❌ | ❌ |
 | **AIツール** | ✅ Claude Code, Codex, Gemini CLI | ❌ | ❌ |
@@ -342,7 +342,7 @@ USER2: CONTAINER_NAME=mixseek-core-dev-2 make -C dockerfiles/dev run
 
 ```bash
 # ベースイメージの更新（月次）
-docker pull ghcr.io/astral-sh/uv:0.8.24-python3.12-bookworm-slim
+docker pull ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim
 make -C dockerfiles/dev build --no-cache
 
 # セキュリティアップデート
@@ -475,7 +475,7 @@ chmod +x setup-dev.sh
 ```bash
 # チーム全体で同じバージョンを使用
 echo "dockerfiles/dev Dockerfile のベースイメージバージョンを固定"
-# FROM ghcr.io/astral-sh/uv:0.8.24-python3.12-bookworm-slim
+# FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim
 
 # 依存関係のロック
 uv lock  # uv.lockファイルを更新

@@ -13,7 +13,7 @@
 #   UID: User ID for permission synchronization (default: 1000)
 #   GID: Group ID for permission synchronization (default: 1000)
 
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim
 
 # =============================================================================
 # METADATA & LABELS

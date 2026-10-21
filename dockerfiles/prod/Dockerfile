@@ -17,7 +17,7 @@
 # STAGE 1: BUILDER - Build dependencies and virtual environment
 # =============================================================================
 
-FROM ghcr.io/astral-sh/uv:0.8.24-python3.13-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.13.4-python3.13-bookworm-slim AS builder
 
 LABEL stage=builder
 

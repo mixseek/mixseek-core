@@ -7,6 +7,9 @@ on:
     - cron: "23 0 * * 1" # 毎週月曜 09:23 JST (混雑して遅延しやすい毎時 0 分を避ける)
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   install-check-latest:
     runs-on: ubuntu-latest

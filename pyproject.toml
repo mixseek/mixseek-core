@@ -39,7 +39,9 @@ dependencies = [
     # (bedrock=boto3/botocore, mistral, cohere, groq, huggingface) と temporal 統合まで引くが、
     # 本パッケージが import するのは google / anthropic / openai(Grok も openai クライアント経由)だけ。
     # slim 化でランタイム/イメージのサイズを大きく削減する。
-    "pydantic-ai-slim[anthropic,google,openai]>=1.26.0",
+    # 2.0.0 で providers.grok (GrokProvider) が削除され、core/auth.py の import が失敗するため 2 未満に制限する。
+    # 2.x に上げるには GrokProvider の置き換えが必要。
+    "pydantic-ai-slim[anthropic,google,openai]>=1.26.0,<2",
     "pydantic-settings>=2.12.0",
     "rich>=14.2.0",
     "typer>=0.20.0",

@@ -23,20 +23,27 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["multi-agent", "ai-agent", "pydantic-ai", "llm", "framework", "google-genai", "anthropic", "openai"]
+# ソースで直接 import するパッケージは、他パッケージ経由で入るものも含めて全て宣言する
+# (推移的依存に頼ると上流の変更で壊れる。tests/contract/test_dependency_contract.py で検査)。
 dependencies = [
     "duckdb>=1.4.2",
     # Vertex AI プロバイダ (`google-vertex:` モデル) の実行に必要。GoogleProvider(vertexai=True)
     # 経由の Vertex 認証/実行で参照されるため、ソースに直接 import が無くても残す。
     "google-cloud-aiplatform>=1.128.0",
     "google-genai>=1.52.0",
+    "httpx>=0.28.1",
+    "jinja2>=3.1.6",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
     # pydantic-ai-slim + 実際に使うプロバイダ extra のみ。フルの `pydantic-ai` は全プロバイダ
     # (bedrock=boto3/botocore, mistral, cohere, groq, huggingface) と temporal 統合まで引くが、
     # 本パッケージが import するのは google / anthropic / openai(Grok も openai クライアント経由)だけ。
     # slim 化でランタイム/イメージのサイズを大きく削減する。
-    "pydantic-ai-slim[anthropic,google,openai]>=1.26.0",
+    # 2.0.0 で providers.grok (GrokProvider) が削除され、core/auth.py の import が失敗するため 2 未満に制限する。
+    # 2.x に上げるには GrokProvider の置き換えが必要。
+    "pydantic-ai-slim[anthropic,google,openai]>=1.26.0,<2",
     "pydantic-settings>=2.12.0",
+    "rich>=14.2.0",
     "typer>=0.20.0",
 ]
 

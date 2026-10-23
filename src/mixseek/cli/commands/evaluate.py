@@ -20,6 +20,7 @@ from mixseek.cli.common_options import (
     WORKSPACE_OPTION,
 )
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
+from mixseek.config.logging import LogFormatType
 from mixseek.utils.env import get_workspace_path
 
 
@@ -38,7 +39,7 @@ def evaluate(
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
     logfire_http: bool = LOGFIRE_HTTP_OPTION,
-    log_format: str | None = LOG_FORMAT_OPTION,
+    log_format: LogFormatType | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Evaluate AI agent submission using LLM-as-a-Judge.
 

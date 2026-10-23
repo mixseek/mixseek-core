@@ -23,6 +23,7 @@ from mixseek.cli.common_options import (
 from mixseek.cli.utils import initialize_observability, validate_logfire_flags
 from mixseek.config import ConfigurationManager, OrchestratorSettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
+from mixseek.config.logging import LogFormatType
 from mixseek.config.preflight import PreflightResult, run_preflight_check
 from mixseek.core.auth import close_all_auth_clients
 from mixseek.orchestrator import Orchestrator
@@ -115,7 +116,7 @@ def exec_command(
     log_level: str = LOG_LEVEL_OPTION,
     no_log_console: bool = NO_LOG_CONSOLE_OPTION,
     no_log_file: bool = NO_LOG_FILE_OPTION,
-    log_format: str | None = LOG_FORMAT_OPTION,
+    log_format: LogFormatType | None = LOG_FORMAT_OPTION,
 ) -> None:
     """ユーザプロンプトを複数チームで並列実行
 

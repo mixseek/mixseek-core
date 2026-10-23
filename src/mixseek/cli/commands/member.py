@@ -30,6 +30,7 @@ from mixseek.cli.utils import (
     validate_logfire_flags,
 )
 from mixseek.config.bundled_member_agents import BundledMemberAgentError, BundledMemberAgentLoader
+from mixseek.config.logging import LogFormatType
 from mixseek.config.manager import ConfigurationManager
 from mixseek.config.member_agent_loader import member_settings_to_config
 from mixseek.core.auth import close_all_auth_clients
@@ -132,7 +133,7 @@ def member(
     logfire: bool = LOGFIRE_OPTION,
     logfire_metadata: bool = LOGFIRE_METADATA_OPTION,
     logfire_http: bool = LOGFIRE_HTTP_OPTION,
-    log_format: str | None = LOG_FORMAT_OPTION,
+    log_format: LogFormatType | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Execute Member Agent (development/testing only).
 

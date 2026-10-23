@@ -10,16 +10,18 @@ Requirements:
 """
 
 import os
+from dataclasses import fields, is_dataclass, replace
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 from pydantic_ai.models.test import TestModel
+from pydantic_ai.profiles import ModelProfile
 from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.providers.grok import GrokProvider
 
@@ -209,6 +211,26 @@ def validate_vertex_ai_credentials() -> None:
         )
 
 
+_SERVER_SIDE_TOOL_INVOCATIONS_FLAG = "google_supports_server_side_tool_invocations"
+
+
+def _disable_server_side_tool_invocations(profile: ModelProfile | None) -> ModelProfile | None:
+    """Return a copy of the profile with server-side tool invocations disabled.
+
+    pydantic-ai-slim 1.95-1.x sends `include_server_side_tool_invocations` for Gemini 3
+    based on the model name only, but google-genai rejects it in Vertex AI mode.
+    Fixed upstream only in 2.x (pydantic/pydantic-ai#6771); remove this when moving to 2.x.
+    Versions without the flag (< 1.95) get the profile unchanged.
+    """
+    if profile is None or not is_dataclass(profile):
+        return profile
+    if _SERVER_SIDE_TOOL_INVOCATIONS_FLAG not in {f.name for f in fields(profile)}:
+        return profile
+    # Pass the field by name: it does not exist in the locked version, so mypy cannot check it
+    changes: dict[str, Any] = {_SERVER_SIDE_TOOL_INVOCATIONS_FLAG: False}
+    return replace(profile, **changes)
+
+
 @lru_cache(maxsize=32)
 def _create_google_model_cached(model_name: str, provider_type: Literal["google-gla", "google-vertex"]) -> GoogleModel:
     """Create a cached GoogleModel instance with dedicated HTTP client.
@@ -247,6 +269,12 @@ def _create_google_model_cached(model_name: str, provider_type: Literal["google-
     )
 
     # Create GoogleModel with dedicated provider
+    if provider_type == "google-vertex":
+        return GoogleModel(
+            model_name,
+            provider=google_provider,
+            profile=lambda name: _disable_server_side_tool_invocations(google_provider.model_profile(name)),
+        )
     return GoogleModel(model_name, provider=google_provider)
 
 

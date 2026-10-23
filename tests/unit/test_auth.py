@@ -13,6 +13,7 @@ Requirements tested:
 import json
 import os
 import tempfile
+from dataclasses import dataclass
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +23,7 @@ from mixseek.core.auth import (
     AuthenticationError,
     AuthProvider,
     _create_google_model_cached,
+    _disable_server_side_tool_invocations,
     _managed_http_clients,
     clear_auth_caches,
     create_authenticated_model,
@@ -545,3 +547,86 @@ class TestClearAuthCaches:
         cache_info = _create_google_model_cached.cache_info()
         assert cache_info.currsize == 0
         assert len(_managed_http_clients) == 0
+
+
+@dataclass
+class _ProfileWithFlag:
+    """Stand-in for GoogleModelProfile in pydantic-ai-slim >= 1.95."""
+
+    supports_tools: bool = True
+    google_supports_server_side_tool_invocations: bool = True
+
+
+@dataclass
+class _ProfileWithoutFlag:
+    """Stand-in for GoogleModelProfile in pydantic-ai-slim < 1.95."""
+
+    supports_tools: bool = True
+
+
+class TestVertexServerSideToolInvocations:
+    """Vertex AI must not send include_server_side_tool_invocations.
+
+    pydantic-ai-slim 1.95-1.x enables it for Gemini 3 based on the model name only,
+    and google-genai rejects it in Vertex mode (pydantic/pydantic-ai#6771).
+    """
+
+    def test_disables_flag_when_present(self) -> None:
+        # Typed as Any: the stand-in is not a real ModelProfile
+        profile: Any = _ProfileWithFlag()
+
+        result: Any = _disable_server_side_tool_invocations(profile)
+
+        assert result.google_supports_server_side_tool_invocations is False
+        assert result.supports_tools is True
+        # The original profile is not mutated
+        assert profile.google_supports_server_side_tool_invocations is True
+
+    def test_keeps_profile_without_flag(self) -> None:
+        profile: Any = _ProfileWithoutFlag()
+
+        result: Any = _disable_server_side_tool_invocations(profile)
+
+        assert result is profile
+
+    def test_keeps_none(self) -> None:
+        assert _disable_server_side_tool_invocations(None) is None
+
+    def test_vertex_model_uses_profile_without_flag(self) -> None:
+        clear_auth_caches()
+        with (
+            patch("mixseek.core.auth.httpx.AsyncClient"),
+            patch("mixseek.core.auth.GoogleProvider") as mock_provider,
+            patch("mixseek.core.auth.GoogleModel") as mock_model,
+        ):
+            mock_provider.return_value.model_profile.return_value = _ProfileWithFlag()
+
+            _create_google_model_cached("gemini-3-flash-preview", "google-vertex")
+
+            profile_spec = mock_model.call_args.kwargs["profile"]
+            profile = profile_spec("gemini-3-flash-preview")
+            assert profile.google_supports_server_side_tool_invocations is False
+            mock_provider.return_value.model_profile.assert_called_once_with("gemini-3-flash-preview")
+        clear_auth_caches()
+
+    def test_google_ai_model_keeps_default_profile(self) -> None:
+        clear_auth_caches()
+        with (
+            patch("mixseek.core.auth.httpx.AsyncClient"),
+            patch("mixseek.core.auth.GoogleProvider") as mock_provider,
+            patch("mixseek.core.auth.GoogleModel") as mock_model,
+        ):
+            _create_google_model_cached("gemini-3-flash-preview", "google-gla")
+
+            mock_model.assert_called_once_with("gemini-3-flash-preview", provider=mock_provider.return_value)
+        clear_auth_caches()
+
+    def test_real_vertex_model_profile_on_installed_pydantic_ai(self) -> None:
+        """Works with the installed pydantic-ai, whether or not it has the flag."""
+        clear_auth_caches()
+        with patch.dict(os.environ, {"GOOGLE_CLOUD_PROJECT": "test-project", "GOOGLE_CLOUD_LOCATION": "us-central1"}):
+            model = _create_google_model_cached("gemini-3-flash-preview", "google-vertex")
+
+            profile = model.profile
+            assert getattr(profile, "google_supports_server_side_tool_invocations", False) is False
+        clear_auth_caches()

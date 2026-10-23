@@ -6,6 +6,9 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -149,3 +152,23 @@ jobs:
 
       - name: Build documentation
         run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+
+  install-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # CI イメージは dev グループと [ui] extra を含み、他パッケージ経由で入る依存に隠れて
+      # コア依存のみでインストールしたときの import 失敗に気付けないため、別の環境で検証する
+      - name: Install package with core dependencies only
+        run: uv sync --locked --no-dev --no-editable
+
+      - name: Check installed package
+        run: .venv/bin/python -I scripts/check_install.py

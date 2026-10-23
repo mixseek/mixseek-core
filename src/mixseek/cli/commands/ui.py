@@ -18,6 +18,7 @@ from mixseek.cli.common_options import (
 from mixseek.config import ConfigurationManager, UISettings
 from mixseek.config.constants import WORKSPACE_ENV_VAR
 from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
+from mixseek.config.logging import LogFormatType
 
 
 def ui(
@@ -29,7 +30,7 @@ def ui(
     log_level: str = LOG_LEVEL_OPTION,
     no_log_console: bool = NO_LOG_CONSOLE_OPTION,
     no_log_file: bool = NO_LOG_FILE_OPTION,
-    log_format: str | None = LOG_FORMAT_OPTION,
+    log_format: LogFormatType | None = LOG_FORMAT_OPTION,
 ) -> None:
     """Launch Mixseek UI (Streamlit application).
 

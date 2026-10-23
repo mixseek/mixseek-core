@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a21 (2026-10-23)
+
+### Fix
+
+- **ci**: restrict GITHUB_TOKEN to contents: read in CI workflows
+- **deps**: cap pydantic-ai-slim below 2 until GrokProvider is replaced
+- **deps**: fix CLI startup on typer 0.26+ and undeclared direct deps
+
 ## v0.1.0a20 (2026-10-21)
 
 ### Fix

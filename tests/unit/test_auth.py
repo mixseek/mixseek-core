@@ -13,6 +13,7 @@ Requirements tested:
 import json
 import os
 import tempfile
+import warnings
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -629,4 +630,50 @@ class TestVertexServerSideToolInvocations:
 
             profile = model.profile
             assert getattr(profile, "google_supports_server_side_tool_invocations", False) is False
+        clear_auth_caches()
+
+
+class TestGoogleProviderArguments:
+    """GoogleProvider must not receive vertexai=False.
+
+    It is the default, and pydantic-ai-slim >= 1.97 warns that passing it explicitly is deprecated.
+    """
+
+    def test_google_ai_does_not_pass_vertexai(self) -> None:
+        clear_auth_caches()
+        with (
+            patch("mixseek.core.auth.httpx.AsyncClient") as mock_client,
+            patch("mixseek.core.auth.GoogleProvider") as mock_provider,
+            patch("mixseek.core.auth.GoogleModel"),
+        ):
+            _create_google_model_cached("gemini-flash-lite-latest", "google-gla")
+
+            mock_provider.assert_called_once_with(http_client=mock_client.return_value)
+        clear_auth_caches()
+
+    def test_vertex_ai_passes_vertexai_true(self) -> None:
+        clear_auth_caches()
+        with (
+            patch("mixseek.core.auth.httpx.AsyncClient") as mock_client,
+            patch("mixseek.core.auth.GoogleProvider") as mock_provider,
+            patch("mixseek.core.auth.GoogleModel"),
+        ):
+            _create_google_model_cached("gemini-flash-lite-latest", "google-vertex")
+
+            mock_provider.assert_called_once_with(vertexai=True, http_client=mock_client.return_value)
+        clear_auth_caches()
+
+    def test_real_google_ai_model_on_installed_pydantic_ai(self) -> None:
+        """Uses the Gemini API without deprecation warnings on the installed pydantic-ai."""
+        clear_auth_caches()
+        with (
+            patch.dict(os.environ, {"GOOGLE_API_KEY": "AIza" + "x" * 35}),
+            warnings.catch_warnings(record=True) as caught,
+        ):
+            warnings.simplefilter("always")
+            model = _create_google_model_cached("gemini-flash-lite-latest", "google-gla")
+
+        assert model.base_url == "https://generativelanguage.googleapis.com/"
+        # Match by name: the category does not exist in the locked version (1.26.0)
+        assert [str(w.message) for w in caught if w.category.__name__ == "PydanticAIDeprecationWarning"] == []
         clear_auth_caches()

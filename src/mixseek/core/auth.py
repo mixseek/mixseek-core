@@ -262,19 +262,16 @@ def _create_google_model_cached(model_name: str, provider_type: Literal["google-
     # Add to managed clients for cleanup
     _managed_http_clients.append(http_client)
 
-    # Create GoogleProvider with dedicated HTTP client
-    google_provider = GoogleProvider(
-        vertexai=(provider_type == "google-vertex"),
-        http_client=http_client,
-    )
-
-    # Create GoogleModel with dedicated provider
+    # Create GoogleProvider and GoogleModel with dedicated HTTP client
     if provider_type == "google-vertex":
+        google_provider = GoogleProvider(vertexai=True, http_client=http_client)
         return GoogleModel(
             model_name,
             provider=google_provider,
             profile=lambda name: _disable_server_side_tool_invocations(google_provider.model_profile(name)),
         )
+    # Omit vertexai: False is the default, and pydantic-ai-slim >= 1.97 deprecates passing it explicitly
+    google_provider = GoogleProvider(http_client=http_client)
     return GoogleModel(model_name, provider=google_provider)
 
 

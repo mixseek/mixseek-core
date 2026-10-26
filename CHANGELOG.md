@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a22 (2026-10-26)
+
+### Fix
+
+- **auth**: stop passing deprecated vertexai=False to GoogleProvider
+- **auth**: disable server-side tool invocations for Vertex AI Gemini models
+
 ## v0.1.0a21 (2026-10-23)
 
 ### Fix

@@ -4,10 +4,13 @@
 file_output フィールドは削除（ファイル出力は LoggingConfig.file_enabled で一元管理）。
 """
 
+import logging
 import os
 from enum import Enum
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class LogfirePrivacyMode(str, Enum):
@@ -58,9 +61,6 @@ class LogfireConfig(BaseModel):
             LOGFIRE_SEND_TO_LOGFIRE: "1"で有効化（デフォルト: "1"）
             MIXSEEK_LOG_CONSOLE: コンソール出力有効化（true/false/1/0）
             MIXSEEK_JSON_SPAN_LOG: json モードのスパンJSON出力有効化（true/false/1/0、デフォルト: true）
-
-        Raises:
-            ValueError: MIXSEEK_JSON_SPAN_LOG が不正値の場合
         """
         enabled = os.getenv("LOGFIRE_ENABLED") == "1"
         privacy_str = os.getenv("LOGFIRE_PRIVACY_MODE", "metadata_only")
@@ -88,14 +88,18 @@ class LogfireConfig(BaseModel):
 def json_span_log_from_env() -> bool:
     """MIXSEEK_JSON_SPAN_LOG を読み取る。未設定・空文字は true（後方互換）。
 
-    既定が有効のため、書き間違いで黙って無効化されないよう不正値は ValueError とする。
-
-    Raises:
-        ValueError: true/false/1/0 以外の値が指定された場合
+    不正値は警告を出して true（現状維持）にフォールバックする。
+    観測設定の書き間違いで CLI 本体を停止させず、かつ黙って無効化もしないため。
     """
-    value = os.getenv("MIXSEEK_JSON_SPAN_LOG", "").strip().lower()
+    raw = os.getenv("MIXSEEK_JSON_SPAN_LOG", "")
+    value = raw.strip().lower()
     if value in ("", "true", "1"):
         return True
     if value in ("false", "0"):
         return False
-    raise ValueError(f"Invalid MIXSEEK_JSON_SPAN_LOG: '{value}'. Valid values: true, false, 1, 0")
+    # 構造化ログ: 環境変数名と不正値を extra で明示し、JsonFormatter でフィールド化する
+    logger.warning(
+        "Invalid MIXSEEK_JSON_SPAN_LOG value; falling back to true. Valid values: true, false, 1, 0",
+        extra={"env_var": "MIXSEEK_JSON_SPAN_LOG", "value": raw},
+    )
+    return True

@@ -125,8 +125,10 @@ export MIXSEEK_JSON_SPAN_LOG=false
 ```
 
 - text 形式ではこの設定は無視されます
-- `true`/`false`/`1`/`0` 以外の値はエラーになります
-- `LOGFIRE_SEND_TO_LOGFIRE=0` で OTLP の送信先もない場合、スパンはどこにも出力されません
+- `true`/`false`/`1`/`0` 以外の値は警告を出したうえで既定値（有効）として扱います
+- 無効化するとスパンはローカル（コンソール・ファイル）に一切出力されません。
+  `LOGFIRE_SEND_TO_LOGFIRE=0` で OTLP の送信先もない場合はどこにも残らないため、
+  手元でスパンを確認したいデバッグ時は `MIXSEEK_LOG_FORMAT=text` を使ってください
 
 ### 優先順位
 

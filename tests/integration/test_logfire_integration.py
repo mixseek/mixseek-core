@@ -176,6 +176,39 @@ class TestJsonMode:
         assert processors is not None
         assert any(isinstance(p, JsonSpanProcessor) for p in processors)
 
+    def test_json_span_processor_not_added_when_disabled(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
+        """json_span_log=False なら JsonSpanProcessor を登録しない（Issue #172）"""
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.METADATA_ONLY,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+            json_span_log=False,
+        )
+
+        setup_logfire(config, log_format="json", workspace=temp_workspace)
+
+        call_kwargs = mock_logfire.configure.call_args[1]
+        assert call_kwargs["console"] is False
+        assert call_kwargs.get("additional_span_processors") is None
+
+    def test_text_mode_ignores_json_span_log(self, mock_logfire: MagicMock, temp_workspace: Path) -> None:
+        """text モードでは json_span_log=True でも JsonSpanProcessor を登録しない"""
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.METADATA_ONLY,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+            json_span_log=True,
+        )
+
+        setup_logfire(config, log_format="text", workspace=temp_workspace, file_enabled=False)
+
+        call_kwargs = mock_logfire.configure.call_args[1]
+        assert call_kwargs.get("additional_span_processors") is None
+
 
 class TestJsonSpanProcessor:
     """JsonSpanProcessor ユニットテスト"""

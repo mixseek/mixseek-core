@@ -22,6 +22,7 @@ def clean_env() -> Generator[None]:
         "LOGFIRE_SEND_TO_LOGFIRE",
         "MIXSEEK_LOG_CONSOLE",
         "MIXSEEK_LOG_FILE",
+        "MIXSEEK_JSON_SPAN_LOG",
     ]
     original_env = {}
     for var in env_vars_to_clean:
@@ -56,6 +57,50 @@ class TestLogfireConfigConsoleOutput:
         os.environ["MIXSEEK_LOG_CONSOLE"] = "0"
         config = LogfireConfig.from_env()
         assert config.console_output is False
+
+
+class TestLogfireConfigJsonSpanLog:
+    """json_span_log フィールドのテスト（Issue #172）"""
+
+    def test_default_json_span_log_true(self, clean_env: None) -> None:
+        """未設定時は後方互換のため有効"""
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    def test_direct_construction_default_true(self) -> None:
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.FULL,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+        )
+        assert config.json_span_log is True
+
+    @pytest.mark.parametrize("value", ["false", "0", "FALSE", " False "])
+    def test_from_env_disabled(self, clean_env: None, value: str) -> None:
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is False
+
+    @pytest.mark.parametrize("value", ["true", "1", "TRUE"])
+    def test_from_env_enabled(self, clean_env: None, value: str) -> None:
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    def test_from_env_empty_uses_default(self, clean_env: None) -> None:
+        """空文字は未設定と同様に既定値（有効）"""
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = ""
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    @pytest.mark.parametrize("value", ["yes", "off", "2"])
+    def test_from_env_invalid_raises(self, clean_env: None, value: str) -> None:
+        """不正値で黙って無効化されないよう ValueError にする"""
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        with pytest.raises(ValueError, match="MIXSEEK_JSON_SPAN_LOG"):
+            LogfireConfig.from_env()
 
 
 class TestLogfireConfigExistingFields:

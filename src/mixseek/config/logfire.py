@@ -34,6 +34,8 @@ class LogfireConfig(BaseModel):
         project_name: Logfireプロジェクト名（オプション）
         send_to_logfire: Logfireクラウドへの送信有効化
         console_output: Logfireスパンのコンソール出力有効化（text モードの ConsoleOptions 制御）
+        json_span_log: json モードでスパンを JsonSpanProcessor 経由でログ出力するか
+            （text モードでは無視）
     """
 
     enabled: bool
@@ -42,6 +44,7 @@ class LogfireConfig(BaseModel):
     project_name: str | None
     send_to_logfire: bool
     console_output: bool = Field(default=True)
+    json_span_log: bool = Field(default=True)
 
     @classmethod
     def from_env(cls) -> "LogfireConfig":
@@ -54,6 +57,10 @@ class LogfireConfig(BaseModel):
             LOGFIRE_PROJECT: プロジェクト名
             LOGFIRE_SEND_TO_LOGFIRE: "1"で有効化（デフォルト: "1"）
             MIXSEEK_LOG_CONSOLE: コンソール出力有効化（true/false/1/0）
+            MIXSEEK_JSON_SPAN_LOG: json モードのスパンJSON出力有効化（true/false/1/0、デフォルト: true）
+
+        Raises:
+            ValueError: MIXSEEK_JSON_SPAN_LOG が不正値の場合
         """
         enabled = os.getenv("LOGFIRE_ENABLED") == "1"
         privacy_str = os.getenv("LOGFIRE_PRIVACY_MODE", "metadata_only")
@@ -74,4 +81,21 @@ class LogfireConfig(BaseModel):
             project_name=project_name,
             send_to_logfire=send_to_logfire,
             console_output=console_output,
+            json_span_log=json_span_log_from_env(),
         )
+
+
+def json_span_log_from_env() -> bool:
+    """MIXSEEK_JSON_SPAN_LOG を読み取る。未設定・空文字は true（後方互換）。
+
+    既定が有効のため、書き間違いで黙って無効化されないよう不正値は ValueError とする。
+
+    Raises:
+        ValueError: true/false/1/0 以外の値が指定された場合
+    """
+    value = os.getenv("MIXSEEK_JSON_SPAN_LOG", "").strip().lower()
+    if value in ("", "true", "1"):
+        return True
+    if value in ("false", "0"):
+        return False
+    raise ValueError(f"Invalid MIXSEEK_JSON_SPAN_LOG: '{value}'. Valid values: true, false, 1, 0")

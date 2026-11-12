@@ -12,7 +12,7 @@ from typing import Any, NoReturn, TypeVar, cast
 import typer
 from pydantic import ValidationError
 
-from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode
+from mixseek.config.logfire import LogfireConfig, LogfirePrivacyMode, json_span_log_from_env
 from mixseek.config.logging import LevelName, LogFormatType, LoggingConfig
 from mixseek.observability import setup_logfire, setup_logging
 
@@ -168,6 +168,7 @@ def setup_logfire_from_cli(
             project_name=base_config.project_name if base_config else None,
             send_to_logfire=base_config.send_to_logfire if base_config else True,
             console_output=console_enabled,
+            json_span_log=json_span_log_from_env(),
         )
     elif os.getenv("LOGFIRE_ENABLED") == "1":
         # CLI値で console_output を上書き（CLI > env の優先度）

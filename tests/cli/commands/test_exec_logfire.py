@@ -155,6 +155,100 @@ class TestLogfireConfigPriority:
             assert config.capture_http is True
             assert config.enabled is True
 
+    @pytest.mark.parametrize(
+        ("logfire", "logfire_metadata", "logfire_http"),
+        [(True, False, False), (False, True, False), (False, False, True)],
+    )
+    def test_cli_flag_inherits_json_span_log_env(
+        self, monkeypatch: pytest.MonkeyPatch, logfire: bool, logfire_metadata: bool, logfire_http: bool
+    ) -> None:
+        """CLIフラグ指定時も MIXSEEK_JSON_SPAN_LOG を継承する（LOGFIRE_PROJECT 未設定でも）"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+        monkeypatch.delenv("LOGFIRE_PROJECT", raising=False)
+        monkeypatch.delenv("LOGFIRE_SEND_TO_LOGFIRE", raising=False)
+        monkeypatch.setenv("MIXSEEK_JSON_SPAN_LOG", "false")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(
+                logfire=logfire,
+                logfire_metadata=logfire_metadata,
+                logfire_http=logfire_http,
+                verbose=False,
+                log_format="json",
+            )
+
+            mock_setup.assert_called_once()
+            config = mock_setup.call_args[0][0]
+            assert config.json_span_log is False
+
+    def test_cli_flag_json_span_log_default_true(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CLIフラグ指定時、MIXSEEK_JSON_SPAN_LOG 未設定なら有効"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+        monkeypatch.delenv("MIXSEEK_JSON_SPAN_LOG", raising=False)
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=True, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            config = mock_setup.call_args[0][0]
+            assert config.json_span_log is True
+
+    def test_env_var_json_span_log_disabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CLIフラグなし（LOGFIRE_ENABLED=1）でも MIXSEEK_JSON_SPAN_LOG が反映される"""
+        from unittest.mock import patch
+
+        monkeypatch.setenv("LOGFIRE_ENABLED", "1")
+        monkeypatch.setenv("MIXSEEK_JSON_SPAN_LOG", "0")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=False, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            config = mock_setup.call_args[0][0]
+            assert config.json_span_log is False
+
+    def test_env_var_invalid_privacy_mode_does_not_abort(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """LOGFIRE_PRIVACY_MODE が不正値でも CLI は停止せず metadata_only で継続する（Issue #174）"""
+        from unittest.mock import patch
+
+        monkeypatch.setenv("LOGFIRE_ENABLED", "1")
+        monkeypatch.setenv("LOGFIRE_PRIVACY_MODE", "metadata")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=False, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            mock_setup.assert_called_once()
+            config = mock_setup.call_args[0][0]
+            assert config.privacy_mode.value == "metadata_only"
+
+    def test_cli_flag_with_invalid_privacy_mode_env_does_not_abort(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CLIフラグ + LOGFIRE_PROJECT 設定時に env の privacy_mode が不正値でも停止しない（Issue #174）"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+        monkeypatch.setenv("LOGFIRE_PROJECT", "test-project")
+        monkeypatch.setenv("LOGFIRE_PRIVACY_MODE", "metadata")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=True, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            config = mock_setup.call_args[0][0]
+            # CLIフラグ（--logfire = full）が優先され、project_name は env から継承される
+            assert config.privacy_mode.value == "full"
+            assert config.project_name == "test-project"
+
     def test_setup_logfire_from_cli_error_handling(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Logfire初期化失敗時にグレースフルに警告を出力して継続する"""
         from unittest.mock import patch

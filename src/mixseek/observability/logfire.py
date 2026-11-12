@@ -3,6 +3,7 @@
 text/json で ConsoleOptions の使用/不使用を切り替える。
 - text: ConsoleOptions + TeeWriter(stderr + mixseek.log) でスパンツリー表示
 - json: ConsoleOptions無効 + JsonSpanProcessor で構造化JSON出力
+  （LogfireConfig.json_span_log=False なら JsonSpanProcessor を登録しない）
 """
 
 from __future__ import annotations
@@ -122,6 +123,7 @@ def setup_logfire(
 
     - text: ConsoleOptions + TeeWriter(stderr + mixseek.log) でスパンツリー表示
     - json: ConsoleOptions無効 + JsonSpanProcessor で構造化JSON出力
+      （config.json_span_log=False の場合、スパンは stderr/ファイルに出さずエクスポートのみ）
 
     Args:
         config: Logfire設定
@@ -172,8 +174,10 @@ def setup_logfire(
             # writers が空の場合は console=False のまま
         elif log_format == "json":
             # Mode 4: ConsoleOptions無効 + JsonSpanProcessor
+            # json_span_log=False ならスパンは OTLP 等へのエクスポートのみ（Issue #172）
             console = False
-            additional_processors.append(JsonSpanProcessor())
+            if config.json_span_log:
+                additional_processors.append(JsonSpanProcessor())
 
         logfire.configure(
             send_to_logfire=config.send_to_logfire,

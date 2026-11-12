@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
+## v0.1.0a23 (2026-11-12)
+
+### Feat
+
+- **observability**: JsonSpanProcessor を MIXSEEK_JSON_SPAN_LOG で無効化可能にする
+
+### Fix
+
+- **observability**: LOGFIRE_PRIVACY_MODE の不正値で CLI を停止させない
+- **observability**: MIXSEEK_JSON_SPAN_LOG の不正値で CLI を停止させない
+
 ## v0.1.0a22 (2026-10-26)
 
 ### Fix

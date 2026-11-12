@@ -535,6 +535,9 @@ mixseek team "..." --config team.toml
 | `LOGFIRE_SEND_TO_LOGFIRE` | "1"でLogfireクラウドへ送信 | "1" |
 | `LOGFIRE_TOKEN` | Logfire認証トークン（本番環境） | .logfireから読み込み |
 
+`LOGFIRE_PRIVACY_MODE` に不正値を指定した場合は、警告を出したうえで既定値 `metadata_only` として扱います
+（大文字小文字・前後の空白は区別しません）。
+
 #### 環境変数の詳細
 
 **プロジェクト名の設定（オプション）**

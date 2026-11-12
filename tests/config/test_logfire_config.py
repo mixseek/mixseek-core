@@ -117,6 +117,49 @@ class TestLogfireConfigJsonSpanLog:
         mock_logger.warning.assert_not_called()
 
 
+class TestLogfireConfigPrivacyModeFallback:
+    """LOGFIRE_PRIVACY_MODE の不正値フォールバックのテスト（Issue #174）"""
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("full", LogfirePrivacyMode.FULL),
+            ("FULL", LogfirePrivacyMode.FULL),
+            (" disabled ", LogfirePrivacyMode.DISABLED),
+            ("metadata_only", LogfirePrivacyMode.METADATA_ONLY),
+        ],
+    )
+    def test_from_env_valid_values(self, clean_env: None, value: str, expected: LogfirePrivacyMode) -> None:
+        os.environ["LOGFIRE_PRIVACY_MODE"] = value
+        with patch("mixseek.config.logfire.logger") as mock_logger:
+            config = LogfireConfig.from_env()
+
+        assert config.privacy_mode == expected
+        mock_logger.warning.assert_not_called()
+
+    def test_from_env_empty_uses_default(self, clean_env: None) -> None:
+        """空文字は未設定と同様に既定値（metadata_only）"""
+        os.environ["LOGFIRE_PRIVACY_MODE"] = ""
+        with patch("mixseek.config.logfire.logger") as mock_logger:
+            config = LogfireConfig.from_env()
+
+        assert config.privacy_mode == LogfirePrivacyMode.METADATA_ONLY
+        mock_logger.warning.assert_not_called()
+
+    @pytest.mark.parametrize("value", ["metadata", "ful", "none"])
+    def test_from_env_invalid_warns_and_falls_back(self, clean_env: None, value: str) -> None:
+        """不正値は CLI を落とさず、警告を出して既定値（metadata_only）にフォールバックする"""
+        os.environ["LOGFIRE_PRIVACY_MODE"] = value
+        with patch("mixseek.config.logfire.logger") as mock_logger:
+            config = LogfireConfig.from_env()
+
+        assert config.privacy_mode == LogfirePrivacyMode.METADATA_ONLY
+        mock_logger.warning.assert_called_once()
+        extra = mock_logger.warning.call_args.kwargs["extra"]
+        assert extra["env_var"] == "LOGFIRE_PRIVACY_MODE"
+        assert extra["value"] == value
+
+
 class TestLogfireConfigExistingFields:
     """既存フィールドの互換性テスト"""
 

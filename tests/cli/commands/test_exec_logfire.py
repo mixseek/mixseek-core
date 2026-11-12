@@ -215,6 +215,40 @@ class TestLogfireConfigPriority:
             config = mock_setup.call_args[0][0]
             assert config.json_span_log is False
 
+    def test_env_var_invalid_privacy_mode_does_not_abort(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """LOGFIRE_PRIVACY_MODE が不正値でも CLI は停止せず metadata_only で継続する（Issue #174）"""
+        from unittest.mock import patch
+
+        monkeypatch.setenv("LOGFIRE_ENABLED", "1")
+        monkeypatch.setenv("LOGFIRE_PRIVACY_MODE", "metadata")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=False, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            mock_setup.assert_called_once()
+            config = mock_setup.call_args[0][0]
+            assert config.privacy_mode.value == "metadata_only"
+
+    def test_cli_flag_with_invalid_privacy_mode_env_does_not_abort(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CLIフラグ + LOGFIRE_PROJECT 設定時に env の privacy_mode が不正値でも停止しない（Issue #174）"""
+        from unittest.mock import patch
+
+        monkeypatch.delenv("LOGFIRE_ENABLED", raising=False)
+        monkeypatch.setenv("LOGFIRE_PROJECT", "test-project")
+        monkeypatch.setenv("LOGFIRE_PRIVACY_MODE", "metadata")
+
+        with patch("mixseek.cli.utils.setup_logfire") as mock_setup:
+            from mixseek.cli.utils import setup_logfire_from_cli
+
+            setup_logfire_from_cli(logfire=True, logfire_metadata=False, logfire_http=False, verbose=False)
+
+            config = mock_setup.call_args[0][0]
+            # CLIフラグ（--logfire = full）が優先され、project_name は env から継承される
+            assert config.privacy_mode.value == "full"
+            assert config.project_name == "test-project"
+
     def test_setup_logfire_from_cli_error_handling(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Logfire初期化失敗時にグレースフルに警告を出力して継続する"""
         from unittest.mock import patch

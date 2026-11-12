@@ -5,6 +5,7 @@ file_output / from_toml 廃止後のテスト。console_output は維持。
 
 import os
 from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
@@ -22,6 +23,7 @@ def clean_env() -> Generator[None]:
         "LOGFIRE_SEND_TO_LOGFIRE",
         "MIXSEEK_LOG_CONSOLE",
         "MIXSEEK_LOG_FILE",
+        "MIXSEEK_JSON_SPAN_LOG",
     ]
     original_env = {}
     for var in env_vars_to_clean:
@@ -56,6 +58,63 @@ class TestLogfireConfigConsoleOutput:
         os.environ["MIXSEEK_LOG_CONSOLE"] = "0"
         config = LogfireConfig.from_env()
         assert config.console_output is False
+
+
+class TestLogfireConfigJsonSpanLog:
+    """json_span_log フィールドのテスト（Issue #172）"""
+
+    def test_default_json_span_log_true(self, clean_env: None) -> None:
+        """未設定時は後方互換のため有効"""
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    def test_direct_construction_default_true(self) -> None:
+        config = LogfireConfig(
+            enabled=True,
+            privacy_mode=LogfirePrivacyMode.FULL,
+            capture_http=False,
+            project_name=None,
+            send_to_logfire=True,
+        )
+        assert config.json_span_log is True
+
+    @pytest.mark.parametrize("value", ["false", "0", "FALSE", " False "])
+    def test_from_env_disabled(self, clean_env: None, value: str) -> None:
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is False
+
+    @pytest.mark.parametrize("value", ["true", "1", "TRUE"])
+    def test_from_env_enabled(self, clean_env: None, value: str) -> None:
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    def test_from_env_empty_uses_default(self, clean_env: None) -> None:
+        """空文字は未設定と同様に既定値（有効）"""
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = ""
+        config = LogfireConfig.from_env()
+        assert config.json_span_log is True
+
+    @pytest.mark.parametrize("value", ["yes", "off", "2"])
+    def test_from_env_invalid_warns_and_falls_back_true(self, clean_env: None, value: str) -> None:
+        """不正値は CLI を落とさず、警告を出して既定値（有効）にフォールバックする"""
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = value
+        with patch("mixseek.config.logfire.logger") as mock_logger:
+            config = LogfireConfig.from_env()
+
+        assert config.json_span_log is True
+        mock_logger.warning.assert_called_once()
+        extra = mock_logger.warning.call_args.kwargs["extra"]
+        assert extra["env_var"] == "MIXSEEK_JSON_SPAN_LOG"
+        assert extra["value"] == value
+
+    def test_from_env_valid_value_no_warning(self, clean_env: None) -> None:
+        os.environ["MIXSEEK_JSON_SPAN_LOG"] = "false"
+        with patch("mixseek.config.logfire.logger") as mock_logger:
+            LogfireConfig.from_env()
+
+        mock_logger.warning.assert_not_called()
 
 
 class TestLogfireConfigExistingFields:

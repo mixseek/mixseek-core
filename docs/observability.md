@@ -102,6 +102,7 @@ mixseek team "..." --config team.toml --log-level debug
 | `MIXSEEK_LOG_FORMAT` | ログ出力形式（text/json） | `text` |
 | `MIXSEEK_LOG_CONSOLE` | コンソール出力有効化（true/false） | `true` |
 | `MIXSEEK_LOG_FILE` | ファイル出力有効化（true/false） | `true` |
+| `MIXSEEK_JSON_SPAN_LOG` | json 形式でスパンを JSON ログ出力するか（true/false） | `true` |
 
 ```bash
 # 環境変数での設定例
@@ -111,6 +112,23 @@ export MIXSEEK_LOG_FILE=false  # ファイル出力無効
 
 mixseek team "..." --config team.toml
 ```
+
+#### スパンの JSON ログ出力を無効化する
+
+`MIXSEEK_LOG_FORMAT=json` かつ Logfire 有効時は、既定でスパンの開始・終了も JSON ログとして
+コンソール・ファイルに出力されます。スパンを OTLP などで別経路に送っている場合は、
+`MIXSEEK_JSON_SPAN_LOG=false` で JSON ログ出力だけを止められます（通常のログ出力は変わりません）。
+
+```bash
+export MIXSEEK_LOG_FORMAT=json
+export MIXSEEK_JSON_SPAN_LOG=false
+```
+
+- text 形式ではこの設定は無視されます
+- `true`/`false`/`1`/`0` 以外の値は警告を出したうえで既定値（有効）として扱います
+- 無効化するとスパンはローカル（コンソール・ファイル）に一切出力されません。
+  `LOGFIRE_SEND_TO_LOGFIRE=0` で OTLP の送信先もない場合はどこにも残らないため、
+  手元でスパンを確認したいデバッグ時は `MIXSEEK_LOG_FORMAT=text` を使ってください
 
 ### 優先順位
 

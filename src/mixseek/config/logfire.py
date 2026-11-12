@@ -55,7 +55,7 @@ class LogfireConfig(BaseModel):
 
         環境変数:
             LOGFIRE_ENABLED: "1"で有効化
-            LOGFIRE_PRIVACY_MODE: "full", "metadata_only", "disabled"
+            LOGFIRE_PRIVACY_MODE: "full", "metadata_only", "disabled"（デフォルト: "metadata_only"）
             LOGFIRE_CAPTURE_HTTP: "1"で有効化
             LOGFIRE_PROJECT: プロジェクト名
             LOGFIRE_SEND_TO_LOGFIRE: "1"で有効化（デフォルト: "1"）
@@ -63,8 +63,7 @@ class LogfireConfig(BaseModel):
             MIXSEEK_JSON_SPAN_LOG: json モードのスパンJSON出力有効化（true/false/1/0、デフォルト: true）
         """
         enabled = os.getenv("LOGFIRE_ENABLED") == "1"
-        privacy_str = os.getenv("LOGFIRE_PRIVACY_MODE", "metadata_only")
-        privacy_mode = LogfirePrivacyMode(privacy_str)
+        privacy_mode = privacy_mode_from_env()
         capture_http = os.getenv("LOGFIRE_CAPTURE_HTTP") == "1"
         project_name = os.getenv("LOGFIRE_PROJECT")
         send_to_logfire_str = os.getenv("LOGFIRE_SEND_TO_LOGFIRE", "1")
@@ -83,6 +82,28 @@ class LogfireConfig(BaseModel):
             console_output=console_output,
             json_span_log=json_span_log_from_env(),
         )
+
+
+def privacy_mode_from_env() -> LogfirePrivacyMode:
+    """LOGFIRE_PRIVACY_MODE を読み取る。未設定・空文字は metadata_only。
+
+    不正値は警告を出して metadata_only（既定値・コンテンツ除外の安全側）にフォールバックする。
+    観測設定の書き間違いで CLI 本体を停止させないため。
+    """
+    raw = os.getenv("LOGFIRE_PRIVACY_MODE", "")
+    value = raw.strip().lower()
+    if not value:
+        return LogfirePrivacyMode.METADATA_ONLY
+    try:
+        return LogfirePrivacyMode(value)
+    except ValueError:
+        valid_values = ", ".join(m.value for m in LogfirePrivacyMode)
+        # 構造化ログ: 環境変数名と不正値を extra で明示し、JsonFormatter でフィールド化する
+        logger.warning(
+            f"Invalid LOGFIRE_PRIVACY_MODE value; falling back to metadata_only. Valid values: {valid_values}",
+            extra={"env_var": "LOGFIRE_PRIVACY_MODE", "value": raw},
+        )
+        return LogfirePrivacyMode.METADATA_ONLY
 
 
 def json_span_log_from_env() -> bool:
